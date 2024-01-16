@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+<module name="Dentsu_Comparemodule" > 
+     <sequence> 
+         <!-- <module name="Magento_Customer"/> 
+         <module name="Magento_Downloadable"/> 
+         <module name="Magento_Wishlist"/> 
+         <module name="Magento_Review"/>  -->
+         <module name="Magento_Catalog"/> 
+         <module name="Magento_Sale"/>
+         <!-- <module name="Magento_Theme"/> 
+         <module name="Magento_Directory"/>
+         <module name="Magento_Config"/>  -->
+     </sequence>
+ </module> 
+</config>
