@@ -9,5 +9,6 @@
     <body>
         <referenceBlock name="customer_account_dashboard_top" remove="true"/> 
         <referenceBlock name="sale.reorder.sidebar" remove="true"/>
+        <referenceBlock name="product.info.sku" remove="true"/>
     </body>
 </page>
