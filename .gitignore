@@ -22,14 +22,8 @@ vendor/composer/installed.php
 vendor/*
 
 vendor/composer/LICENSE
-vendor/composer/autoload_files.php
-vendor/composer/autoload_psr4.php
-vendor/composer/autoload_static.php
 vendor/composer/installed.json
-vendor/composer/installed.php
  
-var/.regenerate
-
 composer.json
 composer.lock
 
