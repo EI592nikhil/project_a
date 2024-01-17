@@ -1,0 +1,78 @@
+<?php
+/**
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+<!-- <div class="message info empty"><span><?= $escaper->escapeHtml(__('You have no schedule in your calendar. Click Add Schedule button to begin creating the schedules.')) ?></span></div>
+<div class="actions-toolbar">
+    <div class="primary">
+        <button type="button" role="add-schedule" title="<?= $block->escapeHtmlAttr(__('Add New Schedule')) ?>" class="action primary add"><span><?= $block->escapeHtml(__('Add New Schedule')) ?></span></button>
+    </div>
+    <div class="secondary">
+        <a class="action back" href="<?= $escaper->escapeUrl($block->getUrl('customer/account/')) ?>">
+            <span><?= $escaper->escapeHtml(__('Back')) ?></span>
+        </a>
+    </div>
+</div> -->
+
+<div id="custom-form">
+   <form class="form"
+      action="<?php echo $this->getUrl('trainera/addcourse/index', ['_secure' => true]);?>"
+      id="custom-form"
+      method="post"
+      data-hasrequired="<?php  echo __('* Required Fields') ?>"
+      data-mage-init='{"validation":{}}' 
+      enctype="multipart/form-data" >
+      <!-- <input type="hidden" name="cproduct_id" id="cproduct_id" value="0" /> -->
+      <fieldset class="fieldset">
+         <legend class="legend"><span><?php // echo __("Course Name") ?></span></legend>
+         <br />
+         <div class="field name required">
+            <label class="label" for="name"><span><?php  echo __('Course name') ?></span></label>
+            <div class="control">
+               <input name="name" id="name" title="<?php  echo __('Course name') ?>" class="input-text" type="text" data-validate="{required:true}"/>
+            </div>
+         </div>
+         <div class="field courseagenda required">
+            <label class="label" for="courseagenda"><span><?php  echo __('Agenda Of The Course') ?></span></label>
+            <div class="control">
+               <textarea name="courseagenda" id="courseagenda" title="<?php  echo __('Agenda Of The Course') ?>" class="input-text" cols="5" rows="3" data-validate="{required:true}"></textarea>
+            </div>
+         </div>
+         <div class="field courseduration required">
+            <label class="label" for="courseduration"><span><?php  echo __('Course Duration') ?></span></label>
+            <div class="control">
+               <input name="courseduration" id="courseduration" title="<?php  echo __('Course Duration') ?>" class="input-text" type="text" data-validate="{required:true}"/>
+            </div>
+         </div>
+         <div class="field availability required">
+            <label class="label" for="availability"><span><?php  echo __('Trainer Availablity') ?></span></label>
+            <div class="control">
+               <input name="availability" id="availability" title="<?php  echo __('Trainer Availablity') ?>" class="input-text" type="text" data-validate="{required:true}" />
+            </div>
+         </div>
+         <div class="field coursedocumnet required">
+            <label class="label" for="coursedocumnet"><span><?php  echo __('Related Documnet') ?></span></label>
+            <div class="control">
+               <input name="coursedocumnet[]" id="coursedocumnet" title="<?php  echo __('Related Documnet') ?>" class="input-text" type="file" data-validate="{required:true}" multiple="multiple" accept=".pdf, .doc, .docx"/>
+            </div>
+         </div>
+         <div class="field trainingvideo required">
+            <label class="label" for="trainingvideo"><span><?php  echo __('Training Video Url') ?></span></label>
+            <div class="control">
+               <input name="trainingvideo" id="trainingvideo" title="<?php  echo __('Training Video Url') ?>" class="input-text" type="text" data-validate="{required:true}" placeholder="http://test.com/sample/BigBuckBunny.mp4" />
+            </div>
+         </div>
+      </fieldset>
+      <div class="actions-toolbar">
+         <div class="primary">
+            <input type="hidden" name="hideit" id="hideit" value="" />
+            <button type="submit" title="<?php  echo __('Submit') ?>" class="action submit primary" id="custom_btn">
+            <span><?php  echo __('Submit') ?></span>
+            </button>
+         </div>
+      </div>
+   </form>
+</div>
