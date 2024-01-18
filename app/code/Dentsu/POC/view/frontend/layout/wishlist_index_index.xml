@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+    <referenceBlock class="Magento\Wishlist\Block\Customer\Wishlist\Item\Column\Cart" name="customer.wishlist.item.cart" template="Dentsu_POC::item/column/cart.phtml">
+                            <arguments>
+                                <argument name="allowedQuantityViewModel" xsi:type="object">Magento\Wishlist\ViewModel\AllowedQuantity</argument>
+                                <argument name="title" translate="true" xsi:type="string">Add to Cart</argument>
+                            </arguments>
+    </referenceBlock>
+    </body>
+</page>
