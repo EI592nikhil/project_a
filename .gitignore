@@ -18,3 +18,13 @@ vendor/composer/installed.php
 /var/*
 /generated/*
 .DS_Store
+
+vendor/*
+
+vendor/composer/LICENSE
+vendor/composer/installed.json
+ 
+composer.json
+composer.lock
+
+

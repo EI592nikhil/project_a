@@ -1,0 +1,43 @@
+<?php if ($block->getPagerHtml()): ?>
+<!-- <div class="order-products-toolbar toolbar bottom"><?php echo $block->getPagerHtml(); ?></div> -->
+<?php endif ?>
+<?php $productColl = $block->getProductCollection(); ?>
+<?php if ($productColl): ?>
+<div class="table-wrapper orders-history">
+    <table class="data table table-order-items history" id="rh-pagination">
+        <caption class="table-caption"><?php echo __('Custom Collection Records') ?></caption>
+        <thead>
+            <tr>
+                <th scope="col" class="col id"><?php echo __('Customer ID') ?></th>
+                <th scope="col" class="col product-name"><?php echo __('Product Name') ?></th>
+                <th scope="col" class="col sku"><?php echo __('Status') ?></th>
+                <th scope="col" class="col price"><?php echo __('Course Expired Date') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($productColl as $product):
+                 ?>
+            <tr>
+                <td data-th="<?= $block->escapeHtml(__('Customer ID')) ?>" class="col id">
+                    <?php echo $product->getCustomerId(); ?>
+                </td>
+                <td data-th="<?= $block->escapeHtml(__('Product Name')) ?>" class="col product-name">
+                    <?php echo $product->getName(); ?>
+                </td>
+                <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col sku">
+                    <?php if($product->getStatus() == 1) {echo "Approved";}else{echo "Pending";}?>
+                </td>
+                <td data-th="<?= $block->escapeHtml(__('Course Expired Date')) ?>" class="col price">
+                    <?php echo $product->getCourseExpireDate(); ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php if ($block->getPagerHtml()): ?>
+    <div class="order-products-toolbar toolbar bottom"><?php echo $block->getPagerHtml(); ?></div>
+<?php endif ?>
+<?php else: ?>
+    <div class="message info empty"><span><?php echo __('You have no any records in your custom collection.'); ?></span></div>
+<?php endif ?>
