@@ -1,5 +1,5 @@
 <?php
-namespace Dentsu\Training\Controller\Index;
+namespace Dentsu\Training\Controller\Trainer;
 
 use Magento\Framework\App\Action\Context;
 use Magento\Customer\Api\CustomerRepositoryInterface;
