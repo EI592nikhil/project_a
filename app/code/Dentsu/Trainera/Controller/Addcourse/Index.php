@@ -144,7 +144,7 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
         $newCours=$this->productFactory->create();
 
         $newCours->setName($data['name']); // Set Product Name       
-        $newCours->setAttributeSetId(14); // Set Attribute Set ID defulat 14
+        $newCours->setAttributeSetId(4); // Set Attribute Set ID ,defulat 4
         $newCours->setSku("course-".substr(str_shuffle(md5(time())), 0, 6)); // Set Random SKU 6 
         $newCours->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH);
         $newCours->setStatus(\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED); //  Set Status by defulat it is disable 
@@ -240,7 +240,7 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
        $link_interface = $this->linkInterface;
        $link_interface->setTitle($linkData["name"]);
        $link_interface->setPrice(9);
-       $link_interface->setNumberOFDownloads(10);
+       $link_interface->setNumberOFDownloads(0); //set zero for unlimted
        $link_interface->setIsShareable(\Magento\Downloadable\Model\Link::LINK_SHAREABLE_CONFIG);
        $link_interface->setLinkType($type);
        $link_interface->setSampleType($type);
@@ -268,12 +268,15 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
             $link_interface->setSampleFileContent($content);
        }
        
-       $link_interface->setIsUnlimited(0);
+       //$link_interface->setIsUnlimited(1);
        $link_interface->setSortOrder(0);
        $this->linkRepositoryInterface->save($sku, $link_interface); // param1 is the sku of your product
        
 
-       //set  sample file            
+       //set  sample file  
+       //@ToDo
+       /*
+
        $sample_interface = $this->sampleInterface;
        $sample_interface->setTitle($linkData["name"]);
        $sample_interface->setSampleType($type);
@@ -291,7 +294,7 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
 
        $sample_interface->setSortOrder(0);
        $this->sampleRepositoryInterface->save($sku, $sample_interface);
-
+       */
     }
 
      /**
