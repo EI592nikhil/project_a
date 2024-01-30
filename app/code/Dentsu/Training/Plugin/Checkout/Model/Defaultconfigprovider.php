@@ -4,11 +4,7 @@ namespace Dentsu\Training\Plugin\Checkout\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 
-
-
-
 class Defaultconfigprovider
-
 {
 
     /**
@@ -18,10 +14,7 @@ class Defaultconfigprovider
      */
 
     protected $checkoutSession;
-
-
-
-
+    private $productFactory;
     /**
  
      * Constructor
