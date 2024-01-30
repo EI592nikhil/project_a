@@ -25,6 +25,10 @@ class Index extends Action
         $this->customerRepository = $customerRepository;
     }
 
+
+     /**
+     * @return void
+     */ 
     public function execute()
     {
         if($this->getRequest()->getPost('id')=="") {

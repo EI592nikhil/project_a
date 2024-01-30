@@ -216,9 +216,9 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
             $this->messageManager->addSuccessMessage(__("Cource added Successfully."));
 
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
            // print_r($ex->getMessage());
-            $this->messageManager->addErrorMessage($e, __("We can\'t submit your request, Please try again."));
+            $this->messageManager->addErrorMessage($ex, __("We can\'t submit your request, Please try again."));
 
         }
 
@@ -321,7 +321,7 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
                 );
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new LocalizedException(__($e->getMessage().": %1", $files["name"]));
         }
         return $result;

@@ -46,8 +46,7 @@ class AddPhoneAttribute implements DataPatchInterface, PatchRevertableInterface
     */
    private $attributeResource;
 
-   /**
-    * AddPhoneAttribute constructor.
+   /**  
     * @param EavSetupFactory $eavSetupFactory
     * @param Config $eavConfig
     * @param LoggerInterface $logger
@@ -67,14 +66,16 @@ class AddPhoneAttribute implements DataPatchInterface, PatchRevertableInterface
        $this->moduleDataSetup = $moduleDataSetup;
    }
 
-   /**
-    * {@inheritdoc}
-    */
+  /**
+     * Apply patch
+     *
+     * @return void
+     */
    public function apply()
    {
        $this->moduleDataSetup->getConnection()->startSetup();
        $this->addPhoneAttribute();
-       $this->moduleDataSetup->getConnection()->endSetup();
+       $this->moduleDataSetup->getConnection()->endSetup();       
    }
 
    /**

@@ -43,8 +43,8 @@ class AddCustomerAttribute implements DataPatchInterface
         $this->attributeSetFactory = $attributeSetFactory;
     }
 
-    /**
-     * {@inheritdoc}
+     /**
+     * @return void
      */
     public function apply()
     {
