@@ -213,7 +213,7 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
         }
             
             //set related documnet /video /file 
-            $this->messageManager->addSuccessMessage(__("New Cource added Successfully."));
+            $this->messageManager->addSuccessMessage(__("Cource added Successfully."));
 
             }
         } catch (Exception $ex) {
