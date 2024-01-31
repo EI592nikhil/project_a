@@ -42,7 +42,6 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
     public function execute()
     {   
         
-
         $dataObject = $this->getRequest();
      
         //echo "---".$this->getRequest()->getMethod();exit;
@@ -56,11 +55,10 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
                 $this->courseHelper->createOfflineCourse($dataObject);
             }
             
-            $this->messageManager->addSuccessMessage(__("New Cource added Successfully."));
+            $this->messageManager->addSuccessMessage(__("Cource added Successfully."));
             } catch (Exception $ex) {
                 // print_r($ex->getMessage());
                 $this->messageManager->addErrorMessage($e, __("We can\'t submit your request, Please try again."));
-    
             }
         }        
         return $this->resultPageFactory->create();

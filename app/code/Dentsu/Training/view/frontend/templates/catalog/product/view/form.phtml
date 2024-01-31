@@ -94,7 +94,7 @@ $customerEmail = $productInquiryHelper->getUserEmail();
                         <input placeholder="<?= $escaper->escapeHtmlAttr(__('Phone')) ?>"
                                name="dentsu_product_inquiry_phone" title="<?= $escaper->escapeHtmlAttr(__('Phone')) ?>"
                                value="<?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_phone')) ?>"
-                               class="input-text" type="text"/>
+                                type="text" maxlength="10" pattern="\d{10}" required />
                     </div>
                 </div>
                 <div class="field email required">
