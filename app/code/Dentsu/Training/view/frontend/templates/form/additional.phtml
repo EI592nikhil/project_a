@@ -1,3 +1,42 @@
+<div class="field required">
+    <label class="label" for="area_of_interests">
+        <span><?php echo __('Area of Interests');?></span>
+    </label>
+   <?php 
+    $interests=$block->getAreaofInterests();
+    if(count($interests)>0): ?>
+<div class="control">
+	<?php
+		 $options = $interests;
+		 foreach($options as $_option):
+			 ?>
+	<input type="checkbox" name="area_of_interests[]" value="<?php echo $_option['value']; ?>"/> <?php echo $_option['label']; ?><br />
+	<?php
+		 endforeach;
+	?>
+</div>
+<?php endif; ?>
+</div>
+
+<div class="field required">
+    <label class="label" for="qualification">
+        <span><?php echo __('Qualification');?></span>
+    </label>
+    <div class="control">
+        <input type="text" name="qualification" id="qualification" value=""
+               title="<?php echo __('Qualification'); ?>" class="input-text" data-validate="{required:true}">
+    </div>
+</div>
+
+<div class="field required">
+    <label class="label" for="current_role">
+        <span><?php echo __('Current Role');?></span>
+    </label>
+    <div class="control">
+        <input type="text" name="current_role" id="current_role" value=""
+               title="<?php echo __('Current Role'); ?>" class="input-text" data-validate="{required:true}">
+    </div>
+</div>
 <div class="field is_trainer required">
     <label class="label" for="is_trainer">
       	<span><?= $block->escapeHtml(__('Do You Want To Register as Trainer?')) ?></span>

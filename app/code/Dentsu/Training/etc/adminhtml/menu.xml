@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Dentsu_Training::product_inquiry" title="Dentsu Training" module="Dentsu_Training" action="training" sortOrder="51" resource="Dentsu_Training::Product_Inquiry"/>
+    </menu>
+</config>

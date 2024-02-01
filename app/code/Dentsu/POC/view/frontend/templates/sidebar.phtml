@@ -42,14 +42,14 @@ $wishlstViewModel = $block->getData('wishlistDataViewModel');
                                         <a href="#"
                                            data-bind="attr: {'data-post': add_to_cart_params}"
                                            class="action tocart primary">
-                                            <span><?= $block->escapeHtml(__('Add to Cart')) ?></span>
+                                            <span><?= $block->escapeHtml(__('Buy Course')) ?></span>
                                         </a>
                                         <!-- /ko -->
                                         <!-- ko ifnot: product_has_required_options -->
                                             <button type="button"
                                                     class="action tocart primary"
                                                     data-bind="attr: {'data-post': add_to_cart_params}">
-                                                <span><?= $block->escapeHtml(__('Add to Cart')) ?></span>
+                                                <span><?= $block->escapeHtml(__('Buy Course')) ?></span>
                                             </button>
                                         <!-- /ko -->
                                     </div>
@@ -77,7 +77,7 @@ $wishlstViewModel = $block->getData('wishlistDataViewModel');
                 </div>
             <!-- /ko -->
             <!-- ko ifnot: wishlist().counter -->
-                <div class="empty"><?= $block->escapeHtml(__('You have no items in your like course.')) ?></div>
+                <div class="empty"><?= $block->escapeHtml(__('You have no items in your wish list.')) ?></div>
             <!-- /ko -->
         </div>
     </div>

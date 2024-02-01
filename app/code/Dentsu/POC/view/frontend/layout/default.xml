@@ -14,6 +14,12 @@
 
 <referenceBlock name="related.product.addto.compare" remove="true" />
 
+<referenceBlock class="Magento\Wishlist\Block\Customer\Sidebar" name="wishlist_sidebar" template="Dentsu_POC::sidebar.phtml">
+                <arguments>
+                    <argument name="wishlistDataViewModel" xsi:type="object">Magento\Wishlist\ViewModel\WishlistData</argument>
+                </arguments>
+</referenceBlock>
+
 </body> 
 
 </page>

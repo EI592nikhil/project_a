@@ -1,5 +1,5 @@
 <?php
-namespace Dentsu\Training\Controller\Index;
+namespace Dentsu\Training\Controller\Trainer;
 
 use Magento\Framework\App\Action\Context;
 use Magento\Customer\Api\CustomerRepositoryInterface;
@@ -25,6 +25,10 @@ class Index extends Action
         $this->customerRepository = $customerRepository;
     }
 
+
+     /**
+     * @return void
+     */ 
     public function execute()
     {
         if($this->getRequest()->getPost('id')=="") {

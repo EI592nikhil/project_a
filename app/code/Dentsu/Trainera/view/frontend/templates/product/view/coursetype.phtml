@@ -3,17 +3,16 @@
 
 <?php if (!empty($course_type)) { ?>
   <button type="button" class="<?php echo $course_type; ?>"><?php echo $course_type; ?></button>
+  <div class="tooltip">
+    <a class="hovertext" href="#">?</a>
+    <?php if ($course_type == "Live Training") { ?>
+      <span class="tooltiptext">Live training is training delivered by a live instructor, in real-time. Virtual (or remote) is training the student receives or accesses over the internet rather than being physically in the classroom with the instructor.</span>
+    <?php } else { ?>
+      <span class="tooltiptext">The study materials include lectures, notes, chapters, questions and answers, video lessons, exercise programs, and other documents. </span>
+    <?php } ?>
+  </div>
 <?php } ?>
-<div class="tooltip">
-  <a class="hovertext" href="#">?</a>
-  <?php if ($course_type == "Live Training") { ?>
-    <span class="tooltiptext">Live training is training delivered by a live instructor, in real-time. Virtual (or remote) is training the student receives or accesses over the internet rather than being physically in the classroom with the instructor.</span>
-  <?php } elseif (($course_type == "Study Material")) { ?>
-    <span class="tooltiptext">The study materials include lectures, notes, chapters, questions and answers, video lessons, exercise programs, and other documents. </span>
-  <?php } else { ?>
-    <span class="tooltiptext">Live training is training delivered by a live instructor, in real-time and The study materials include lectures, notes, chapters, questions and answers, video lessons, exercise programs, and other documents. </span>
-  <?php } ?>
-</div>
+
 
 <style>
   .hovertext {
@@ -70,17 +69,6 @@
 
   .Study {
     background-color: #3398B1;
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-  }
-
-  .Both {
-    background-color: #D15798;
     border: none;
     color: white;
     padding: 15px 32px;
