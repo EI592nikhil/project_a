@@ -1,0 +1,43 @@
+<!-- ko foreach: getRegion('before_details') -->
+ 
+<!-- ko template: getTemplate() --><!-- /ko -->
+ 
+<!-- /ko -->
+ 
+<div class="product-item-details">
+ 
+    <div class="product-item-inner">
+ 
+        <div class="product-item-name-block">
+ 
+            <strong class="product-item-name" data-bind="text: $parent.name"></strong>
+ 
+            <!-- ko if: ( getDuration($parent))-->
+ 
+            <span class="product-item-pcb-master" data-bind="text:  getDuration($parent)"></span><br>
+ 
+            <!-- /ko -->
+             <!-- ko if: (getCourseDate($parent))-->
+
+ 
+             <span class="product-item-pcb-master" data-bind="text: getCourseDate($parent)"></span>
+ 
+             <!-- /ko -->
+ 
+            <div class="details-qty">
+ 
+                <span class="label"><!-- ko i18n: 'Qty' --><!-- /ko --></span>
+ 
+                <span class="value" data-bind="text: $parent.qty"></span>
+ 
+            </div>
+ 
+        </div>
+ 
+        <!-- ko foreach: getRegion('after_details') -->
+ 
+        <!-- ko template: getTemplate() --><!-- /ko -->
+ 
+        <!-- /ko -->
+ 
+    </div>
