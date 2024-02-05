@@ -35,9 +35,9 @@ final class PercentageBarOutput implements ProgressOutputInterface
         $this->context = $context;
 
         $this->progressBar = new ProgressBar($context->getOutput(), $this->context->getFilesCount());
-        $this->progressBar->setBarCharacter('█');
-        $this->progressBar->setEmptyBarCharacter('░');
-        $this->progressBar->setProgressCharacter('░');
+        $this->progressBar->setBarCharacter('▓'); // dark shade character \u2593
+        $this->progressBar->setEmptyBarCharacter('░'); // light shade character \u2591
+        $this->progressBar->setProgressCharacter('');
         $this->progressBar->setFormat('normal');
 
         $this->progressBar->start();
@@ -49,7 +49,7 @@ final class PercentageBarOutput implements ProgressOutputInterface
      */
     public function __sleep(): array
     {
-        throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
+        throw new \BadMethodCallException('Cannot serialize '.self::class);
     }
 
     /**
@@ -60,7 +60,7 @@ final class PercentageBarOutput implements ProgressOutputInterface
      */
     public function __wakeup(): void
     {
-        throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
+        throw new \BadMethodCallException('Cannot unserialize '.self::class);
     }
 
     public function onFixerFileProcessed(FixerFileProcessedEvent $event): void

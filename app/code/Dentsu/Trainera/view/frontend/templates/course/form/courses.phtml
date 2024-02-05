@@ -40,6 +40,16 @@
                <textarea name="courseagenda" id="courseagenda" title="<?php  echo __('Agenda Of The Course') ?>" class="input-text" cols="5" rows="3" data-validate="{required:true}"></textarea>
             </div>
          </div>
+
+         <div class="field courseweoffer required">
+            <label class="label" for="courseweoffer"><span><?php  echo __('Courses We Offer') ?></span></label>
+            <div class="control">
+               <select name="coursetype" id="coursetype" >
+                  <option disabled selected value> -- select an option -- </option>
+               </select>
+            </div>
+         </div>
+
          <div class="field coursetype required">
             <label class="label" for="courseduration"><span><?php  echo __('Course Type') ?></span></label>
             <div class="control">
