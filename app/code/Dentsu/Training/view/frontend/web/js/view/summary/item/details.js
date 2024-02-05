@@ -27,6 +27,32 @@ define(
                 return quoteItem.name;
  
             },
+            getDuration: function(quoteItem) {
+ 
+                var item = this.getItem(quoteItem.item_id);
+ 
+                if (item.course_duration_attribute) {
+                    return [
+                        'Course Duration: ' + item.course_duration_attribute
+                    ];
+                } else {
+                    return [];
+                }
+ 
+            },
+
+            getCourseDate: function(quoteItem) {
+                var item = this.getItem(quoteItem.item_id);
+ 
+                if (item.course_date_attribute) {
+                    return [
+                        'Course Date: ' + item.course_date_attribute
+                    ];
+                } else {
+                    return [];
+                }
+ 
+            },
  
             getCustomValue: function(quoteItem) {
  

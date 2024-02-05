@@ -96,6 +96,29 @@ $canApplyMsrp = $helper->isShowBeforeOrderConfirm($product) && $helper->isMinima
                 <?= $block->getUnitPriceHtml($_item) ?>
             </td>
         <?php endif; ?>
+
+        
+        <?php if($product->getTypeId()=="virtual") { ?>
+
+<!-- Added custom code -->
+
+<td class="col scheduledDate" data-th="ScheduledDate">
+    <span class="td-span-scheduledDate">
+        <span class="scheduledDate-val"><?= $_item->getProduct()->getData('course_date_attribute'); ?></span>
+    </span>
+</td>
+
+<!-- end custom code -->
+
+<!-- Added custom code -->
+<td class="col duration" data-th="Duration">
+    <span class="td-span-duration">
+        <span class="duration-val"><?= $_item->getProduct()->getData('course_duration_attribute'); ?></span>
+    </span>
+</td>
+<!-- end custom code -->
+<?php } ?>
+
         <td class="col qty" data-th="<?= $block->escapeHtml(__('Qty')) ?>">
             <div class="field qty">
                 <div class="control qty">
