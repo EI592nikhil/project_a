@@ -7,5 +7,13 @@
         <plugin name="show-extra-attribute-checkout-summary-product" type="Dentsu\Training\Plugin\Checkout\Model\Defaultconfigprovider" />
  
     </type>
+      <!--Sync the sales_order table and sales_order_grid-->
+    <virtualType name="Magento\Sales\Model\ResourceModel\Order\Grid" type="Magento\Sales\Model\ResourceModel\Grid">
+        <arguments>
+            <argument name="columns">
+                <item name="live_course_status" xsi:type="string">sales_order.live_course_status</item>
+            </argument>
+        </arguments>
+    </virtualType>
  
 </config>
