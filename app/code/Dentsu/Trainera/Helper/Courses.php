@@ -14,7 +14,10 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Downloadable\Api\Data\File\ContentInterfaceFactory;
- 
+use Magento\Eav\Api\AttributeRepositoryInterface;
+use Magento\Catalog\Model\Product;
+
+
 class Courses extends \Magento\Framework\App\Helper\AbstractHelper
 {   
       /**
@@ -79,6 +82,20 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
       */
      private ContentInterfaceFactory $contentInterfaceFactory;
 
+     /**
+      *  @coursetypemapping array 
+      */
+
+    public $courseTypes= ["livetraining" =>"Live Training","Offline"=>"Study Material"];
+
+    
+    static $archiveCourseTypesValue = [];
+
+    /**
+      * @var  Magento\Eav\Api\AttributeRepositoryInterface  $attribute_repository;
+      */
+    public $attribute_repository ;
+
     /**
      * Constructor
      *
@@ -97,7 +114,8 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         Session $customerSession,
         UploaderFactory $uploaderFactory,
         Filesystem $filesystem,
-        ContentInterfaceFactory $contentInterfaceFactory
+        ContentInterfaceFactory $contentInterfaceFactory,
+        AttributeRepositoryInterface $attribute_repository
 
     ) {
         $this->productFactory = $productFactory;
@@ -111,6 +129,7 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         $this->uploaderFactory = $uploaderFactory;
         $this->filesystem = $filesystem;
         $this->contentInterfaceFactory = $contentInterfaceFactory;
+        $this->attribute_repository = $attribute_repository;
         
     }
     
@@ -119,10 +138,11 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         
         $data = (array) $dataObject->getPost();
         $newCours=$this->productFactory->create();
-
+        $sku="course-offline".substr(str_shuffle(md5(time())), 0, 6);
         $newCours->setName($data['name']); // Set Product Name       
         $newCours->setAttributeSetId(4); // Set Attribute Set ID defulat 14
-        $newCours->setSku("course-".substr(str_shuffle(md5(time())), 0, 6)); // Set Random SKU 6 
+        $newCours->setSku($sku); // Set Random SKU 6 
+        $newCours->setUrlKey($sku.$data['name']);// Set url key
         $newCours->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH);
         $newCours->setStatus(\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED); //  Set Status by defulat it is disable 
         $newCours->setTypeId(\Magento\Downloadable\Model\Product\Type::TYPE_DOWNLOADABLE);
@@ -146,7 +166,9 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         $newCours->setCourseAgendaAttribute($data["courseagenda"]); // set cource agenda
         $newCours->setAvailabilityAttribute($data["availability"]); //set trainer availablity
         
-        $newCours->setTypeOfCourseAttribute($data["livetraining"]); //course type
+        $optionValue = $this->getAttributeValueForStringValue("type_of_course_attribute",$this->courseTypes[$data["coursetype"]]);
+                
+        $newCours->setTypeOfCourseAttribute($optionValue); //course type
         
         $newCours->setCourseDurationAttribute($data["courseduration"]); //set course duration
         $newCours->setCourseStartDate($data["from-date"]); //set course start date
@@ -284,9 +306,12 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
 
         $newLiveCours=$this->productFactory->create();
 
+        $sku="course-live".substr(str_shuffle(md5(time())), 0, 6);
+
         $newLiveCours->setName($data['name']); // Set Product Name       
         $newLiveCours->setAttributeSetId(4); // Set Attribute Set , defulat 4
         $newLiveCours->setSku("course-live".substr(str_shuffle(md5(time())), 0, 6)); // Set Random SKU 6 
+        $newLiveCours->setUrlKey($sku.$data['name']);
         $newLiveCours->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH);
         $newLiveCours->setStatus(\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED); //  Set Status by defulat it is disable 
         $newLiveCours->setTypeId(\Magento\Catalog\Model\Product\Type::TYPE_VIRTUAL);
@@ -308,14 +333,22 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         //set custom attribute 
         $newLiveCours->setCustomerId($this->customerSession->getCustomerId()); // set  trainer id 
         $newLiveCours->setCourseAgendaAttribute($data["courseagenda"]); // set cource agenda
+        
         $newLiveCours->setAvailabilityAttribute($data["availability"]); //set trainer availablity
+        
+        $optionValue = $this->getAttributeValueForStringValue("type_of_course_attribute",$this->courseTypes[$data["coursetype"]]);
+                
+        $newLiveCours->setTypeOfCourseAttribute($optionValue); //course type
+
         $newLiveCours->setCourseDurationAttribute($data["courseduration"]); //set trainer availablity
+        
         //$newCours->setRelatedDocumnetAttribute($data["coursedocumnet"]); //set trainer availablity
-        $newLiveCours->setTypeOfCourseAttribute($data["coursetype"]); //course type
-        $newLiveCours->setCourseStartDate($data["from-date"]); //set course start date
+        $now = new \DateTime();
+        $newLiveCours->setCourseStartDate($now->format($data["from-date"].' H:i:s')); //set course start date
         $newLiveCours->setCourseEndDate($data["to-date"]); //set course End date
         $newLiveCours->setBatchStartTime($data["fromtime"]); //batch start time
         $newLiveCours->setBatchEndTime($data["totime"]); //batch end time 
+
         //set stock
         $newLiveCours->setStockData(
         [
@@ -368,5 +401,30 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
             throw new LocalizedException(__($e->getMessage().": %1", $files["name"]));
         }
         return $result;
+    }
+
+
+    public function getAttributeValueForStringValue($attribute_code, $search_string)
+    {
+        $options = $this->getAttributeOptions($attribute_code);
+        if(array_key_exists($search_string, $options)) {
+            return $options[$search_string];
+        }
+    }
+
+    public function getAttributeOptions($attribute_code)
+    {
+        if(!array_key_exists($attribute_code, self::$archiveCourseTypesValue)) {
+            self::$archiveCourseTypesValue[$attribute_code] = array_reduce(
+                $this->attribute_repository
+                ->get(Product::ENTITY, $attribute_code)
+                ->getSource()
+                ->getAllOptions(false),
+                function ($collector, $attribute) {
+                    $collector[$attribute['label']] = $attribute['value'];
+                    return $collector;
+                },[]);
+        }
+        return self::$archiveCourseTypesValue[$attribute_code];
     }
 }
