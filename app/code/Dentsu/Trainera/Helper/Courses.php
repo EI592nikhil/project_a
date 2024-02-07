@@ -150,8 +150,7 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         /* @ToDo */
         //$newCours->setTaxClassId(2); // Set Tax Class Id
         //$newCours->setWebsiteIds([1]); // Set Website Ids
-        //$newCours->setCategoryIds([9, 10]); // Assign Category Ids
-        
+        $newCours->setCategoryIds($data["subcategory"]); // Assign Category Ids
         $newCours->setPrice(100); // Product Price
         $newCours->setPriceType(0);
         $newCours->setPriceView(0);
@@ -316,10 +315,10 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         $newLiveCours->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH);
         $newLiveCours->setStatus(\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_DISABLED); //  Set Status by defulat it is disable 
         $newLiveCours->setTypeId(\Magento\Catalog\Model\Product\Type::TYPE_VIRTUAL);
+        $newLiveCours->setCategoryIds($data["subcategory"]); // Assign Category Ids
         /* @ToDo */
         //$newCours->setTaxClassId(2); // Set Tax Class Id
         //$newCours->setWebsiteIds([1]); // Set Website Ids
-        //$newCours->setCategoryIds([9, 10]); // Assign Category Ids
         
         $newLiveCours->setPrice(100); // Product Price
         $newLiveCours->setPriceType(0);
@@ -404,6 +403,7 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         return $result;
     }
 
+
     public function getAttributeValueForStringValue($attribute_code, $search_string)
     {
         $options = $this->getAttributeOptions($attribute_code);
@@ -428,5 +428,3 @@ class Courses extends \Magento\Framework\App\Helper\AbstractHelper
         return self::$archiveCourseTypesValue[$attribute_code];
     }
 }
-
-

@@ -11,6 +11,18 @@
         <div class="product-item-name-block">
  
             <strong class="product-item-name" data-bind="text: $parent.name"></strong>
+
+             <!-- ko if: ( getDuration($parent))-->
+ 
+             <span class="product-item-pcb-master" data-bind="text:  getDuration($parent)"></span><br>
+ 
+             <!-- /ko -->
+              <!-- ko if: (getCourseDate($parent))-->
+ 
+  
+              <span class="product-item-pcb-master" data-bind="text: getCourseDate($parent)"></span>
+  
+              <!-- /ko -->
  
             <!-- ko if: (getCustomValue($parent))-->
  
