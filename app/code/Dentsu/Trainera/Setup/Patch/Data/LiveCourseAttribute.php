@@ -48,13 +48,13 @@ class LiveCourseAttribute implements DataPatchInterface
     public function apply()
     {
         try {
-            $productTypes = implode(',', [Type::TYPE_SIMPLE, Type::TYPE_VIRTUAL]);
+            $productTypes = implode(',', [Type::TYPE_SIMPLE, Type::TYPE_VIRTUAL,\Magento\Downloadable\Model\Product\Type::TYPE_DOWNLOADABLE]);
             /** @var EavSetup $eavSetup */
             $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
             $eavSetup->addAttribute(Product::ENTITY, 'course_start_date', [
-                'type' => 'varchar',
-                'backend' => '',
-                'frontend' => '',
+                'type' => 'datetime',
+                'backend' => 'Magento\Catalog\Model\Attribute\Backend\Startdate',
+                'frontend' => 'Magento\Eav\Model\Entity\Attribute\Frontend\Datetime',
                 'label' => 'Course Start Date',
                 'input' => 'date',
                 'class' => '',
