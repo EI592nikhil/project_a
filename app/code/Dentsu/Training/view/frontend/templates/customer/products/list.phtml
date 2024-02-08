@@ -1,0 +1,117 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use Magento\Downloadable\Model\Link\Purchased\Item;
+
+/**
+ * @var $block \Dentsu\Training\Block\Customer\Products\ListProducts
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
+ */
+?>
+<?php  
+$_items = $block->getItems(); 
+
+?>
+<?php if (count($_items)): ?>
+    <div class="table-wrapper downloadable-products">
+        <table id="my-downloadable-products-table" class="data table table-downloadable-products">
+            <caption class="table-caption"><?= $block->escapeHtml(__('Downloadable Products')) ?></caption>
+            <thead>
+                <tr>
+                    <th scope="col" class="col id"><?= $block->escapeHtml(__('Order #')) ?></th>
+                    <th scope="col" class="col date"><?= $block->escapeHtml(__('Purchase Date')) ?></th>
+                    <th scope="col" class="col title"><?= $block->escapeHtml(__('Course Name')) ?></th>
+                    <!-- Added new column Expire Date -->
+                    <th scope="col" class="col remaining"><?= $block->escapeHtml(__('Expire Date')) ?></th>
+                    <!---- End Column ------------------->
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($_items as $_item):
+                $orderId = $_item->getPurchased()->getOrderId(); //Your Order Id
+                //print_r($_item->getProductId());
+            //    echo "<br>";
+            //     $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            //     $product = $objectManager->get('Magento\Catalog\Model\Product')->load($_item->getProductId());
+
+            //     print_r($product->getTypeId()) ;
+            //     die;
+                $ExpireDate = $block->getInvoice($orderId); //get expire date data in array
+            ?>
+                <tr>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Order #')) ?>" class="col id">
+                        <a href="<?= $block->escapeUrl($block->getOrderViewUrl($_item->getPurchased()->getOrderId()))?>"
+                            title="<?= $block->escapeHtml(__('View Order')) ?>">
+                            <?= $block->escapeHtml($_item->getPurchased()->getOrderIncrementId()) ?>
+                        </a>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Purchase Date')) ?>" class="col date">
+                        <?= $block->escapeHtml($block->getDateFormat($_item->getPurchased()->getCreatedAt()))?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Course Name')) ?>" class="col title">
+                        <strong class="product-name">
+                            <?= $block->escapeHtml($_item->getPurchased()->getProductName()) ?>
+                        </strong>
+
+                        <!-- added condition -->
+
+                           <?php if ($_item->getStatus() == Item::LINK_STATUS_AVAILABLE && $ExpireDate['2'] < 6 ) : ?>
+                        
+                        <!-- end condition-->
+
+                            <a href="<?= $block->escapeUrl($block->getDownloadUrl($_item)) ?>"
+                               id="download_<?= /* @noEscape */ $_item->getPurchased()->getProductId() ?>"
+                               title="<?= $block->escapeHtmlAttr(__('Start Download')) ?>"
+                               class="action download">
+                                <?= $block->escapeHtml($_item->getLinkTitle()) ?>
+                            </a>
+                            <?php if ($block->getIsOpenInNewWindow()): ?>
+                                <?= /* @noEscape */ $secureRenderer->renderEventListenerAsTag(
+                                    'onclick',
+                                    "this.target='_blank'",
+                                    'a#download_' . $_item->getPurchased()->getProductId()
+                                ) ?>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </td>
+
+                    <!--------- add new column with condition ---------->
+
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Expire Date')) ?>" class="col status">
+                        <?php if($ExpireDate['1']==""){
+                                echo "Not Availabel due to Pending Payment.";
+                            }elseif ($ExpireDate['2'] >= 6){
+                                    echo "Course Expired.";
+                            }else {
+                                    echo $block->escapeHtml($ExpireDate['1']);
+                                }?>
+                    </td>
+
+                    <!------------ end new column condition --------------->
+
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if ($block->getChildHtml('pager')): ?>
+        <div class="toolbar downloadable-products-toolbar bottom">
+            <?= $block->getChildHtml('pager') ?>
+        </div>
+    <?php endif; ?>
+<?php else: ?>
+    <div class="message info empty">
+        <span><?= $block->escapeHtml(__('You have not purchased any downloadable courses yet.')) ?></span>
+    </div>
+<?php endif; ?>
+
+<div class="actions-toolbar">
+    <div class="secondary">
+        <a href="<?= $block->escapeUrl($block->getBackUrl()) ?>" class="action back">
+            <span><?= $block->escapeHtml(__('Back')) ?></span>
+        </a>
+    </div>
+</div>

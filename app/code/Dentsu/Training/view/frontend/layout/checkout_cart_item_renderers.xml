@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance dc" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <referenceBlock name="checkout.cart.item.renderers.bundle" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.virtual" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.default" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.simple" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.configurable" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.grouped" template="Dentsu_Training::cart/item/default.phtml" />
+    <referenceBlock name="checkout.cart.item.renderers.downloadable" template="Dentsu_Training::cart/item/default.phtml" />
+</page>

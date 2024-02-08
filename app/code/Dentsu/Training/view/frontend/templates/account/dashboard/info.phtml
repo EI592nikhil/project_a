@@ -1,0 +1,72 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+/** @var \Magento\Customer\Block\Account\Info $block */
+
+ if($block->isCustomerLoggedIn()) 
+ {
+$customerSession = $block->getCustomerSession();
+$trainerValue = $customerSession->getCustomer()->getIsTrainer();
+$customerId = $customerSession->getCustomerId();
+if ($trainerValue == 0){?>
+    <button id="modal-btn" style="float:right;"> Do you want to become a trainer </button>
+    <div id="modal-content" style="display:none;">
+        Are you sure want to register as Trainer ?
+            <form method="post" id="form-validate" enctype="multipart/form-data" autocomplete="off" >
+            <input name="form_key" type="hidden" value="<?php /* @escapeNotVerified */ echo $block->getFormKey(); ?>" />         
+            <input type="hidden" id="custId" name="custId" value= <?= $customerId ?>>
+            <input type="hidden" id="trainer_id" name="trainer_id" value = <?= $customerId ?>>
+        </form>
+    </div>
+<?php }
+ }
+?>
+<script>
+    require(
+        [
+            'jquery',
+            'Magento_Ui/js/modal/modal'
+        ],
+        function($, modal) {
+            var options = {
+                type: 'popup',
+                responsive: true,
+                innerScroll: true,
+                buttons: [{
+                    text: $.mage.__('Confirm'),
+                    class: 'modal-close',
+                    click: function (data){
+						var form_data = $("#form-validate").serialize();
+                        var form_key = $('input[name=form_key').val();
+                        var trainer_id = $('input[name=trainer_id').val();
+                        var custId = $('input[name=custId').val()
+                        console.log(form_key);
+                        console.log(custId);
+                        console.log(trainer_id);
+						jQuery.ajax({
+                            url: "<?= $block->getCurrentUrl();?>",
+                            type: 'POST',
+                            data: {key:form_key,id:custId,tid:trainer_id},
+                            success: function(data) {
+                                console.log(data);
+                                alert("Request submit successfully");
+                                window.location.reload();
+                            },
+                            error: function(result) {
+                                console.log('no response !');
+                            }
+                        });
+                    this.closeModal();
+                    }
+                }]
+            };
+            $("#modal-btn").on('click',function(){
+                modal(options, $('#modal-content'));
+                $("#modal-content").modal("openModal");
+            });
+        }
+    );
+</script>
+
