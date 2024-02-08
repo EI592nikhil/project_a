@@ -1,0 +1,73 @@
+<?php
+
+if ($block->getPagerHtml()) : ?>
+    <!-- <div class="order-products-toolbar toolbar bottom"><?php
+    echo $block->getPagerHtml(); ?></div> -->
+<?php endif ?>
+<?php
+
+$liveProductCollection = $block->getProductIdFromOrderCollection();
+
+?>
+<?php if ($liveProductCollection) : ?>
+    <div class="table-wrapper orders-history">
+        <table class="data table table-order-items history" id="rh-pagination">
+            <caption class="table-caption"><?php echo __('Custom Collection Records') ?></caption>
+            <thead>
+                <tr>
+                    <th scope="col" class="col id"><?php echo __('Course Name') ?></th>
+                    <th scope="col" class="col product-name"><?php echo __('Course Start Date') ?></th>
+                    <th scope="col" class="col sku"><?php echo __('Course End Date ') ?></th>
+                    <th scope="col" class="col price"><?php echo __('Meeting Link') ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($liveProductCollection as $product) :
+                ?>
+                    <tr>
+                        <td data-th="<?= $block->escapeHtml(__('Course Name')) ?>" class="col id">
+                            <?php echo $product->getName(); ?>
+                        </td>
+                        <td data-th="<?= $block->escapeHtml(__('Course Start Date')) ?>" class="col product-name">
+                            <?php echo $product->getCourseStartDate(); ?>
+                        </td>
+                        <td data-th="<?= $block->escapeHtml(__('Course End Date')) ?>" class="col sku">
+                            <?php echo $product->getCourseEndDate(); ?>
+                        </td>
+                        <td data-th="<?= $block->escapeHtml(__('Meeting Link')) ?>" class="col price">
+                            <?php
+                            $meetingLink = $product->getMeetingLink();
+                            if (!isset($meetingLink)) {
+                                $meetingLink = "Meeting Link Not Generated Yet..";
+                            }
+                            $courseStartDate = new DateTime($product->getCourseStartDate());
+                            $courseEndDate = new DateTime($product->getCourseEndDate());
+                            $currentDate = new DateTime();
+                            $courseActiveConfiguration = $block->getLinkActiveBeforeTimeConfiguration();
+                            $linkActiveDate = date('Y-m-d H:i:s', strtotime('-' . $courseActiveConfiguration . ' hours', $courseStartDate->getTimestamp()));
+                            $linkActiveDate = new DateTime($linkActiveDate);
+                            $courseStartDate = $courseStartDate->getTimestamp();
+                            $courseEndDate = $courseEndDate->getTimestamp();
+                            $linkActiveDate = $linkActiveDate->getTimestamp();
+                            $currentDate = $currentDate->getTimestamp();
+                            if ($currentDate < $linkActiveDate && $currentDate < $courseEndDate) {
+                                echo "<h4 style='color:green;' > Meeting Link Available Soon</h4>";
+                            } else if ($currentDate >= $linkActiveDate & $currentDate <= $courseEndDate) {
+                                echo "<h4><a target='_blank' href=" . $product->getMeetingLink() . ">" . $product->getMeetingLink() . "</a></h4>";
+                            } else if ($courseEndDate < $currentDate) {
+                                echo "<h4 style='color:red;' >Meeting Link Expired</h4>";
+                                $orderId = $block->getOrderId($product->getId());
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if ($block->getPagerHtml()) : ?>
+        <div class="order-products-toolbar toolbar bottom "><?php echo $block->getPagerHtml(); ?></div>
+    <?php endif ?>
+<?php else : ?>
+    <div class="message info empty"><span><?php echo __('You have not any active live courses'); ?></span></div>
+<?php endif ?>

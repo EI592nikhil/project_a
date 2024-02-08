@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Config/etc/system_file.xsd">
+    <system>
+        <!-- for add new tab in Magento2 system configuration section -->
+        <tab id="training" translate="label" sortOrder="10">
+             <label>Dentsu Training</label>
+        </tab>
+
+        <!-- for create section -->
+        <section id="expiredaterange" translate="label" type="text" sortOrder="320" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Expiry Date Range </label>
+            <!-- Assign section to tab -->
+            <tab>training</tab>
+            <resource>Dentsu_Training::configuration</resource>
+            <!-- create group for fields in section -->
+            <group id="daterange" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Configuration</label>
+                <!-- create text type field -->
+                <field id="expire" translate="label comment" sortOrder="7" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Expire Days </label>
+                    <comment>e.g 2.</comment>
+                    <validate>validate-number required-entry</validate>
+                </field>
+            </group>
+        </section>
+
+    </system>
+</config>
+  

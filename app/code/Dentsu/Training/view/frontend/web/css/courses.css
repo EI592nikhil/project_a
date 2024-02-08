@@ -1,0 +1,10 @@
+  /* Css Added for Add Course Form */
+  
+  #fieldavailability,#fieldcourseduration, #coursedocumnets, #fieldtrainingurl {
+   display:none;
+   }
+   #daterange ,#timerange{
+   display: none;
+   }
+
+  
