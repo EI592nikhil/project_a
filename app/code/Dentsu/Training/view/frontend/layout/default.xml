@@ -14,6 +14,11 @@
         <referenceContainer name="sidebar.additional">
             <referenceBlock class="Magento\Wishlist\Block\Customer\Sidebar" name="wishlist_sidebar"  template="Dentsu_Training::sidebar.phtml" >
             </referenceBlock>
+            <referenceBlock name="top.search">
+                <action method="setTemplate">
+                    <argument name="template" xsi:type="string">Dentsu_Training::form.mini.phtml</argument>
+                </action>
+            </referenceBlock>
 		<referenceBlock name="catalog.compare.sidebar" remove="true" />
         <referenceBlock name="category.product.addto.compare" remove="true"/>
         <referenceBlock name="catalogsearch.product.addto.compare" remove="true"/>
