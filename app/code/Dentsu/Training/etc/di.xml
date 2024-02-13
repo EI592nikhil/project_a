@@ -12,5 +12,8 @@
 <!-- <preference for="Magento\Wishlist\Block\Customer\Sidebar" type="Dentsu\Training\Block\Customer\Sidebar" /> -->
 <preference for="Magento\Wishlist\Block\Link" type="Dentsu\Training\Block\Link" />
 <preference for="Magento\Catalog\Block\Product\ListProduct" type="Dentsu\Training\Block\Product\ListProduct" />
+<type name="Magento\Checkout\Model\DefaultConfigProvider">
+        <plugin name="show-extra-attribute-checkout-summary-product" type="Dentsu\Training\Plugin\Checkout\Model\Defaultconfigprovider" />
+</type>
 </config>
 
