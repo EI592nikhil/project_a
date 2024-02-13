@@ -1,0 +1,116 @@
+<?php
+$productInquiryHelper = $this->helper(\Dentsu\Training\Helper\Data::class);
+$customerName = $productInquiryHelper->getUserName();
+$customerEmail = $productInquiryHelper->getUserEmail();
+?>
+<script>
+    require(['jquery', 'mage/validation'], function($) {
+        var dataForm = $('#dentsu-product-inquiry-popup-modal-form');
+        dataForm.mage('validation', {});
+        $('#dentsu_product_inquiry_submit').click(function() {
+            var status = dataForm.validation('isValid');
+            if (status) {
+                $.ajax({
+                    type: 'post',
+                    url: '<?= $escaper->escapeUrl($block->getUrl("trainer")) ?>',
+                    data: $('#dentsu-product-inquiry-popup-modal-form').serialize(),
+                    cache: false,
+                    showLoader: 'true',
+                    success: function(response) {
+                        var msg = response.split("::");
+                        if (msg[0] == '1') {
+                            $('.note').show();
+                            $('.note').css('color', 'green');
+                            document.getElementById("dentsu-product-inquiry-popup-modal-form").reset();
+                            setTimeout(function() {
+                                $(".dentsu-product-inquiry-popup-modal").modal("closeModal");
+                            }, 3000);
+                        } else {
+                            $('.note').show();
+                            $('.note').css('color', 'red');
+                        }
+
+                        $('.note').html(msg[1]);
+
+                    }
+                });
+                return false;
+            }
+        });
+    });
+    require(
+        [
+            'jquery',
+            'Magento_Ui/js/modal/modal'
+        ],
+        function($, modal) {
+            $(document).ready(function() {
+                if ($('.dentsu-product-inquiry-popup-modal').length > 0) {
+                    var dentsuProductInquiryPopupOptions = {
+                        type: 'popup',
+                        responsive: true,
+                        innerScroll: true,
+                        title: '',
+                        buttons: []
+                    };
+
+                    var dentsuProductInquiryPopup = modal(dentsuProductInquiryPopupOptions, $('.dentsu-product-inquiry-popup-modal'));
+
+                    $(".dentsu_product_inquiry_link").click(function() {
+                        $('.note').hide();
+                        $(".dentsu_product_inquiry_sku").val($(this).attr("data-product-inquiry-sku"));
+                        $(".display_dentsu_product_inquiry_model_title").html($(this).attr("data-product-inquiry-name"));
+                        $(".dentsu-product-inquiry-popup-modal").modal("openModal");
+                    });
+                }
+            });
+
+        }
+    );
+</script>
+<div class="dentsu-product-inquiry-popup-modal" style="display:none;">
+    <div>
+        <h2 class="display_dentsu_product_inquiry_model_title"></h2>
+    </div>
+    <hr>
+    <form id="dentsu-product-inquiry-popup-modal-form" method="post" action="<?= $escaper->escapeHtmlAttr($block->getBaseUrl()); ?>product_inquiry" class="form" data-mage-init='{"validation":{}}'>
+        <fieldset class="fieldset dentsu_product_inquiry_fieldset">
+            <div class="fields">
+                <div class="field note no-label">&nbsp;</div>
+                <div class="field name required">
+                    <label class="label" for="dentsu_product_inquiry_name"><span><?= $escaper->escapeHtml(__('Name')) ?></span></label>
+                    <div class="control">
+                        <input placeholder="<?= $escaper->escapeHtmlAttr(__('Name')) ?>" name="dentsu_product_inquiry_name" title="<?= $escaper->escapeHtmlAttr(__('Name')) ?>" value="<?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_name') ?: $customerName) ?>" class="input-text" type="text" data-validate='{"required":true}' />
+                    </div>
+                </div>
+                <div class="field phone">
+                    <label class="label" for="dentsu_product_inquiry_phone"><span><?= $escaper->escapeHtml(__('Phone')) ?></span></label>
+                    <div class="control">
+                        <input placeholder="<?= $escaper->escapeHtmlAttr(__('Phone')) ?>" name="dentsu_product_inquiry_phone" title="<?= $escaper->escapeHtmlAttr(__('Phone')) ?>" value="<?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_phone')) ?>" 
+                        type="text" maxlength="10" pattern="\d{10}" required />
+                    </div>
+                </div>
+                <div class="field email required">
+                    <label class="label" for="dentsu_product_inquiry_email"><span><?= $escaper->escapeHtml(__('Email')) ?></span></label>
+                    <div class="control">
+                        <input placeholder="<?= $escaper->escapeHtmlAttr(__('Email')) ?>" name="dentsu_product_inquiry_email" title="<?= $escaper->escapeHtmlAttr(__('Email')) ?>" value="<?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_email') ?: $customerEmail) ?>" class="input-text" type="text" data-validate="{required:true, 'validate-email':true}" />
+                    </div>
+                </div>
+                <div class="field description required">
+                    <label class="label" for="dentsu_product_inquiry_description"><span><?= $escaper->escapeHtml(__('Description')) ?></span></label>
+                    <div class="control">
+                        <textarea placeholder="<?= $escaper->escapeHtmlAttr(__('Description')) ?>" data-validate='{"required":true}' name="dentsu_product_inquiry_description" class="dentsu_product_inquiry_description" title="<?= $escaper->escapeHtmlAttr(__('Description')) ?>" cols="30" rows="10"><?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_description')) ?></textarea>
+                    </div>
+                </div>
+                <input placeholder="<?= $escaper->escapeHtmlAttr(__('SKU')) ?>" name="dentsu_product_inquiry_sku" title="<?= $escaper->escapeHtmlAttr(__('SKU')) ?>" value="<?= $escaper->escapeHtmlAttr($this->helper(\Magento\Contact\Helper\Data::class)->getPostValue('dentsu_product_inquiry_sku')) ?>" class="input-text dentsu_product_inquiry_sku" type="hidden" data-validate='{"required":true}' />
+            </div>
+        </fieldset>
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button type="submit" title="<?= $escaper->escapeHtmlAttr(__('Submit')) ?>" class="action submit primary" id="dentsu_product_inquiry_submit">
+                    <span><?= $escaper->escapeHtml(__('Submit')) ?></span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

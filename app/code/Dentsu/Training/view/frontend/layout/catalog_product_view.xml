@@ -8,6 +8,7 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
+            <block class="Magento\Framework\View\Element\Template" name="product.inquiry" template="Dentsu_Training::catalog/product/view/form.phtml" before="product.info.extrahint" group="default" />
             <block class="Magento\Cookie\Block\RequireCookie" name="require-cookie" template="Magento_Cookie::require_cookie.phtml">
                 <arguments>
                     <argument name="triggers" xsi:type="array">
@@ -16,30 +17,32 @@
                 </arguments>
             </block>
             <referenceBlock name="product.info.addto">
-                <block class="Magento\Wishlist\Block\Catalog\Product\View\AddTo\Wishlist" name="view.addto.wishlist"
-                       template="Dentsu_Training::catalog/product/view/addto/wishlist.phtml" />
+                <block class="Magento\Wishlist\Block\Catalog\Product\View\AddTo\Wishlist" name="view.addto.wishlist" template="Dentsu_Training::catalog/product/view/addto/wishlist.phtml" />
             </referenceBlock>
         </referenceContainer>
         <referenceContainer name="content.aside">
             <referenceBlock name="related.product.addto">
-                <block class="Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist"
-                       name="related.product.addto.wishlist" as="wishlist" before="compare"
-                       template="Dentsu_Training::catalog/product/list/addto/wishlist.phtml"/>
+                <block class="Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist" name="related.product.addto.wishlist" as="wishlist" before="compare" template="Dentsu_Training::catalog/product/list/addto/wishlist.phtml"/>
             </referenceBlock>
             <referenceBlock name="upsell.product.addto">
-                <block class="Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist"
-                       name="upsell.product.addto.wishlist" as="wishlist" before="compare"
-                       template="Dentsu_Training::catalog/product/list/addto/wishlist.phtml"/>
+                <block class="Magento\Wishlist\Block\Catalog\Product\ProductList\Item\AddTo\Wishlist" name="upsell.product.addto.wishlist" as="wishlist" before="compare" template="Dentsu_Training::catalog/product/list/addto/wishlist.phtml"/>
             </referenceBlock>
         </referenceContainer>
-
+        <!-- 
         <referenceBlock name="product.info.addtocart">
-        <action method="setTemplate">
-            <argument name="template" xsi:type="string">Dentsu_Training::products/view/addtocart.phtml</argument>
-        </action>
-    </referenceBlock>
-     <referenceContainer name="product.info.main">
-           <block class="Magento\Catalog\Block\Product\View" name="coursetype" template="Dentsu_Training::product/view/coursetype.phtml" after="product.info.price"/>
-     </referenceContainer>
+            <action method="setTemplate">
+                <argument name="template" xsi:type="string">Dentsu_Training::products/view/addtocart.phtml</argument>
+            </action>
+        </referenceBlock> -->
+        <referenceBlock name="product.info.addtocart">
+            <action method="setTemplate">
+                <argument name="template" xsi:type="string">Dentsu_Training::catalog/product/view/addtocart.phtml</argument>
+            </action>
+        </referenceBlock>
+        <referenceBlock name="product.info.addtocart.additional">
+            <action method="setTemplate">
+                <argument name="template" xsi:type="string">Dentsu_Training::catalog/product/view/addtocart.phtml</argument>
+            </action>
+        </referenceBlock>
     </body>
 </page>
