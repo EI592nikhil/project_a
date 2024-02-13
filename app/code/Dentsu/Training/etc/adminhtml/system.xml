@@ -23,6 +23,7 @@
                 </field>
             </group>
         </section>
+
         <section id="mylivecourses" translate="label" type="text" sortOrder="320" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>My live Courses</label>
             <!-- Assign section to tab -->
@@ -39,7 +40,7 @@
                 </field>
             </group>
         </section>
-
+        
     </system>
 </config>
   

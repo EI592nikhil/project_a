@@ -19,5 +19,8 @@
             </argument>
         </arguments>
     </virtualType>
+    <type name="Magento\Checkout\Model\DefaultConfigProvider">
+        <plugin name="show-extra-attribute-checkout-summary-product" type="Dentsu\Training\Plugin\Checkout\Model\Defaultconfigprovider" />
+    </type>
 </config>
 
