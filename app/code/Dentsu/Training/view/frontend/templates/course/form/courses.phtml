@@ -160,24 +160,41 @@
                id: 'to-date'
            }
        });
+
+      //  $('#timerange').dateRange({
+      //      buttonText: 'Choose Time',
+      //      minDate: 0,
+      //      timeFormat: 'HH:mm:',
+      //      showsTime: true,
+      //      from: {
+      //          id: 'fromtime',
+      //      },
+      //      to: {
+      //          id: 'totime'
+      //      }
+      //  });
+
+       
    
        $('#fromtime').timepicker({
-           buttonText: 'Choose Time',
-         //   from: {
-         //       id: 'fromtime'
-         //   },
-         //   to: {
-         //       id: 'totime'
-         //   }
+         buttonText: 'Choose Time',
+         onClose: function (){
+         var time = $(this).val();
+               //  console.log("from time ")
+               //  console.log($(this).val())
+                var picker = $("#totime");
+                picker.timepicker('option', 'minTime', time);
+        }
        });
        $('#totime').timepicker({
            buttonText: 'Choose Time',
-         //   from: {
-         //       id: 'fromtime'
-         //   },
-         //   to: {
-         //       id: 'totime'
-         //   }
+           onClose: function(time) {
+            // console.log("to")
+            // console.log($(this).val())
+            var time = $(this).val();
+            var picker = $("#fromtime");
+            picker.timepicker('option', 'maxTime', time);
+        }
        });
    
    });

@@ -49,16 +49,16 @@ class Index extends \Magento\Customer\Controller\AbstractAccount
             try {
             $coursetype=$this->getRequest()->getPost("coursetype");
 
-            if(isset($coursetype) &&  $coursetype =="livetraining"){
+            if(isset($coursetype) &&  $coursetype =="1"){
                 $this->courseHelper->createLiveTrainingCourse($dataObject);
             }else{
                 $this->courseHelper->createOfflineCourse($dataObject);
             }
             
             $this->messageManager->addSuccessMessage(__("Cource added Successfully."));
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 // print_r($ex->getMessage());
-                $this->messageManager->addErrorMessage($e, __("We can\'t submit your request, Please try again."));
+                $this->messageManager->addErrorMessage($ex->getMessage());
             }
         }        
         return $this->resultPageFactory->create();
