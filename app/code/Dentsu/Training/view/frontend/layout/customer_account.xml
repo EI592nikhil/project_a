@@ -18,7 +18,7 @@
             <block class="Magento\Customer\Block\Account\SortLinkInterface" ifconfig="wishlist/general/active" name="customer-account-navigation-wish-list-link">
                 <arguments>
                     <argument name="path" xsi:type="string">wishlist</argument>
-                    <argument name="label" xsi:type="string" translate="true">Like Course</argument>
+                    <argument name="label" xsi:type="string" translate="true">Liked Course</argument>
                     <argument name="sortOrder" xsi:type="number">210</argument>
                 </arguments>
             </block>

@@ -25,7 +25,7 @@ class Sidebar extends \Magento\Wishlist\Block\AbstractBlock
      */
     public function getTitle()
     {
-        return __('Like Course');
+        return __('Liked Course');
     }
 
     /**
