@@ -178,21 +178,23 @@ require(['jquery', 'jquery/ui', 'mage/calendar'], function($) {
 
     $('#fromtime').timepicker({
         buttonText: 'Choose Time',
-        //   from: {
-        //       id: 'fromtime'
-        //   },
-        //   to: {
-        //       id: 'totime'
-        //   }
+        onClose: function (){
+         var time = $(this).val();
+               //  console.log("from time ")
+               //  console.log($(this).val())
+                var picker = $("#totime");
+                picker.timepicker('option', 'minTime', time);
+        }
     });
     $('#totime').timepicker({
         buttonText: 'Choose Time',
-        //   from: {
-        //       id: 'fromtime'
-        //   },
-        //   to: {
-        //       id: 'totime'
-        //   }
+        onClose: function(time) {
+            // console.log("to")
+            // console.log($(this).val())
+            var time = $(this).val();
+            var picker = $("#fromtime");
+            picker.timepicker('option', 'maxTime', time);
+        }
     });
 
 });
