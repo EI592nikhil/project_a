@@ -1,0 +1,80 @@
+<?php $_product = $block->getProduct(); ?>
+<?php $course_type = $_product->getResource()->getAttribute('type_of_course_attribute')->getFrontend()->getValue($_product); ?>
+
+<?php if (!empty($course_type)) { ?>
+  <button type="button" class="<?php echo $course_type; ?>"><?php echo $course_type; ?></button>
+  <div class="tooltip">
+    <a class="hovertext" href="#">?</a>
+    <?php if ($course_type == "Live Training") { ?>
+      <span class="tooltiptext">Live training is training delivered by a live instructor, in real-time. Virtual (or remote) is training the student receives or accesses over the internet rather than being physically in the classroom with the instructor.</span>
+    <?php } else { ?>
+      <span class="tooltiptext">The study materials include lectures, notes, chapters, questions and answers, video lessons, exercise programs, and other documents. </span>
+    <?php } ?>
+  </div>
+<?php } ?>
+
+
+<style>
+  .hovertext {
+    color: black;
+    background-color: #E1D6DC;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    border-radius: 100%;
+    font-size: 15px;
+    text-align: center;
+    text-decoration: none;
+    -webkit-box-shadow: inset -1px -1px 1px 0px rgba(0, 0, 0, 0.25);
+    -moz-box-shadow: inset -1px -1px 1px 0px rgba(0, 0, 0, 0.25);
+    box-shadow: inset -1px -1px 1px 0px rgba(0, 0, 0, 0.25);
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: none;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 240px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+  }
+</style>
+
+<style>
+  .Live {
+    background-color: #A833B1;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  .Study {
+    background-color: #3398B1;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+</style>
