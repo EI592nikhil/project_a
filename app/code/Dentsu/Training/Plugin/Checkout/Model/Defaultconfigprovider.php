@@ -52,6 +52,8 @@ class Defaultconfigprovider
         foreach ($items as $index => $item) {
             $quoteItem = $this->checkoutSession->getQuote()->getItemById($item['item_id']);
             $result['quoteItemData'][$index]['type_of_course_attribute'] = $quoteItem->getProduct()->getAttributeText('type_of_course_attribute');
+            $result['quoteItemData'][$index]['course_duration_attribute'] = $quoteItem->getProduct()->getData('course_duration_attribute');
+            $result['quoteItemData'][$index]['course_date_attribute'] = $quoteItem->getProduct()->getData('course_date_attribute');
         }
         return $result;
     }
