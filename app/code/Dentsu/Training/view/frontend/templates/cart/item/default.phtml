@@ -20,93 +20,110 @@ $canApplyMsrp = $helper->isShowBeforeOrderConfirm($product) && $helper->isMinima
     <tr class="item-info">
         <td data-th="<?= $block->escapeHtml(__('Item')) ?>" class="col item">
             <?php if ($block->hasProductUrl()): ?>
-                <a href="<?= $block->escapeUrl($block->getProductUrl()) ?>"
-                   title="<?= $block->escapeHtml($block->getProductName()) ?>"
-                   tabindex="-1"
-                   class="product-item-photo">
-            <?php else: ?>
+            <a href="<?= $block->escapeUrl($block->getProductUrl()) ?>"
+                title="<?= $block->escapeHtml($block->getProductName()) ?>" tabindex="-1" class="product-item-photo">
+                <?php else: ?>
                 <span class="product-item-photo">
-            <?php endif; ?>
-            <?= $block->getImage($block->getProductForThumbnail(), 'cart_page_product_thumbnail')->toHtml() ?>
-            <?php if ($block->hasProductUrl()): ?>
-                </a>
+                    <?php endif; ?>
+                    <?= $block->getImage($block->getProductForThumbnail(), 'cart_page_product_thumbnail')->toHtml() ?>
+                    <?php if ($block->hasProductUrl()): ?>
+            </a>
             <?php else: ?>
-                </span>
+            </span>
             <?php endif; ?>
             <div class="product-item-details">
                 <strong class="product-item-name">
                     <?php if ($block->hasProductUrl()): ?>
-                        <a href="<?= $block->escapeUrl($block->getProductUrl()) ?>"><?= $block->escapeHtml($block->getProductName()) ?></a>
+                    <a
+                        href="<?= $block->escapeUrl($block->getProductUrl()) ?>"><?= $block->escapeHtml($block->getProductName()) ?></a>
                     <?php else: ?>
-                        <?= $block->escapeHtml($block->getProductName()) ?>
+                    <?= $block->escapeHtml($block->getProductName()) ?>
                     <?php endif; ?>
                 </strong>
                 <strong class="product-item-name">
                     <?php $course_type = $product->getResource()->getAttribute('type_of_course_attribute')->getFrontend()->getValue($product); ?>
                     <?php if (!empty($course_type)) { ?>
-                        <?php echo $course_type; ?>
+                    <?php echo $course_type; ?>
                     <?php } ?>
                 </strong>
                 <?php if ($_options = $block->getOptionList()): ?>
-                    <dl class="item-options">
-                        <?php foreach ($_options as $_option): ?>
-                            <?php $_formatedOptionValue = $block->getFormatedOptionValue($_option) ?>
-                            <dt><?= $block->escapeHtml($_option['label']) ?></dt>
-                            <dd>
-                                <?php if (isset($_formatedOptionValue['full_view'])): ?>
-                                        <?= $block->escapeHtml($_formatedOptionValue['full_view'], ['span', 'a']) ?>
-                                    <?php else: ?>
-                                        <?= $block->escapeHtml($_formatedOptionValue['value'], ['span', 'a']) ?>
-                                <?php endif; ?>
-                            </dd>
-                        <?php endforeach; ?>
-                    </dl>
+                <dl class="item-options">
+                    <?php foreach ($_options as $_option): ?>
+                    <?php $_formatedOptionValue = $block->getFormatedOptionValue($_option) ?>
+                    <dt><?= $block->escapeHtml($_option['label']) ?></dt>
+                    <dd>
+                        <?php if (isset($_formatedOptionValue['full_view'])): ?>
+                        <?= $block->escapeHtml($_formatedOptionValue['full_view'], ['span', 'a']) ?>
+                        <?php else: ?>
+                        <?= $block->escapeHtml($_formatedOptionValue['value'], ['span', 'a']) ?>
+                        <?php endif; ?>
+                    </dd>
+                    <?php endforeach; ?>
+                </dl>
                 <?php endif; ?>
                 <?php if ($messages = $block->getMessages()): ?>
-                    <?php foreach ($messages as $message): ?>
-                        <div class= "cart item message <?= $block->escapeHtmlAttr($message['type']) ?>">
-                            <div><?= $block->escapeHtml($message['text']) ?></div>
-                        </div>
-                    <?php endforeach; ?>
+                <?php foreach ($messages as $message): ?>
+                <div class="cart item message <?= $block->escapeHtmlAttr($message['type']) ?>">
+                    <div><?= $block->escapeHtml($message['text']) ?></div>
+                </div>
+                <?php endforeach; ?>
                 <?php endif; ?>
                 <?php $addInfoBlock = $block->getProductAdditionalInformationBlock(); ?>
                 <?php if ($addInfoBlock): ?>
-                    <?= $addInfoBlock->setItem($_item)->toHtml() ?>
+                <?= $addInfoBlock->setItem($_item)->toHtml() ?>
                 <?php endif; ?>
             </div>
         </td>
 
         <?php if ($canApplyMsrp): ?>
-            <td class="col msrp" data-th="<?= $block->escapeHtml(__('Price')) ?>">
-                <span class="pricing msrp">
-                    <span class="msrp notice"><?= $block->escapeHtml(__('See price before order confirmation.')) ?></span>
-                    <?php $helpLinkId = 'cart-msrp-help-' . $_item->getId(); ?>
-                    <a href="#" class="action help map"
-                       id="<?= ($block->escapeHtmlAttr($helpLinkId)) ?>"
-                       data-mage-init='{"addToCart":{
+        <td class="col msrp" data-th="<?= $block->escapeHtml(__('Price')) ?>">
+            <span class="pricing msrp">
+                <span class="msrp notice"><?= $block->escapeHtml(__('See price before order confirmation.')) ?></span>
+                <?php $helpLinkId = 'cart-msrp-help-' . $_item->getId(); ?>
+                <a href="#" class="action help map" id="<?= ($block->escapeHtmlAttr($helpLinkId)) ?>" data-mage-init='{"addToCart":{
                                             "origin": "info",
                                             "helpLinkId": "#<?= $block->escapeJs($block->escapeHtml($helpLinkId)) ?>",
                                             "productName": "<?= $block->escapeJs($block->escapeHtml($product->getName())) ?>",
                                             "showAddToCart": false
                                             }
-                                        }'
-                    >
-                        <span><?= $block->escapeHtml(__("What's this?")) ?></span>
-                    </a>
-                </span>
-            </td>
+                                        }'>
+                    <span><?= $block->escapeHtml(__("What's this?")) ?></span>
+                </a>
+            </span>
+        </td>
         <?php else: ?>
-            <td class="col price" data-th="<?= $block->escapeHtml(__('Price')) ?>">
-                <?= $block->getUnitPriceHtml($_item) ?>
-            </td>
+        <td class="col price" data-th="<?= $block->escapeHtml(__('Price')) ?>">
+            <?= $block->getUnitPriceHtml($_item) ?>
+        </td>
         <?php endif; ?>
-        
+
+        <?php if($product->getTypeId()=="virtual") { ?>
+
+        <!-- Added custom code -->
+
+        <td class="col scheduledDate" data-th="ScheduledDate">
+            <span class="td-span-scheduledDate">
+                <span class="scheduledDate-val"><?= $_item->getProduct()->getData('course_date_attribute'); ?></span>
+            </span>
+        </td>
+
+        <!-- end custom code -->
+
+        <!-- Added custom code -->
+        <td class="col duration" data-th="Duration">
+            <span class="td-span-duration">
+                <span class="duration-val"><?= $_item->getProduct()->getData('course_duration_attribute'); ?></span>
+            </span>
+        </td>
+        <!-- end custom code -->
+
+        <?php } ?>
 
         <td class="col subtotal" data-th="<?= $block->escapeHtml(__('Subtotal')) ?>">
             <?php if ($canApplyMsrp): ?>
-                <span class="cart msrp subtotal">--</span>
+            <span class="cart msrp subtotal">--</span>
             <?php else: ?>
-                <?= $block->getRowTotalHtml($_item) ?>
+            <?= $block->getRowTotalHtml($_item) ?>
             <?php endif; ?>
         </td>
     </tr>
