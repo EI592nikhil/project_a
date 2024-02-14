@@ -20,6 +20,9 @@ $_productCollection = $block->getLoadedProductCollection();
 /** @var \Magento\Catalog\Helper\Output $_helper */
 $_helper = $block->getData('outputHelper');
 ?>
+<?php $InstockLable = $block->getInstockLable(); ?>
+<?php $lowseatLable = $block->getLabelforLowseats(); ?>
+<?php $lowseatNumber = $block->getLabelforLowseatsnumber(); ?>
 <?php if (!$_productCollection->count()): ?>
     <div class="message info empty">
         <div><?= $escaper->escapeHtml(__('We can\'t find products matching the selection.')) ?></div>
@@ -123,6 +126,20 @@ $_helper = $block->getData('outputHelper');
                                 <?=/* @noEscape */ $_helper->productAttribute($_product, $_product->getName(), 'name')?>
                             </a>
                         </strong>
+                        <strong>
+                                <?php $prodObj = $_product->load($_product->getId()); ?>
+                                <?php $stockItem = $prodObj->getExtensionAttributes()->getStockItem(); ?>
+                                <?php $ProductQty = $stockItem->getQty(); ?>
+                                <?php if ($ProductQty > $lowseatNumber) : ?>
+                                    <div class="stock available" title="<?= $block->escapeHtmlAttr(__('Availability')) ?>">
+                                        <span><?= $InstockLable ?></span>
+                                    </div>
+                                <?php else : ?>
+                                    <div class="stock available" title="<?= $block->escapeHtmlAttr(__('Availability')) ?>">
+                                        <span><?= $lowseatLable ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </strong>
 
                         <?= $block->getReviewsSummaryHtml($_product, $templateType) ?>
                         <?= /* @noEscape */ $block->getProductPrice($_product) ?>
