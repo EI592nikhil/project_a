@@ -47,7 +47,7 @@
         <section id="mylivecourses" translate="label" type="text" sortOrder="320" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>My live Courses</label>
             <!-- Assign section to tab -->
-            <tab>dentsu</tab>
+            <tab>training</tab>
             <resource>Dentsu_Training::configuration</resource>
             <!-- create group for fields in section -->
             <group id="userlivecourse" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
