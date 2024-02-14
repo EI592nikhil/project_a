@@ -41,6 +41,12 @@ $canApplyMsrp = $helper->isShowBeforeOrderConfirm($product) && $helper->isMinima
                         <?= $block->escapeHtml($block->getProductName()) ?>
                     <?php endif; ?>
                 </strong>
+                <strong class="product-item-name">
+                    <?php $course_type = $product->getResource()->getAttribute('type_of_course_attribute')->getFrontend()->getValue($product); ?>
+                    <?php if (!empty($course_type)) { ?>
+                        <?php echo $course_type; ?>
+                    <?php } ?>
+                </strong>
                 <?php if ($_options = $block->getOptionList()): ?>
                     <dl class="item-options">
                         <?php foreach ($_options as $_option): ?>

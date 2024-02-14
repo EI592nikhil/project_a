@@ -62,7 +62,7 @@ class Products extends \Magento\Framework\View\Element\Template
         $collection =  $this->orderCollectionFactory->create()->addFieldToSelect('*')
             ->addAttributeToFilter('customer_id', $customerId)
             // ->addAttributeToFilter('status', 'pending')
-            ->addAttributeToFilter('live_course_status', "pending")
+            // ->addAttributeToFilter('live_course_status', "pending")
             ->getItems();
         if ($collection) {
             foreach ($collection as $order) {
@@ -93,7 +93,7 @@ class Products extends \Magento\Framework\View\Element\Template
         $customerId = $this->customerSession->getCustomer()->getId();
         $collection =  $this->orderCollectionFactory->create()->addFieldToSelect('*')
             ->addAttributeToFilter('customer_id', $customerId)
-            ->addAttributeToFilter('live_course_status', "pending")
+            // ->addAttributeToFilter('live_course_status', "pending")
             ->getItems();
         foreach ($collection as $order) {
             $items = $order->getAllItems();

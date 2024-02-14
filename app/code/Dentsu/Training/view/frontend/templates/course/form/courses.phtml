@@ -1,9 +1,13 @@
 <?php
    /**
     * @var \Magento\Framework\View\Element\Template $block
+    * @var Dentsu\Training\Block\Subcategory $subcategoriesBlock
     * @var \Magento\Framework\Escaper $escaper
     * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
     */
+
+    $parentId = 3;
+    $blockObj= $block->getLayout()->createBlock('Dentsu\Training\Block\Subcategory');
    ?>
 <!-- <div class="message info empty"><span><?= $escaper->escapeHtml(__('You have no schedule in your calendar. Click Add Schedule button to begin creating the schedules.')) ?></span></div>
    <div class="actions-toolbar">
@@ -17,168 +21,181 @@
        </div>
    </div> -->
 <div id="custom-form">
-   <form class="form"
-      action="<?php echo $this->getUrl('trainer/addcourse/index', ['_secure' => true]);?>"
-      id="custom-form"
-      method="post"
-      data-hasrequired="<?php  echo __('* Required Fields') ?>"
-      data-mage-init='{"validation":{}}' 
-      enctype="multipart/form-data" >
-      <!-- <input type="hidden" name="cproduct_id" id="cproduct_id" value="0" /> -->
-      <fieldset class="fieldset">
-         <legend class="legend"><span><?php // echo __("Course Name") ?></span></legend>
-         <br />
-         <div class="field name required">
-            <label class="label" for="name"><span><?php  echo __('Course name') ?></span></label>
-            <div class="control">
-               <input name="name" id="name" title="<?php  echo __('Course name') ?>" class="input-text" type="text" data-validate="{required:true}"/>
+    <form class="form" action="<?php echo $this->getUrl('trainer/addcourse/index', ['_secure' => true]);?>"
+        id="custom-form" method="post" data-hasrequired="<?php  echo __('* Required Fields') ?>"
+        data-mage-init='{"validation":{}}' enctype="multipart/form-data">
+        <!-- <input type="hidden" name="cproduct_id" id="cproduct_id" value="0" /> -->
+        <fieldset class="fieldset">
+            <legend class="legend"><span><?php // echo __("Course Name") ?></span></legend>
+            <br />
+            <div class="field name required">
+                <label class="label" for="name"><span><?php  echo __('Course name') ?></span></label>
+                <div class="control">
+                    <input name="name" id="name" title="<?php  echo __('Course name') ?>" class="input-text" type="text"
+                        data-validate="{required:true}" />
+                </div>
             </div>
-         </div>
-         <div class="field courseagenda required">
-            <label class="label" for="courseagenda"><span><?php  echo __('Agenda Of The Course') ?></span></label>
-            <div class="control">
-               <textarea name="courseagenda" id="courseagenda" title="<?php  echo __('Agenda Of The Course') ?>" class="input-text" cols="5" rows="3" data-validate="{required:true}"></textarea>
+            <div class="field courseagenda required">
+                <label class="label" for="courseagenda"><span><?php  echo __('Agenda Of The Course') ?></span></label>
+                <div class="control">
+                    <textarea name="courseagenda" id="courseagenda" title="<?php  echo __('Agenda Of The Course') ?>"
+                        class="input-text" cols="5" rows="3" data-validate="{required:true}"></textarea>
+                </div>
             </div>
-         </div>
-         <div class="field coursetype required">
-            <label class="label" for="courseduration"><span><?php  echo __('Course Type') ?></span></label>
-            <div class="control">
-               <!-- <input name="courseduration" id="courseduration" title="" class="input-text" type="text" data-validate="{required:true}"/> -->
-               <select name="coursetype" id="coursetype" >
-                  <option disabled selected value> -- select an option -- </option>
-                  <option value="1" >Live Training</option>
-                  <option value="2">Offline</option>
-               </select>
+
+            <!-- custom code -->
+
+            <div class="field courses required">
+                <label class="label" for="coursesweoffer"><span><?php  echo __('Courses we offer') ?></span></label>
+                <div class="control">
+                    <!-- <input name="courseduration" id="courseduration" title="" class="input-text" type="text" data-validate="{required:true}"/> -->
+                    <?php if (!empty($blockObj->getSubcategories($parentId))): ?>
+                    <select name="subcategory" id="subcategory">
+                        <option value="">-- Select Courses --</option>
+                        <?php foreach ($blockObj->getSubcategories($parentId) as $subcategory): ?>
+                        <option value="<?php echo $subcategory->getId(); ?>">
+                            <?php echo $subcategory->getName(); ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php endif; ?>
+                </div>
             </div>
-         </div>
-         <div class="field availability required" name="field availability" id="fieldavailability"  >
-            <label class="label" for="availability"><span><?php  echo __('Trainer Availability') ?></span></label>
-            <div class="control">
-               <!-- <input name="availability" id="availability" title="" class="input-text" type="text" data-validate="{required:true}" /> -->
-               <select name="availability" id="availability">
-                  <option value="Weekdays">Mon-Fri / Weekdays</option>
-                  <option value="Weekend">Sat-Sun / Weekends</option>
-               </select>
+            <!-- custom code -->
+
+            <div class="field coursetype required">
+                <label class="label" for="courseduration"><span><?php  echo __('Course Type') ?></span></label>
+                <div class="control">
+                    <!-- <input name="courseduration" id="courseduration" title="" class="input-text" type="text" data-validate="{required:true}"/> -->
+                    <select name="coursetype" id="coursetype">
+                        <option disabled selected value> -- select an option -- </option>
+                        <option value="1">Live Training</option>
+                        <option value="2">Offline</option>
+                    </select>
+                </div>
             </div>
-         </div>
-         <div class="field courseduration required" id= "fieldcourseduration" >
-            <label class="label" for="courseduration"><span><?php  echo __('Course Duration') ?></span></label>
-            <div class="control">
-               <input name="courseduration" id="courseduration" title="" class="input-text" type="number" min="1"  data-validate="{required:true}"/>
-               <!-- <select name="courseduration" id="courseduration">
+            <div class="field availability required" name="field availability" id="fieldavailability">
+                <label class="label" for="availability"><span><?php  echo __('Trainer Availability') ?></span></label>
+                <div class="control">
+                    <!-- <input name="availability" id="availability" title="" class="input-text" type="text" data-validate="{required:true}" /> -->
+                    <select name="availability" id="availability">
+                        <option value="Weekdays">Mon-Fri / Weekdays</option>
+                        <option value="Weekend">Sat-Sun / Weekends</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field courseduration required" id="fieldcourseduration">
+                <label class="label" for="courseduration"><span><?php  echo __('Course Duration') ?></span></label>
+                <div class="control">
+                    <input name="courseduration" id="courseduration" title="" class="input-text" type="number" min="1"
+                        data-validate="{required:true}" />
+                    <!-- <select name="courseduration" id="courseduration">
                   <option value="1">2-4 Hours</option>
                   <option value="2">4-6 Hours</option>
                   <option value="2">6-8 Hours</option>
                   <option value="2">8-10 Hours</option>
                </select> -->
+                </div>
             </div>
-         </div>
-         <div class="field required" id="daterange">
-            <label for="from-date" class="label" style="margin-right: 20px;">
-            <span>Course Start date</span>
-            </label>
-            <div class="control">
-               <input class="input-text required-entry"
-                  type="text"
-                  id="from-date"
-                  name="from-date" />
+            <div class="field required" id="daterange">
+                <label for="from-date" class="label" style="margin-right: 20px;">
+                    <span>Course Start date</span>
+                </label>
+                <div class="control">
+                    <input class="input-text required-entry" type="text" id="from-date" name="from-date" />
+                </div>
+                <label for="to-date" class="label" style="margin-right: 20px;margin-left:20px;">
+                    <span>Course End date</span>
+                </label>
+                <div class="control">
+                    <input class="input-text required-entry" type="text" id="to-date" name="to-date" />
+                </div>
             </div>
-            <label for="to-date" class="label" style="margin-right: 20px;margin-left:20px;">
-            <span>Course End date</span>
-            </label>
-            <div class="control">
-               <input class="input-text required-entry"
-                  type="text"
-                  id="to-date"
-                  name="to-date"  />
+            <div class="field required" id="timerange">
+                <label for="fromtime" class="label" style="margin-right: 20px;">
+                    <span>Course Start Time</span>
+                </label>
+                <div class="control">
+                    <input class="input-text required-entry" type="text" id="fromtime" name="fromtime" />
+                </div>
+                <label for="totime" class="label" style="margin-right: 20px;margin-left:20px;">
+                    <span>Course End Time</span>
+                </label>
+                <div class="control">
+                    <input class="input-text required-entry" type="text" id="totime" name="totime" />
+                </div>
             </div>
-         </div>
-         <div class="field required" id="timerange">
-            <label for="fromtime" class="label" style="margin-right: 20px;">
-            <span>Course Start Time</span>
-            </label>
-            <div class="control">
-               <input class="input-text required-entry"
-                  type="text"
-                  id="fromtime"
-                  name="fromtime" />
+            <div class="field trainingvideo" id="fieldtrainingurl">
+                <label class="label" for="trainingvideo"><span><?php  echo __('Training Video Url') ?></span></label>
+                <div class="control">
+                    <input name="trainingvideo" id="trainingvideo" title="<?php  echo __('Training Video Url') ?>"
+                        class="input-text" type="text" placeholder="http://test.com/sample/BigBuckBunny.mp4" />
+                </div>
             </div>
-            <label for="totime" class="label" style="margin-right: 20px;margin-left:20px;">
-            <span>Course End Time</span>
-            </label>
-            <div class="control">
-               <input class="input-text required-entry"
-                  type="text"
-                  id="totime"
-                  name="totime"  />
+            <div class="field coursedocumnet required" id="coursedocumnets">
+                <label class="label" for="coursedocumnet"><span><?php  echo __('Related Document') ?></span></label>
+                <div class="control">
+                    <input name="coursedocumnet[]" id="coursedocumnet" title="<?php  echo __('Related Document') ?>"
+                        class="input-text" type="file" data-validate="{required:true}" multiple="multiple"
+                        accept=".pdf, .doc, .docx" />
+                </div>
             </div>
-         </div>
-         <div class="field trainingvideo" id="fieldtrainingurl">
-            <label class="label" for="trainingvideo"><span><?php  echo __('Training Video Url') ?></span></label>
-            <div class="control">
-               <input name="trainingvideo" id="trainingvideo" title="<?php  echo __('Training Video Url') ?>" class="input-text" type="text"  placeholder="http://test.com/sample/BigBuckBunny.mp4" />
+        </fieldset>
+        <div class="actions-toolbar">
+            <div class="primary">
+                <input type="hidden" name="hideit" id="hideit" value="" />
+                <button type="submit" title="<?php  echo __('Submit') ?>" class="action submit primary" id="custom_btn">
+                    <span><?php  echo __('Submit') ?></span>
+                </button>
             </div>
-            </div>
-         <div class="field coursedocumnet required" id = "coursedocumnets">
-            <label class="label" for="coursedocumnet"><span><?php  echo __('Related Document') ?></span></label>
-            <div class="control">
-               <input name="coursedocumnet[]" id="coursedocumnet" title="<?php  echo __('Related Document') ?>" class="input-text" type="file" data-validate="{required:true}" multiple="multiple" accept=".pdf, .doc, .docx"/>
-            </div>
-         </div>
-      </fieldset>
-      <div class="actions-toolbar">
-         <div class="primary">
-            <input type="hidden" name="hideit" id="hideit" value="" />
-            <button type="submit" title="<?php  echo __('Submit') ?>" class="action submit primary" id="custom_btn">
-            <span><?php  echo __('Submit') ?></span>
-            </button>
-         </div>
-      </div>
-   </form>
+        </div>
+    </form>
 </div>
 <script>
-   require(['jquery', 'jquery/ui', 'mage/calendar'], function($){     
-      $('.coursetype').change(function(){
-         var courseType = $('#coursetype').find(":selected").val();
-            var visible = (courseType == "1") ? 'block': 'none';
-            var pattern = (courseType == "1") ? 'flex': 'none';
-            var visibleDoc = (courseType == "2") ? 'block': 'none';
-         $('#fieldavailability,#fieldcourseduration').css('display', visible);
-         $('#daterange,#timerange').css('display', pattern);
-         $('#coursedocumnets,#fieldtrainingurl').css('display', visibleDoc);
-   
-     });
+require(['jquery', 'jquery/ui', 'mage/calendar'], function($) {
+    $('.coursetype').change(function() {
+        var courseType = $('#coursetype').find(":selected").val();
+        var visible = (courseType == "1") ? 'block' : 'none';
+        var pattern = (courseType == "1") ? 'flex' : 'none';
+        var visibleDoc = (courseType == "2") ? 'block' : 'none';
+        $('#fieldavailability,#fieldcourseduration').css('display', visible);
+        $('#daterange,#timerange').css('display', pattern);
+        $('#coursedocumnets,#fieldtrainingurl').css('display', visibleDoc);
 
-     $('#daterange').dateRange({
-           buttonText: 'Choose Date',
-           minDate: 0,
-           from: {
-               id: 'from-date',
-               
-           },
-           to: {
-               id: 'to-date'
-           }
-       });
-   
-       $('#fromtime').timepicker({
-           buttonText: 'Choose Time',
-         //   from: {
-         //       id: 'fromtime'
-         //   },
-         //   to: {
-         //       id: 'totime'
-         //   }
-       });
-       $('#totime').timepicker({
-           buttonText: 'Choose Time',
-         //   from: {
-         //       id: 'fromtime'
-         //   },
-         //   to: {
-         //       id: 'totime'
-         //   }
-       });
-   
-   });
+    });
+
+    $('#daterange').dateRange({
+        buttonText: 'Choose Date',
+        minDate: 0,
+        from: {
+            id: 'from-date',
+
+        },
+        to: {
+            id: 'to-date'
+        }
+    });
+
+    $('#fromtime').timepicker({
+        buttonText: 'Choose Time',
+        onClose: function (){
+         var time = $(this).val();
+               //  console.log("from time ")
+               //  console.log($(this).val())
+                var picker = $("#totime");
+                picker.timepicker('option', 'minTime', time);
+        }
+    });
+    $('#totime').timepicker({
+        buttonText: 'Choose Time',
+        onClose: function(time) {
+            // console.log("to")
+            // console.log($(this).val())
+            var time = $(this).val();
+            var picker = $("#fromtime");
+            picker.timepicker('option', 'maxTime', time);
+        }
+    });
+
+});
 </script>

@@ -6,6 +6,9 @@
             <referenceBlock name="category.products.list"  template="Dentsu_Training::products/list.phtml">
                 <block class="Magento\Catalog\Block\Product\ListProduct" name="products.list.reconstructed"/>
             </referenceBlock>
+            <referenceContainer name="content">
+            <block class="Dentsu\Training\Block\Subcategory" name="custom.subcategory.dropdown" template="Dentsu_Training::subcategory_dropdown.phtml"/>
+            </referenceContainer>
         </referenceContainer>
     </body>
 </page>
