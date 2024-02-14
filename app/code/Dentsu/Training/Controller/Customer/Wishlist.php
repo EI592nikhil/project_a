@@ -122,7 +122,7 @@ class Wishlist extends \Magento\Wishlist\Block\AbstractBlock
     protected function _prepareLayout()
     {
         parent::_prepareLayout();
-        $this->pageConfig->getTitle()->set(__('Liked Course'));
+        $this->pageConfig->getTitle()->set(__('Liked Courses'));
         $this->getChildBlock('wishlist_item_pager')
             ->setUseContainer(
                 true
