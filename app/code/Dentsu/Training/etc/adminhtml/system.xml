@@ -3,7 +3,7 @@
     <system>
         <!-- for add new tab in Magento2 system configuration section -->
         <tab id="training" translate="label" sortOrder="10">
-            <label>Dentsu Training</label>
+             <label>Dentsu Training</label>
         </tab>
 
         <!-- for create section -->
