@@ -1,0 +1,26 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+?>
+<?php /* @var $block \Magento\Catalog\Block\Product\View\AbstractView */?>
+<?php $_product = $block->getProduct() ?>
+<?php  $InstockLable= $block->getInstockLable();?>
+<?php  $lowseatLable= $block->getLabelforLowseats();?>
+<?php  $lowseatNumber= $block->getLabelforLowseatsnumber();?>
+<?php  $ProductQty= $_product->getExtensionAttributes()->getStockItem()->getQty(); ?>
+
+<?php if ($block->displayProductStockStatus()) :?>
+    <?php if ($_product->isAvailable()) :?>
+        <?php if ($ProductQty > $lowseatNumber) :?>
+        <div class="stock available" title="<?= $block->escapeHtmlAttr(__('Availability')) ?>">
+            <span><?= $InstockLable ?></span>
+        </div>
+    <?php else :?>
+        <div class="stock available" title="<?= $block->escapeHtmlAttr(__('Availability')) ?>">
+            <span><?= $lowseatLable ?></span>
+        </div>
+        <?php endif; ?>
+    <?php endif; ?>
+<?php endif; ?>

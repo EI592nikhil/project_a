@@ -11,6 +11,8 @@ use Magento\Catalog\Helper\Output as OutputHelper;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class ListProduct extends \Magento\Catalog\Block\Product\ListProduct
 {
@@ -38,6 +40,12 @@ class ListProduct extends \Magento\Catalog\Block\Product\ListProduct
      * @param Context $context
      * @param PostHelper $postDataHelper
      */
+
+     /*
+    * var $scopeConfig
+    */
+    public $scopeConfig;
+
     public function __construct(
         Context $context,
         PostHelper $postDataHelper,
@@ -47,9 +55,11 @@ class ListProduct extends \Magento\Catalog\Block\Product\ListProduct
         TimezoneInterface $timeZone,
         DateTime $dateTime,
         CustomerRepositoryInterface $customerRepository,
+        ScopeConfigInterface  $scopeConfig,
         array $data = [],
         OutputHelper $outputHelper = null          
     ) {
+        $this->scopeConfig = $scopeConfig;
         $this->customerRepository = $customerRepository;
         $this->_catalogLayer = $layerResolver->get();
         $this->_postDataHelper = $postDataHelper;
@@ -111,6 +121,18 @@ class ListProduct extends \Magento\Catalog\Block\Product\ListProduct
         } while ($scheduleDate <= $courseEndDate);
 
         return $scheduleDetail;
+    }
+    public function getInstockLable()
+    {
+        return $this->scopeConfig->getValue('label_configuration/labelforquantity/labelforinstock', ScopeInterface::SCOPE_STORE);
+    }
+    public function getLabelforLowseats()
+    {
+        return $this->scopeConfig->getValue('label_configuration/labelforquantity/labelforlowseats', ScopeInterface::SCOPE_STORE);
+    }
+    public function getLabelforLowseatsnumber()
+    {
+        return $this->scopeConfig->getValue('label_configuration/labelforquantity/labelforlowseatsnumber', ScopeInterface::SCOPE_STORE);
     }
 
 }
