@@ -28,7 +28,7 @@
             
             <label>Lable Configuration</label>
             <tab>training</tab>
-            <resource>Dentsu_Training::lable configuration</resource>
+            <resource>Dentsu_Training::lable_configuration</resource>
             <group id="labelforquantity" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Label For Quantity Threshold</label>
                 <field id="labelforinstock" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
