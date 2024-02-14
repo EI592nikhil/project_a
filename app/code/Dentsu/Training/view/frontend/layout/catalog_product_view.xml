@@ -44,5 +44,8 @@
                 <argument name="template" xsi:type="string">Dentsu_Training::catalog/product/view/addtocart.phtml</argument>
             </action>
         </referenceBlock>
+        <referenceContainer name="product.info.main">
+           <block class="Magento\Catalog\Block\Product\View" name="coursetype" template="Dentsu_Training::product/view/coursetype.phtml" after="product.info.price"/>
+        </referenceContainer>
     </body>
 </page>
