@@ -143,3 +143,168 @@ public interface ContentFragmentDataService {
     Map<String, Object> readFragment(ResourceResolver resolver, String fragmentPath);
 }
 
+----------------------------------------
+
+
+package com.centurylink.aem.core.models;
+
+import com.centurylink.aem.core.services.ContentFragmentDataService;
+import com.centurylink.aem.core.utils.DataLayerUtil;
+import com.drew.lang.annotations.Nullable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Model(
+        adaptables = {
+                SlingHttpServletRequest.class,
+                Resource.class
+        },
+        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
+)
+public class AuthorBioModel {
+
+    @Inject
+    private Resource resource;
+
+    public static final String RESOURCE_TYPE = "ewcmams/components/authorbio";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorBioModel.class);
+
+    private String id;
+    private boolean dataLayerEnabled;
+
+    @ValueMapValue
+    private String[] authorCfPaths;
+
+    @ValueMapValue
+    private String authorCfPath;
+
+    @ValueMapValue
+    private String avatarAltText;
+
+    @SlingObject
+    private ResourceResolver resolver;
+
+    @OSGiService
+    private ContentFragmentDataService cfReader;
+
+    private List<AuthorBio> authors = new ArrayList<>();
+
+    public static class AuthorBio {
+        private final Map<String, Object> cfFields;
+
+        public AuthorBio(Map<String, Object> cfFields) {
+            this.cfFields = cfFields;
+        }
+
+        private String getString(String key) {
+            Object o = cfFields.get(key);
+            return (o != null) ? o.toString() : "";
+        }
+
+        public String getAuthorFirstName()   { return getString("authorFirstName"); }
+        public String getAuthorLastName()    { return getString("authorLastName"); }
+        public String getAuthorRole()        { return getString("authorRole"); }
+        public String getAuthorDescription() { return getString("authorDescription"); }
+
+        public String getAuthorAvatar() {
+            String avatar = getString("authorAvatar");
+            if (StringUtils.isNotEmpty(avatar)) {
+                return avatar;
+            }
+            String first = getString("authorFirstName");
+            String last = getString("authorLastName");
+            String initials = (StringUtils.isNotEmpty(first) ? String.valueOf(first.charAt(0)).toUpperCase() : "")
+                            + (StringUtils.isNotEmpty(last)  ? String.valueOf(last.charAt(0)).toUpperCase()  : "");
+            return initials;
+        }
+    }
+
+    @Nullable
+    public String getId() {
+        return id;
+    }
+
+    public boolean isDataLayerEnabled() {
+        return dataLayerEnabled;
+    }
+
+    @PostConstruct
+    protected void init() {
+        id = DataLayerUtil.generateId("author-bio", resource.getPath());
+        dataLayerEnabled = StringUtils.isNotBlank(id);
+        LOGGER.info("Initialized component id :: {}", id);
+
+        List<String> paths = new ArrayList<>();
+        if (authorCfPaths != null && authorCfPaths.length > 0) {
+            for (String p : authorCfPaths) {
+                if (StringUtils.isNotBlank(p)) {
+                    paths.add(p);
+                }
+            }
+        } else if (StringUtils.isNotBlank(authorCfPath)) {
+            paths.add(authorCfPath);
+        }
+
+        for (String path : paths) {
+            LOGGER.info("Loading CF path: {}", path);
+            Map<String, Object> fields = cfReader.readFragment(resolver, path);
+            LOGGER.info("CF fields loaded: {}", fields);
+            authors.add(new AuthorBio(fields));
+        }
+    }
+
+    public List<AuthorBio> getAuthors() {
+        return authors;
+    }
+
+    public String getData() {
+        if (!dataLayerEnabled || authors.isEmpty()) {
+            return null;
+        }
+        AuthorBio first = authors.get(0);
+        Map<String, Object> data = new HashMap<>();
+        data.put("componentName", "author-bio");
+        data.put("resourceType", RESOURCE_TYPE);
+        data.put("authorFirstName", first.getAuthorFirstName());
+        data.put("authorLastName", first.getAuthorLastName());
+        data.put("authorAvatar", first.getAuthorAvatar());
+        data.put("avatarAltText", getAvatarAltText());
+        data.put("authorRole", first.getAuthorRole());
+        data.put("id", id);
+        if (StringUtils.isBlank(id)) {
+            return null;
+        }
+        try {
+            return String.format("{\"%s\":%s}",
+                    id,
+                    new ObjectMapper().writeValueAsString(data));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Unable to generate dataLayer JSON string for Author Bio component", e);
+        }
+        return null;
+    }
+
+    public String getAvatarAltText() {
+        return avatarAltText;
+    }
+
+}
