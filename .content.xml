@@ -66,165 +66,80 @@
         </items>
     </content>
 </jcr:root>
-package com.centurylink.aem.core.models;
 
-import com.centurylink.aem.core.services.ContentFragmentDataService;
-import com.centurylink.aem.core.utils.DataLayerUtil;
-import com.drew.lang.annotations.Nullable;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+package com.centurylink.aem.core.utils;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.models.annotations.DefaultInjectionStrategy;
-import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.OSGiService;
-import org.apache.sling.models.annotations.injectorspecific.SlingObject;
-import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+/**
+ * Utility class for Adobe Client Data Layer operations.
+ * Provides methods for generating component IDs and other data layer utilities.
+ */
+public final class DataLayerUtil {
 
-@Model(
-        adaptables = {
-                SlingHttpServletRequest.class,
-                Resource.class
-        },
-        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
-)
-public class AuthorBioModel {
+    /**
+     * Separator used in component IDs.
+     */
+    private static final String ID_SEPARATOR = "-";
 
-    @Inject
-    private Resource resource;
+    /**
+     * Length of the ID hash.
+     */
+    private static final int ID_HASH_LENGTH = 10;
 
-    public static final String RESOURCE_TYPE = "ewcmams/components/authorbio";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorBioModel.class);
-
-    private String id;
-    private boolean dataLayerEnabled;
-
-    @ValueMapValue
-    private String[] authorCfPaths;
-
-    @ValueMapValue
-    private String authorCfPath;
-
-    @ValueMapValue
-    private String avatarAltText;
-
-    @SlingObject
-    private ResourceResolver resolver;
-
-    @OSGiService
-    private ContentFragmentDataService cfReader;
-
-    private List<AuthorBio> authors = new ArrayList<>();
-
-    public static class AuthorBio {
-        private final Map<String, Object> cfFields;
-
-        public AuthorBio(Map<String, Object> cfFields) {
-            this.cfFields = cfFields;
-        }
-
-        private String getString(String key) {
-            Object o = cfFields.get(key);
-            return (o != null) ? o.toString() : "";
-        }
-
-        public String getAuthorFirstName()   { return getString("authorFirstName"); }
-        public String getAuthorLastName()    { return getString("authorLastName"); }
-        public String getAuthorRole()        { return getString("authorRole"); }
-        public String getAuthorDescription() { return getString("authorDescription"); }
-
-        public String getAuthorAvatar() {
-            String avatar = getString("authorAvatar");
-            if (StringUtils.isNotEmpty(avatar)) {
-                return avatar;
-            }
-            String first = getString("authorFirstName");
-            String last = getString("authorLastName");
-            String initials = (StringUtils.isNotEmpty(first) ? String.valueOf(first.charAt(0)).toUpperCase() : "")
-                            + (StringUtils.isNotEmpty(last)  ? String.valueOf(last.charAt(0)).toUpperCase()  : "");
-            return initials;
-        }
+    private DataLayerUtil() {
+        // Utility class - prevent instantiation
     }
 
-    @Nullable
-    public String getId() {
-        return id;
+    /**
+     * Generates a unique component ID for the data layer.
+     * Format: "componentName-hash" (e.g., "navlink-e323ad2a28")
+     *
+     * @param componentName The name of the component (e.g., "navlink", "button")
+     * @param resourcePath The path of the resource
+     * @return A unique component ID
+     */
+    public static String generateId(String componentName, String resourcePath) {
+        if (componentName == null || resourcePath == null) {
+            throw new IllegalArgumentException("Component name and resource path cannot be null");
+        }
+        String hash = StringUtils.substring(DigestUtils.sha256Hex(resourcePath), 0, ID_HASH_LENGTH);
+        return StringUtils.join(componentName, ID_SEPARATOR, hash);
     }
 
-    public boolean isDataLayerEnabled() {
-        return dataLayerEnabled;
+    /**
+     * Converts the passed String to lowercase if it's not null.
+     *
+     * @param str The string to transform
+     * @return Lowercase string or null if input is null
+     */
+    public static String transformValForAnalytics(String str) {
+        return str != null ? str.toLowerCase() : null;
     }
 
-    @PostConstruct
-    protected void init() {
-        id = DataLayerUtil.generateId("author-bio", resource.getPath());
-        dataLayerEnabled = StringUtils.isNotBlank(id);
-        LOGGER.info("Initialized component id :: {}", id);
-
-        List<String> paths = new ArrayList<>();
-        if (authorCfPaths != null && authorCfPaths.length > 0) {
-            for (String p : authorCfPaths) {
-                if (StringUtils.isNotBlank(p)) {
-                    paths.add(p);
-                }
-            }
-        } else if (StringUtils.isNotBlank(authorCfPath)) {
-            paths.add(authorCfPath);
-        }
-
-        for (String path : paths) {
-            LOGGER.info("Loading CF path: {}", path);
-            Map<String, Object> fields = cfReader.readFragment(resolver, path);
-            LOGGER.info("CF fields loaded: {}", fields);
-            authors.add(new AuthorBio(fields));
-        }
-    }
-
-    public List<AuthorBio> getAuthors() {
-        return authors;
-    }
-
-    public String getData() {
-        if (!dataLayerEnabled || authors.isEmpty()) {
-            return null;
-        }
-        AuthorBio first = authors.get(0);
-        Map<String, Object> data = new HashMap<>();
-        data.put("componentName", "author-bio");
-        data.put("resourceType", RESOURCE_TYPE);
-        data.put("authorFirstName", first.getAuthorFirstName());
-        data.put("authorLastName", first.getAuthorLastName());
-        data.put("authorAvatar", first.getAuthorAvatar());
-        data.put("avatarAltText", getAvatarAltText());
-        data.put("authorRole", first.getAuthorRole());
-        data.put("id", id);
-        if (StringUtils.isBlank(id)) {
-            return null;
-        }
-        try {
-            return String.format("{\"%s\":%s}",
-                    id,
-                    new ObjectMapper().writeValueAsString(data));
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Unable to generate dataLayer JSON string for Author Bio component", e);
-        }
-        return null;
-    }
-
-    public String getAvatarAltText() {
-        return avatarAltText;
+    /**
+     * Converts the passed String to lowercase and replace dashes with spaces if it's not null.
+     *
+     * @param str The string to transform
+     * @return Transformed string or null if input is null
+     */
+    public static String transformTitleValForAnalytics(String str) {
+        return str != null ? transformValForAnalytics(str).replace("-", " ") : null;
     }
 
 }
+
+
+----------------
+
+package com.centurylink.aem.core.services;
+
+import java.util.Map;
+
+import org.apache.sling.api.resource.ResourceResolver;
+
+public interface ContentFragmentDataService {
+    Map<String, Object> readFragment(ResourceResolver resolver, String fragmentPath);
+}
+
