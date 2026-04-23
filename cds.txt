@@ -1,0 +1,434 @@
+core/src/main/java/com/centurylink/aem/core/models/StatisticTileModel.java
+
+@@ -0,0 +1,174 @@
+package com.centurylink.aem.core.models;
+
+import com.centurylink.aem.core.utils.DataLayerUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Model(
+        adaptables = {SlingHttpServletRequest.class, Resource.class},
+        resourceType = "ewcmams/components/statistictile",
+        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
+)
+public class StatisticTileModel {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticTileModel.class);
+
+    public static final String RESOURCE_TYPE       = "ewcmams/components/statistictile";
+    public static final String VARIANT_STAT_BOX    = "stat-box";
+    public static final String VARIANT_COMPACT     = "compact";
+    public static final int    MAX_CARDS           = 6;
+
+    @SlingObject
+    private Resource resource;
+
+    /** "stat-box" (default) or "compact" */
+    @ValueMapValue
+    private String variant;
+
+    /** 06 — component-level title for Compact variant */
+    @ValueMapValue
+    private String componentTitle;
+
+    @ChildResource(name = "cards")
+    private List<Resource> cardsResources;
+
+    private String id;
+    private boolean dataLayerEnabled;
+    private final List<StatCard> cards = new ArrayList<>();
+
+    // ----------------------------------------------------------------
+    // Inner class — single statistic card
+    // ----------------------------------------------------------------
+    public static class StatCard {
+
+        private final String statisticsField;
+        private final String cardTitle;
+        private final String cardText;
+        private final String ctaLabel;
+        private final String ctaUrl;
+
+        public StatCard(String statisticsField, String cardTitle,
+                        String cardText, String ctaLabel, String ctaUrl) {
+            this.statisticsField = statisticsField;
+            this.cardTitle       = cardTitle;
+            this.cardText        = cardText;
+            this.ctaLabel        = ctaLabel;
+            this.ctaUrl          = ctaUrl;
+        }
+
+        public String getStatisticsField() { return statisticsField; }
+        public String getCardTitle()       { return cardTitle; }
+        public String getCardText()        { return cardText; }
+        public String getCtaLabel()        { return ctaLabel; }
+        public String getCtaUrl()          { return ctaUrl; }
+    }
+
+    // ----------------------------------------------------------------
+    // Init
+    // ----------------------------------------------------------------
+    @PostConstruct
+    protected void init() {
+        id               = DataLayerUtil.generateId("statistic-tile", resource.getPath());
+        dataLayerEnabled = StringUtils.isNotBlank(id);
+
+        if (cardsResources != null) {
+            int count = 0;
+            for (Resource cardResource : cardsResources) {
+                if (count >= MAX_CARDS) {
+                    LOGGER.warn("StatisticTileModel: max {} cards reached, ignoring extras", MAX_CARDS);
+                    break;
+                }
+                ValueMap vm = cardResource.getValueMap();
+                String statsField = vm.get("statisticsField", String.class);
+                String text       = vm.get("cardText",        String.class);
+
+                if (StringUtils.isNotBlank(statsField) || StringUtils.isNotBlank(text)) {
+                    cards.add(new StatCard(
+                            StringUtils.defaultString(statsField),
+                            StringUtils.defaultString(vm.get("cardTitle",  String.class)),
+                            StringUtils.defaultString(text),
+                            StringUtils.defaultString(vm.get("ctaLabel",   String.class)),
+                            StringUtils.defaultString(vm.get("ctaUrl",     String.class))
+                    ));
+                    count++;
+                }
+            }
+        }
+        LOGGER.debug("StatisticTileModel init: variant={}, cards={}", variant, cards.size());
+    }
+
+    // ----------------------------------------------------------------
+    // Variant helpers
+    // ----------------------------------------------------------------
+    public boolean isStatBoxVariant() {
+        return !VARIANT_COMPACT.equals(variant);   // stat-box is the default
+    }
+
+    public boolean isCompactVariant() {
+        return VARIANT_COMPACT.equals(variant);
+    }
+
+    // ----------------------------------------------------------------
+    // Compact — group cards in pairs of 2 for the 2-column layout
+    // ----------------------------------------------------------------
+    public List<List<StatCard>> getPairedCards() {
+        List<List<StatCard>> pairs = new ArrayList<>();
+        for (int i = 0; i < cards.size(); i += 2) {
+            List<StatCard> pair = new ArrayList<>();
+            pair.add(cards.get(i));
+            if (i + 1 < cards.size()) {
+                pair.add(cards.get(i + 1));
+            }
+            pairs.add(pair);
+        }
+        return pairs;
+    }
+
+    // ----------------------------------------------------------------
+    // Getters
+    // ----------------------------------------------------------------
+    public String getVariant()         { return StringUtils.defaultString(variant, VARIANT_STAT_BOX); }
+    public String getComponentTitle()  { return componentTitle; }
+    public List<StatCard> getCards()   { return Collections.unmodifiableList(cards); }
+    public String getId()              { return id; }
+    public boolean isDataLayerEnabled(){ return dataLayerEnabled; }
+
+    public String getData() {
+        if (!dataLayerEnabled || StringUtils.isBlank(id)) {
+            return null;
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("componentName", "statistic-tile");
+        data.put("resourceType",  RESOURCE_TYPE);
+        data.put("variant",       getVariant());
+        data.put("cardCount",     cards.size());
+        data.put("id",            id);
+        if (isCompactVariant() && StringUtils.isNotBlank(componentTitle)) {
+            data.put("componentTitle", componentTitle);
+        }
+        try {
+            return String.format("{\"%s\":%s}", id, new ObjectMapper().writeValueAsString(data));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Unable to generate dataLayer JSON for Statistic Tile component", e);
+        }
+        return null;
+    }
+}
+
+
+core/src/test/java/com/centurylink/aem/core/models/StatisticTileModelTest.java
+
+
+
+@@ -0,0 +1,250 @@
+package com.centurylink.aem.core.models;
+
+import io.wcm.testing.mock.aem.junit5.AemContext;
+import io.wcm.testing.mock.aem.junit5.AemContextExtension;
+import org.apache.sling.api.resource.Resource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(AemContextExtension.class)
+class StatisticTileModelTest {
+
+    private final AemContext context = new AemContext();
+
+    @BeforeEach
+    void setUp() {
+        context.addModelsForClasses(StatisticTileModel.class);
+    }
+
+    // ----------------------------------------------------------------
+    // Helpers
+    // ----------------------------------------------------------------
+    private Resource createStatBox(String path, int cardCount) {
+        Resource comp = context.create().resource(path,
+                Map.of("variant", "stat-box"));
+        for (int i = 0; i < cardCount; i++) {
+            context.create().resource(path + "/cards/item" + i, Map.of(
+                    "statisticsField", "$" + (i + 1) + "K",
+                    "cardTitle",       "Title " + i,
+                    "cardText",        "<p>Description " + i + "</p>",
+                    "ctaLabel",        "Read more",
+                    "ctaUrl",          "/content/lumen/page-" + i
+            ));
+        }
+        return comp;
+    }
+
+    private Resource createCompact(String path, int cardCount, String componentTitle) {
+        Resource comp = context.create().resource(path,
+                Map.of("variant", "compact", "componentTitle", componentTitle));
+        for (int i = 0; i < cardCount; i++) {
+            context.create().resource(path + "/cards/item" + i, Map.of(
+                    "statisticsField", "-" + (i * 1000),
+                    "cardText",        "<p>Label " + i + "</p>"
+            ));
+        }
+        return comp;
+    }
+
+    private StatisticTileModel getModel(String path) {
+        Resource resource = context.resourceResolver().getResource(path);
+        assertNotNull(resource);
+        context.currentResource(resource);
+        context.request().setResource(resource);
+        return context.request().adaptTo(StatisticTileModel.class);
+    }
+
+    // ----------------------------------------------------------------
+    // Basic initialisation
+    // ----------------------------------------------------------------
+    @Test
+    void testModelNotNull() {
+        createStatBox("/content/t/stat-box", 2);
+        assertNotNull(getModel("/content/t/stat-box"));
+    }
+
+    // ----------------------------------------------------------------
+    // Variant detection
+    // ----------------------------------------------------------------
+    @Test
+    void testStatBoxVariantIsDefault() {
+        context.create().resource("/content/t/default");          // no variant set
+        StatisticTileModel model = getModel("/content/t/default");
+        assertTrue(model.isStatBoxVariant());
+        assertFalse(model.isCompactVariant());
+        assertEquals("stat-box", model.getVariant());
+    }
+
+    @Test
+    void testStatBoxVariantExplicit() {
+        createStatBox("/content/t/explicit-stat-box", 1);
+        StatisticTileModel model = getModel("/content/t/explicit-stat-box");
+        assertTrue(model.isStatBoxVariant());
+        assertFalse(model.isCompactVariant());
+    }
+
+    @Test
+    void testCompactVariant() {
+        createCompact("/content/t/compact", 2, "Lumen by the numbers");
+        StatisticTileModel model = getModel("/content/t/compact");
+        assertTrue(model.isCompactVariant());
+        assertFalse(model.isStatBoxVariant());
+        assertEquals("compact", model.getVariant());
+    }
+
+    // ----------------------------------------------------------------
+    // Cards population & fields
+    // ----------------------------------------------------------------
+    @Test
+    void testCardsArePopulated() {
+        createStatBox("/content/t/cards-pop", 3);
+        assertEquals(3, getModel("/content/t/cards-pop").getCards().size());
+    }
+
+    @Test
+    void testStatCardFieldValues() {
+        createStatBox("/content/t/card-fields", 1);
+        StatisticTileModel.StatCard card = getModel("/content/t/card-fields").getCards().get(0);
+        assertEquals("$1K",                    card.getStatisticsField());
+        assertEquals("Title 0",                card.getCardTitle());
+        assertEquals("<p>Description 0</p>",   card.getCardText());
+        assertEquals("Read more",              card.getCtaLabel());
+        assertEquals("/content/lumen/page-0",  card.getCtaUrl());
+    }
+
+    @Test
+    void testEmptyCardsWhenNoChildResources() {
+        context.create().resource("/content/t/no-cards", Map.of("variant", "stat-box"));
+        assertTrue(getModel("/content/t/no-cards").getCards().isEmpty());
+    }
+
+    @Test
+    void testCardsListIsUnmodifiable() {
+        createStatBox("/content/t/immutable", 2);
+        List<StatisticTileModel.StatCard> cards = getModel("/content/t/immutable").getCards();
+        assertThrows(UnsupportedOperationException.class, () -> cards.add(null));
+    }
+
+    // ----------------------------------------------------------------
+    // Max 6 enforcement
+    // ----------------------------------------------------------------
+    @Test
+    void testMaxSixCardsEnforced() {
+        Resource comp = context.create().resource("/content/t/max6", Map.of("variant", "stat-box"));
+        for (int i = 0; i < 9; i++) {
+            context.create().resource("/content/t/max6/cards/item" + i, Map.of(
+                    "statisticsField", "$" + i + "K",
+                    "cardText", "<p>Text</p>"));
+        }
+        assertEquals(StatisticTileModel.MAX_CARDS,
+                getModel("/content/t/max6").getCards().size(),
+                "Cards must be capped at MAX_CARDS (6)");
+    }
+
+    // ----------------------------------------------------------------
+    // Compact — component title & paired cards
+    // ----------------------------------------------------------------
+    @Test
+    void testComponentTitleCompact() {
+        createCompact("/content/t/comp-title", 2, "Network by the numbers");
+        assertEquals("Network by the numbers",
+                getModel("/content/t/comp-title").getComponentTitle());
+    }
+
+    @Test
+    void testPairedCardsEvenCount() {
+        createCompact("/content/t/pairs-even", 4, "Title");
+        List<List<StatisticTileModel.StatCard>> pairs =
+                getModel("/content/t/pairs-even").getPairedCards();
+        assertEquals(2, pairs.size());
+        assertEquals(2, pairs.get(0).size());
+        assertEquals(2, pairs.get(1).size());
+    }
+
+    @Test
+    void testPairedCardsOddCount() {
+        createCompact("/content/t/pairs-odd", 3, "Title");
+        List<List<StatisticTileModel.StatCard>> pairs =
+                getModel("/content/t/pairs-odd").getPairedCards();
+        assertEquals(2, pairs.size());
+        assertEquals(2, pairs.get(0).size());
+        assertEquals(1, pairs.get(1).size());   // last pair has only 1 card
+    }
+
+    @Test
+    void testPairedCardsSixCards() {
+        createCompact("/content/t/pairs-6", 6, "Title");
+        List<List<StatisticTileModel.StatCard>> pairs =
+                getModel("/content/t/pairs-6").getPairedCards();
+        assertEquals(3, pairs.size());
+        pairs.forEach(p -> assertEquals(2, p.size()));
+    }
+
+    @Test
+    void testPairedCardsEmptyWhenNoCards() {
+        context.create().resource("/content/t/pairs-empty", Map.of("variant", "compact"));
+        assertTrue(getModel("/content/t/pairs-empty").getPairedCards().isEmpty());
+    }
+
+    // ----------------------------------------------------------------
+    // Data layer
+    // ----------------------------------------------------------------
+    @Test
+    void testIdIsGenerated() {
+        createStatBox("/content/t/id-gen", 1);
+        assertNotNull(getModel("/content/t/id-gen").getId());
+    }
+
+    @Test
+    void testDataLayerJsonStatBox() {
+        createStatBox("/content/t/dl-statbox", 2);
+        String data = getModel("/content/t/dl-statbox").getData();
+        assertNotNull(data);
+        assertTrue(data.contains("statistic-tile"));
+        assertTrue(data.contains("stat-box"));
+        assertTrue(data.contains("\"cardCount\":2"));
+    }
+
+    @Test
+    void testDataLayerJsonCompactIncludesTitle() {
+        createCompact("/content/t/dl-compact", 2, "Lumen Numbers");
+        String data = getModel("/content/t/dl-compact").getData();
+        assertNotNull(data);
+        assertTrue(data.contains("compact"));
+        assertTrue(data.contains("Lumen Numbers"));
+    }
+
+    // ----------------------------------------------------------------
+    // Blank card rows are skipped
+    // ----------------------------------------------------------------
+    @Test
+    void testBlankCardRowsSkipped() {
+        Resource comp = context.create().resource("/content/t/skip-blank",
+                Map.of("variant", "stat-box"));
+        // blank item — both key fields empty
+        context.create().resource("/content/t/skip-blank/cards/item0",
+                Map.of("statisticsField", "", "cardText", ""));
+        // valid item
+        context.create().resource("/content/t/skip-blank/cards/item1", Map.of(
+                "statisticsField", "$5K",
+                "cardText", "<p>Valid</p>"));
+        assertEquals(1, getModel("/content/t/skip-blank").getCards().size());
+    }
+
+    // ----------------------------------------------------------------
+    // Constants
+    // ----------------------------------------------------------------
+    @Test
+    void testConstants() {
+        assertEquals("ewcmams/components/statistictile", StatisticTileModel.RESOURCE_TYPE);
+        assertEquals("stat-box",  StatisticTileModel.VARIANT_STAT_BOX);
+        assertEquals("compact",   StatisticTileModel.VARIANT_COMPACT);
+        assertEquals(6,           StatisticTileModel.MAX_CARDS);
+    }
+}
