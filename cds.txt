@@ -1,434 +1,250 @@
-core/src/main/java/com/centurylink/aem/core/models/StatisticTileModel.java
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0"
+          xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+          xmlns:cq="http://www.day.com/jcr/cq/1.0"
+          xmlns:granite="http://www.adobe.com/jcr/granite/1.0"
+          xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+    jcr:primaryType="nt:unstructured"
+    jcr:title="FAQ With Agentic CTA"
+    sling:resourceType="cq/gui/components/authoring/dialog"
+          extraClientlibs="[lumen.pdpfaq.dialog.validation]">
 
-@@ -0,0 +1,174 @@
-package com.centurylink.aem.core.models;
-
-import com.centurylink.aem.core.utils.DataLayerUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.models.annotations.DefaultInjectionStrategy;
-import org.apache.sling.models.annotations.Model;
-import org.apache.sling.models.annotations.injectorspecific.ChildResource;
-import org.apache.sling.models.annotations.injectorspecific.SlingObject;
-import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-@Model(
-        adaptables = {SlingHttpServletRequest.class, Resource.class},
-        resourceType = "ewcmams/components/statistictile",
-        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
-)
-public class StatisticTileModel {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticTileModel.class);
-
-    public static final String RESOURCE_TYPE       = "ewcmams/components/statistictile";
-    public static final String VARIANT_STAT_BOX    = "stat-box";
-    public static final String VARIANT_COMPACT     = "compact";
-    public static final int    MAX_CARDS           = 6;
-
-    @SlingObject
-    private Resource resource;
-
-    /** "stat-box" (default) or "compact" */
-    @ValueMapValue
-    private String variant;
-
-    /** 06 — component-level title for Compact variant */
-    @ValueMapValue
-    private String componentTitle;
-
-    @ChildResource(name = "cards")
-    private List<Resource> cardsResources;
-
-    private String id;
-    private boolean dataLayerEnabled;
-    private final List<StatCard> cards = new ArrayList<>();
-
-    // ----------------------------------------------------------------
-    // Inner class — single statistic card
-    // ----------------------------------------------------------------
-    public static class StatCard {
-
-        private final String statisticsField;
-        private final String cardTitle;
-        private final String cardText;
-        private final String ctaLabel;
-        private final String ctaUrl;
-
-        public StatCard(String statisticsField, String cardTitle,
-                        String cardText, String ctaLabel, String ctaUrl) {
-            this.statisticsField = statisticsField;
-            this.cardTitle       = cardTitle;
-            this.cardText        = cardText;
-            this.ctaLabel        = ctaLabel;
-            this.ctaUrl          = ctaUrl;
-        }
-
-        public String getStatisticsField() { return statisticsField; }
-        public String getCardTitle()       { return cardTitle; }
-        public String getCardText()        { return cardText; }
-        public String getCtaLabel()        { return ctaLabel; }
-        public String getCtaUrl()          { return ctaUrl; }
-    }
-
-    // ----------------------------------------------------------------
-    // Init
-    // ----------------------------------------------------------------
-    @PostConstruct
-    protected void init() {
-        id               = DataLayerUtil.generateId("statistic-tile", resource.getPath());
-        dataLayerEnabled = StringUtils.isNotBlank(id);
-
-        if (cardsResources != null) {
-            int count = 0;
-            for (Resource cardResource : cardsResources) {
-                if (count >= MAX_CARDS) {
-                    LOGGER.warn("StatisticTileModel: max {} cards reached, ignoring extras", MAX_CARDS);
-                    break;
-                }
-                ValueMap vm = cardResource.getValueMap();
-                String statsField = vm.get("statisticsField", String.class);
-                String text       = vm.get("cardText",        String.class);
-
-                if (StringUtils.isNotBlank(statsField) || StringUtils.isNotBlank(text)) {
-                    cards.add(new StatCard(
-                            StringUtils.defaultString(statsField),
-                            StringUtils.defaultString(vm.get("cardTitle",  String.class)),
-                            StringUtils.defaultString(text),
-                            StringUtils.defaultString(vm.get("ctaLabel",   String.class)),
-                            StringUtils.defaultString(vm.get("ctaUrl",     String.class))
-                    ));
-                    count++;
-                }
-            }
-        }
-        LOGGER.debug("StatisticTileModel init: variant={}, cards={}", variant, cards.size());
-    }
-
-    // ----------------------------------------------------------------
-    // Variant helpers
-    // ----------------------------------------------------------------
-    public boolean isStatBoxVariant() {
-        return !VARIANT_COMPACT.equals(variant);   // stat-box is the default
-    }
-
-    public boolean isCompactVariant() {
-        return VARIANT_COMPACT.equals(variant);
-    }
-
-    // ----------------------------------------------------------------
-    // Compact — group cards in pairs of 2 for the 2-column layout
-    // ----------------------------------------------------------------
-    public List<List<StatCard>> getPairedCards() {
-        List<List<StatCard>> pairs = new ArrayList<>();
-        for (int i = 0; i < cards.size(); i += 2) {
-            List<StatCard> pair = new ArrayList<>();
-            pair.add(cards.get(i));
-            if (i + 1 < cards.size()) {
-                pair.add(cards.get(i + 1));
-            }
-            pairs.add(pair);
-        }
-        return pairs;
-    }
-
-    // ----------------------------------------------------------------
-    // Getters
-    // ----------------------------------------------------------------
-    public String getVariant()         { return StringUtils.defaultString(variant, VARIANT_STAT_BOX); }
-    public String getComponentTitle()  { return componentTitle; }
-    public List<StatCard> getCards()   { return Collections.unmodifiableList(cards); }
-    public String getId()              { return id; }
-    public boolean isDataLayerEnabled(){ return dataLayerEnabled; }
-
-    public String getData() {
-        if (!dataLayerEnabled || StringUtils.isBlank(id)) {
-            return null;
-        }
-        Map<String, Object> data = new HashMap<>();
-        data.put("componentName", "statistic-tile");
-        data.put("resourceType",  RESOURCE_TYPE);
-        data.put("variant",       getVariant());
-        data.put("cardCount",     cards.size());
-        data.put("id",            id);
-        if (isCompactVariant() && StringUtils.isNotBlank(componentTitle)) {
-            data.put("componentTitle", componentTitle);
-        }
-        try {
-            return String.format("{\"%s\":%s}", id, new ObjectMapper().writeValueAsString(data));
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Unable to generate dataLayer JSON for Statistic Tile component", e);
-        }
-        return null;
-    }
-}
-
-
-core/src/test/java/com/centurylink/aem/core/models/StatisticTileModelTest.java
+    <content
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="granite/ui/components/coral/foundation/container">
+        <items jcr:primaryType="nt:unstructured">
+            <tabs
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="granite/ui/components/coral/foundation/tabs"
+                maximized="{Boolean}true">
+                <items jcr:primaryType="nt:unstructured">
+                    <general
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="General"
+                        sling:resourceType="granite/ui/components/coral/foundation/container"
+                        margin="{Boolean}true">
+                        <items jcr:primaryType="nt:unstructured">
+                            <columns
+                                jcr:primaryType="nt:unstructured"
+                                sling:resourceType="granite/ui/components/coral/foundation/fixedcolumns"
+                                margin="{Boolean}true">
+                                <items jcr:primaryType="nt:unstructured">
+                                    <column
+                                        jcr:primaryType="nt:unstructured"
+                                        sling:resourceType="granite/ui/components/coral/foundation/container">
+                                        <items jcr:primaryType="nt:unstructured">
+                                            <title
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                fieldLabel="Title"
+                                                fieldDescription="Heading displayed on the left side of the component."
+                                                name="./title"
+                                                required="{Boolean}true"/>
+                                            <description
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                fieldLabel="Description"
+                                                fieldDescription="Sub-text displayed below the title."
+                                                name="./description"/>
+                                            <agenticCtaLabel
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                fieldLabel="Agentic CTA Label"
+                                                fieldDescription="Label text for the Agentic chat trigger button."
+                                                name="./agenticCtaLabel"
+                                                required="{Boolean}true"/>
+                                            <agenticCtaAriaLabel
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                fieldLabel="Agentic CTA Aria Label"
+                                                fieldDescription="Screen-reader label for the CTA. Falls back to CTA Label if blank."
+                                                name="./agenticCtaAriaLabel"/>
+                                        </items>
+                                    </column>
+                                </items>
+                            </columns>
+                        </items>
+                    </general>
+                    <items
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="FAQ Items"
+                        sling:resourceType="granite/ui/components/coral/foundation/container"
+                        margin="{Boolean}true">
+                        <items jcr:primaryType="nt:unstructured">
+                            <columns
+                                jcr:primaryType="nt:unstructured"
+                                sling:resourceType="granite/ui/components/coral/foundation/fixedcolumns"
+                                margin="{Boolean}true">
+                                <items jcr:primaryType="nt:unstructured">
+                                    <column
+                                        jcr:primaryType="nt:unstructured"
+                                        sling:resourceType="granite/ui/components/coral/foundation/container">
+                                        <items jcr:primaryType="nt:unstructured">
+                                            <faqList
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/multifield"
+                                                fieldLabel="FAQ Content Fragments"
+                                                fieldDescription="Add 2–6 FAQ Content Fragments. Each CF must use the FAQ model with 'question' and 'answer' fields."
+                                                composite="{Boolean}true"
+                                                name="./faqItems"
+                                                validation="faq-cf-count">
+                                                <granite:data
+                                                    jcr:primaryType="nt:unstructured"
+                                                    faq-multifield="true"
+                                                    faq-min="2"
+                                                    faq-max="6"/>
+                                                <field
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/container"
+                                                    name="./faqItems">
+                                                    <items jcr:primaryType="nt:unstructured">
+                                                        <cfPath
+                                                            jcr:primaryType="nt:unstructured"
+                                                            sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
+                                                            fieldLabel="FAQ Content Fragment"
+                                                            fieldDescription="Select a Content Fragment from the FAQ model. Must contain 'question' (text) and 'answer' (rich text) fields."
+                                                            name="./cfPath"
+                                                            required="{Boolean}true"
+                                                            rootPath="/content/dam/lumen/content-fragments/faq"
+                                                            filter="hierarchyNotFile"
+                                                            emptyText="Browse to an FAQ Content Fragment …">
+                                                            <granite:data
+                                                                jcr:primaryType="nt:unstructured"
+                                                                validate="foundation-jcr-nodetype"
+                                                                nodeTypes="[dam:Asset]"/>
+                                                        </cfPath>
+                                                    </items>
+                                                </field>
+                                            </faqList>
+                                            <validationNote
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/text"
+                                                text="Minimum 2, maximum 6 FAQ Content Fragments required. CF model must expose: question (Single-line text) and answer (Multi-line / rich text)."/>
+                                        </items>
+                                    </column>
+                                </items>
+                            </columns>
+                        </items>
+                    </items>
+                    <containerItems
+                        jcr:primaryType="nt:unstructured"
+                        sling:hideResource="{Boolean}true"/>
+                    <properties
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Properties"
+                        sling:hideResource="{Boolean}true"
+                        sling:orderBefore="cq:styles"
+                        sling:resourceType="granite/ui/components/coral/foundation/container"
+                        maximized="{Boolean}true"/>
+                </items>
+            </tabs>
+        </items>
+    </content>
+</jcr:root>
 
 
 
-@@ -0,0 +1,250 @@
-package com.centurylink.aem.core.models;
 
-import io.wcm.testing.mock.aem.junit5.AemContext;
-import io.wcm.testing.mock.aem.junit5.AemContextExtension;
-import org.apache.sling.api.resource.Resource;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+---------------------------------------------------------------------------
 
-import java.util.List;
-import java.util.Map;
+<sly data-sly-use.model="com.centurylink.aem.core.models.PDPFaqWithAgenticModel"
+     data-sly-use.templates="core/wcm/components/commons/v1/templates.html"/>
 
-import static org.junit.jupiter.api.Assertions.*;
+<sly data-sly-call="${templates.placeholder @ isEmpty=model.empty}"/>
 
-@ExtendWith(AemContextExtension.class)
-class StatisticTileModelTest {
+<sly data-sly-test="${!model.empty}">
 
-    private final AemContext context = new AemContext();
+<div class="cmp-faq-agentic cmp-accordion"
+     id="${model.id @ context='attribute'}"
+     data-cmp-is="accordion"
+     data-cmp-expanded="[]"
+     data-cmp-data-layer="${model.faqData}"
+     data-sly-attribute.data-cmp-single-expansion="${model.singleExpansion ? '' : null}">
 
-    @BeforeEach
-    void setUp() {
-        context.addModelsForClasses(StatisticTileModel.class);
-    }
+    <div class="cmp-faq-agentic__left">
 
-    // ----------------------------------------------------------------
-    // Helpers
-    // ----------------------------------------------------------------
-    private Resource createStatBox(String path, int cardCount) {
-        Resource comp = context.create().resource(path,
-                Map.of("variant", "stat-box"));
-        for (int i = 0; i < cardCount; i++) {
-            context.create().resource(path + "/cards/item" + i, Map.of(
-                    "statisticsField", "$" + (i + 1) + "K",
-                    "cardTitle",       "Title " + i,
-                    "cardText",        "<p>Description " + i + "</p>",
-                    "ctaLabel",        "Read more",
-                    "ctaUrl",          "/content/lumen/page-" + i
-            ));
-        }
-        return comp;
-    }
+        <sly data-sly-test="${model.title}">
+            <h2 class="cmp-faq-agentic__title">
+                ${model.title @ context='html'}
+            </h2>
+        </sly>
 
-    private Resource createCompact(String path, int cardCount, String componentTitle) {
-        Resource comp = context.create().resource(path,
-                Map.of("variant", "compact", "componentTitle", componentTitle));
-        for (int i = 0; i < cardCount; i++) {
-            context.create().resource(path + "/cards/item" + i, Map.of(
-                    "statisticsField", "-" + (i * 1000),
-                    "cardText",        "<p>Label " + i + "</p>"
-            ));
-        }
-        return comp;
-    }
+        <sly data-sly-test="${model.description}">
+            <p class="cmp-faq-agentic__description">
+                ${model.description @ context='html'}
+            </p>
+        </sly>
 
-    private StatisticTileModel getModel(String path) {
-        Resource resource = context.resourceResolver().getResource(path);
-        assertNotNull(resource);
-        context.currentResource(resource);
-        context.request().setResource(resource);
-        return context.request().adaptTo(StatisticTileModel.class);
-    }
+        <sly data-sly-test="${model.agenticCtaLabel}">
+            <button class="cmp-faq-agentic__cta"
+                    type="button"
+                    data-cmp-hook-faqAgentic="agenticCta"
+                    aria-label="${model.agenticCtaAriaLabel @ context='attribute'}">
+                ${model.agenticCtaLabel @ context='html'}
+            </button>
+        </sly>
 
-    // ----------------------------------------------------------------
-    // Basic initialisation
-    // ----------------------------------------------------------------
-    @Test
-    void testModelNotNull() {
-        createStatBox("/content/t/stat-box", 2);
-        assertNotNull(getModel("/content/t/stat-box"));
-    }
+        <!-- Decorative blobs — non-authorable, driven by CSS/SVG (FE concern) -->
+        <div class="cmp-faq-agentic__blobs" aria-hidden="true"></div>
 
-    // ----------------------------------------------------------------
-    // Variant detection
-    // ----------------------------------------------------------------
-    @Test
-    void testStatBoxVariantIsDefault() {
-        context.create().resource("/content/t/default");          // no variant set
-        StatisticTileModel model = getModel("/content/t/default");
-        assertTrue(model.isStatBoxVariant());
-        assertFalse(model.isCompactVariant());
-        assertEquals("stat-box", model.getVariant());
-    }
+    </div>
 
-    @Test
-    void testStatBoxVariantExplicit() {
-        createStatBox("/content/t/explicit-stat-box", 1);
-        StatisticTileModel model = getModel("/content/t/explicit-stat-box");
-        assertTrue(model.isStatBoxVariant());
-        assertFalse(model.isCompactVariant());
-    }
+    <!-- ── SEPARATOR ─────────────────────────────────────────── -->
+    <div class="cmp-faq-agentic__separator" role="separator" aria-hidden="true"></div>
 
-    @Test
-    void testCompactVariant() {
-        createCompact("/content/t/compact", 2, "Lumen by the numbers");
-        StatisticTileModel model = getModel("/content/t/compact");
-        assertTrue(model.isCompactVariant());
-        assertFalse(model.isStatBoxVariant());
-        assertEquals("compact", model.getVariant());
-    }
+    <!-- ── RIGHT PANEL — FAQ ACCORDION ───────────────────────── -->
+    <div class="cmp-faq-agentic__right">
 
-    // ----------------------------------------------------------------
-    // Cards population & fields
-    // ----------------------------------------------------------------
-    @Test
-    void testCardsArePopulated() {
-        createStatBox("/content/t/cards-pop", 3);
-        assertEquals(3, getModel("/content/t/cards-pop").getCards().size());
-    }
+        <sly data-sly-list.item="${model.faqItems}">
 
-    @Test
-    void testStatCardFieldValues() {
-        createStatBox("/content/t/card-fields", 1);
-        StatisticTileModel.StatCard card = getModel("/content/t/card-fields").getCards().get(0);
-        assertEquals("$1K",                    card.getStatisticsField());
-        assertEquals("Title 0",                card.getCardTitle());
-        assertEquals("<p>Description 0</p>",   card.getCardText());
-        assertEquals("Read more",              card.getCtaLabel());
-        assertEquals("/content/lumen/page-0",  card.getCtaUrl());
-    }
+            <div class="cmp-accordion__item"
+                 data-cmp-hook-accordion="item">
 
-    @Test
-    void testEmptyCardsWhenNoChildResources() {
-        context.create().resource("/content/t/no-cards", Map.of("variant", "stat-box"));
-        assertTrue(getModel("/content/t/no-cards").getCards().isEmpty());
-    }
+                <h3 class="cmp-accordion__header"
+                    data-sly-element="${model.headingElement @ context='elementName'}">
 
-    @Test
-    void testCardsListIsUnmodifiable() {
-        createStatBox("/content/t/immutable", 2);
-        List<StatisticTileModel.StatCard> cards = getModel("/content/t/immutable").getCards();
-        assertThrows(UnsupportedOperationException.class, () -> cards.add(null));
-    }
+                    <button class="cmp-accordion__button"
+                            type="button"
+                            id="${model.id @ context='attribute'}-button-${itemList.index @ context='attribute'}"
+                            aria-expanded="false"
+                            aria-controls="${model.id @ context='attribute'}-panel-${itemList.index @ context='attribute'}"
+                            data-cmp-hook-accordion="button"
+                            data-faq-cf-path="${item.cfPath @ context='attribute'}">
 
-    // ----------------------------------------------------------------
-    // Max 6 enforcement
-    // ----------------------------------------------------------------
-    @Test
-    void testMaxSixCardsEnforced() {
-        Resource comp = context.create().resource("/content/t/max6", Map.of("variant", "stat-box"));
-        for (int i = 0; i < 9; i++) {
-            context.create().resource("/content/t/max6/cards/item" + i, Map.of(
-                    "statisticsField", "$" + i + "K",
-                    "cardText", "<p>Text</p>"));
-        }
-        assertEquals(StatisticTileModel.MAX_CARDS,
-                getModel("/content/t/max6").getCards().size(),
-                "Cards must be capped at MAX_CARDS (6)");
-    }
+                        <span class="cmp-accordion__title">
+                            ${item.question @ context='html'}
+                        </span>
 
-    // ----------------------------------------------------------------
-    // Compact — component title & paired cards
-    // ----------------------------------------------------------------
-    @Test
-    void testComponentTitleCompact() {
-        createCompact("/content/t/comp-title", 2, "Network by the numbers");
-        assertEquals("Network by the numbers",
-                getModel("/content/t/comp-title").getComponentTitle());
-    }
+                        <span class="cmp-accordion__icon" aria-hidden="true"></span>
 
-    @Test
-    void testPairedCardsEvenCount() {
-        createCompact("/content/t/pairs-even", 4, "Title");
-        List<List<StatisticTileModel.StatCard>> pairs =
-                getModel("/content/t/pairs-even").getPairedCards();
-        assertEquals(2, pairs.size());
-        assertEquals(2, pairs.get(0).size());
-        assertEquals(2, pairs.get(1).size());
-    }
+                    </button>
 
-    @Test
-    void testPairedCardsOddCount() {
-        createCompact("/content/t/pairs-odd", 3, "Title");
-        List<List<StatisticTileModel.StatCard>> pairs =
-                getModel("/content/t/pairs-odd").getPairedCards();
-        assertEquals(2, pairs.size());
-        assertEquals(2, pairs.get(0).size());
-        assertEquals(1, pairs.get(1).size());   // last pair has only 1 card
-    }
+                </h3>
 
-    @Test
-    void testPairedCardsSixCards() {
-        createCompact("/content/t/pairs-6", 6, "Title");
-        List<List<StatisticTileModel.StatCard>> pairs =
-                getModel("/content/t/pairs-6").getPairedCards();
-        assertEquals(3, pairs.size());
-        pairs.forEach(p -> assertEquals(2, p.size()));
-    }
+                <div class="cmp-accordion__panel cmp-accordion__panel--hidden"
+                     id="${model.id @ context='attribute'}-panel-${itemList.index @ context='attribute'}"
+                     role="region"
+                     aria-labelledby="${model.id @ context='attribute'}-button-${itemList.index @ context='attribute'}"
+                     aria-hidden="true"
+                     hidden
+                     data-cmp-hook-accordion="panel">
 
-    @Test
-    void testPairedCardsEmptyWhenNoCards() {
-        context.create().resource("/content/t/pairs-empty", Map.of("variant", "compact"));
-        assertTrue(getModel("/content/t/pairs-empty").getPairedCards().isEmpty());
-    }
+                    <div class="cmp-accordion__text cmp-faq-agentic__answer-inner">
+                        ${item.answer @ context='html'}
+                    </div>
 
-    // ----------------------------------------------------------------
-    // Data layer
-    // ----------------------------------------------------------------
-    @Test
-    void testIdIsGenerated() {
-        createStatBox("/content/t/id-gen", 1);
-        assertNotNull(getModel("/content/t/id-gen").getId());
-    }
+                </div>
 
-    @Test
-    void testDataLayerJsonStatBox() {
-        createStatBox("/content/t/dl-statbox", 2);
-        String data = getModel("/content/t/dl-statbox").getData();
-        assertNotNull(data);
-        assertTrue(data.contains("statistic-tile"));
-        assertTrue(data.contains("stat-box"));
-        assertTrue(data.contains("\"cardCount\":2"));
-    }
+            </div>
 
-    @Test
-    void testDataLayerJsonCompactIncludesTitle() {
-        createCompact("/content/t/dl-compact", 2, "Lumen Numbers");
-        String data = getModel("/content/t/dl-compact").getData();
-        assertNotNull(data);
-        assertTrue(data.contains("compact"));
-        assertTrue(data.contains("Lumen Numbers"));
-    }
+        </sly>
 
-    // ----------------------------------------------------------------
-    // Blank card rows are skipped
-    // ----------------------------------------------------------------
-    @Test
-    void testBlankCardRowsSkipped() {
-        Resource comp = context.create().resource("/content/t/skip-blank",
-                Map.of("variant", "stat-box"));
-        // blank item — both key fields empty
-        context.create().resource("/content/t/skip-blank/cards/item0",
-                Map.of("statisticsField", "", "cardText", ""));
-        // valid item
-        context.create().resource("/content/t/skip-blank/cards/item1", Map.of(
-                "statisticsField", "$5K",
-                "cardText", "<p>Valid</p>"));
-        assertEquals(1, getModel("/content/t/skip-blank").getCards().size());
-    }
+    </div>
 
-    // ----------------------------------------------------------------
-    // Constants
-    // ----------------------------------------------------------------
-    @Test
-    void testConstants() {
-        assertEquals("ewcmams/components/statistictile", StatisticTileModel.RESOURCE_TYPE);
-        assertEquals("stat-box",  StatisticTileModel.VARIANT_STAT_BOX);
-        assertEquals("compact",   StatisticTileModel.VARIANT_COMPACT);
-        assertEquals(6,           StatisticTileModel.MAX_CARDS);
-    }
-}
+</div>
+
+</sly>
+
+
+
+
