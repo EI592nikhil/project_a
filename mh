@@ -26,7 +26,7 @@
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: var(--spacing-4xl);
-    padding: var(--spacing-lg);
+    //padding: var(--spacing-lg);
     width: 100%;
     max-width: 1360px;
     margin: 0 auto;
@@ -70,7 +70,7 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    margin-top: var(--spacing-3xl);
+    //margin-top: var(--spacing-3xl);
     padding: 14px var(--spacing-2xl);
     gap: 1px;
 
@@ -88,6 +88,10 @@
 
     width: auto;
   }
+
+  .description + .cta-button {
+  margin-top: var(--spacing-3xl); /* 32px */
+}
 
   /* ===== IMAGE ===== */
   .media-wrapper {
@@ -189,7 +193,7 @@
 
     .media_highlight {
       gap: var(--spacing-4xl);
-      padding: var(--spacing-4xl);
+      //padding: var(--spacing-4xl);
       align-items: center;
     }
 
