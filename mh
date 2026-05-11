@@ -298,7 +298,6 @@
       .media-wrapper {
         width: 100%;
         max-width: 1360px;
-        //height: 456px;
         height:100%;
 
         display: flex;
@@ -465,18 +464,19 @@
       max-width: 100%;
       height: auto;
       padding: 0;
+      overflow: hidden;
     }
 
     .media-wrapper img,
-    .media-highlight-video video {
+    .media-highlight-video video,
+    .videoaviewer video {
       width: 100%;
       height: auto;
       display: block;
+      object-fit: cover;
     }
   }
 }
-
-
 
 /* =====================================
    TABLET IMAGE FIX
@@ -487,9 +487,7 @@
   .mediahighlight .media-wrapper {
     width: 100%;
     max-width: 728px;
-
     height: auto;
-
     margin: 0 auto;
     padding: 0;
   }
@@ -498,7 +496,6 @@
   .mediahighlight .media-highlight-video video {
     width: 100%;
     height: 100%;
-
     object-fit: cover;
     display: block;
   }
