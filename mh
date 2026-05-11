@@ -453,25 +453,30 @@
 
 @media (max-width: 767px) {
 
-  .mediahighlight .media-wrapper {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    padding: 0;
-  }
+  .mediahighlight {
 
-  .mediahighlight .media-wrapper img,
-  .mediahighlight .media-highlight-video video {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .mediahighlight .media_highlight {
+    .media_highlight {
       display: flex;
       flex-direction: column;
     }
+
+    .media-wrapper {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      padding: 0;
+    }
+
+    .media-wrapper img,
+    .media-highlight-video video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
 }
+
+
 
 /* =====================================
    TABLET IMAGE FIX
