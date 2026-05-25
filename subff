@@ -1,0 +1,798 @@
+/* =====================================
+   STICKY SUBNAV
+===================================== */
+
+.pdp-subheadernav {
+  width: 100%;
+  background: var(--surface-neutral-strong-light);
+  transition: box-shadow 0.2s ease;
+}
+
+/* active sticky state */
+.pdp-subheadernav.is-fixed {
+  position: fixed;
+  padding: 5px;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background: var(--surface-neutral-strong-light);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
+
+/* smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+.subheader-wrapper {
+  padding:
+var(--Spacing-xl) var(--Spacing-4xl)
+}
+
+@media (max-width: 767px) {
+
+  .subheader-wrapper {
+    padding:
+      var(--Spacing-lg)
+      var(--Spacing-xl);
+  }
+}
+/* =====================================
+   PDP SUB HEADER NAV
+===================================== */
+
+.pdp-subheadernav {
+
+  /* =====================================
+     STICKY NAV
+  ===================================== */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  gap: 12px;
+
+  background: var(--surface-neutral-strong-light);
+
+  /* =====================================
+     INNER WRAPPER
+  ===================================== */
+
+  .subheadernav-wrapper {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+
+    gap: var(--Spacing-xl);
+  }
+
+  /* =====================================
+     LEFT NAV SECTION
+  ===================================== */
+
+  .subheadernav-items {
+
+    display: flex;
+    align-items: center;
+
+    gap: var(--Spacing-3xl);
+
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  .subheadernav-item {
+
+    color: var(--text-headline-light);
+
+    font-family: var(--Font-Family-Open);
+    font-size: var(--Font-Size-Desktop-MD);
+    font-style: var(--Font-Style-Normal);
+    font-weight: var(--Font-Weight-Bold);
+    line-height: var(--Line-Height-166);
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    position: relative;
+  }
+
+  .subheadernav-item.active {
+
+    color: var(--text-link-light);
+  }
+
+  .subheadernav-item.active::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -10px;
+
+    width: 100%;
+    height: 2px;
+
+    background: var(--text-link-light);
+  }
+
+  /* =====================================
+     CTA BUTTON WRAPPER
+  ===================================== */
+
+  .subheadernav-links {
+
+    display: flex;
+    align-items: unset;
+
+    gap: var(--Spacing-lg);
+
+    flex-shrink: 0;
+  }
+
+  /* =====================================
+     BUTTON BASE
+  ===================================== */
+
+  .subheadernav-link {
+
+    display: flex;
+
+    padding:
+      14px
+      var(--Spacing-3xl);
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 1px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: all 0.3s ease;
+
+    color: var(--text-button-secondary-light);
+
+    font-family: var(--Font-Family-Gotham);
+    font-size: var(--Font-Size-Desktop-MD);
+    font-style: var(--Font-Style-Normal);
+    font-weight: var(--Font-Weight-Medium);
+    line-height: var(--Line-Height-125);
+  }
+
+  /* =====================================
+     SECONDARY BUTTON
+  ===================================== */
+
+  .subheadernav-link.secondary {
+
+    border: 2px solid var(--color-brand-red-400);
+
+    background: transparent;
+  }
+
+  /* =====================================
+     PRIMARY BUTTON
+  ===================================== */
+
+  .subheadernav-link.primary {
+
+    border: none;
+
+    background: var(--Red-Orange-Gradient);
+  }
+
+  .subheadernav-link.primary:hover {
+
+    opacity: 0.92;
+  }
+
+  /* =====================================
+     BREADCRUMB
+  ===================================== */
+
+  .breadcrumb {
+
+    .cmp-breadcrumb__list {
+
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+    }
+
+    .cmp-breadcrumb__separator {
+
+      font-size: 0;
+
+      &::before {
+
+        content: "/";
+
+        font-size: 14px;
+      }
+    }
+
+    .cmp-breadcrumb__item,
+    .cmp-breadcrumb__item-link,
+    .cmp-breadcrumb__item--active {
+
+      color: var(--text-default-light);
+
+      font-family: var(--Font-Family-Gotham);
+      font-size: var(--Font-Size-Desktop-SM);
+      font-style: var(--Font-Style-Normal);
+      font-weight: var(--Font-Weight-Regular);
+      line-height: var(--Line-Height-125);
+    }
+
+    .cmp-breadcrumb__item-link {
+
+      text-decoration: none;
+    }
+  }
+
+  /* =====================================
+     MOBILE/TABLET DROPDOWN
+  ===================================== */
+
+  .subheadernav-mobile-dropdown {
+
+    display: none;
+
+    position: relative;
+
+    width: 100%;
+  }
+
+  .subheadernav-dropdown-trigger {
+
+    width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding:
+      var(--Spacing-lg)
+      var(--Spacing-xl);
+
+    align-self: stretch;
+
+    background: var(--surface-neutral-strong-light);
+
+    border: none;
+    border-bottom: 1px solid var(--border-subtle-light);
+
+    outline: none;
+    box-shadow: none;
+
+    cursor: pointer;
+
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .subheadernav-dropdown-trigger::after {
+
+    content: "";
+
+    width: 24px;
+    height: 24px;
+
+    flex-shrink: 0;
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    transition: transform 0.3s ease;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 12.6L7.4 8L6 9.4L12 15.4L18 9.4L16.6 8L12 12.6Z' fill='%2335373B'/%3E%3C/svg%3E");
+  }
+
+  .subheadernav-dropdown-menu {
+
+    display: none;
+
+    flex-direction: column;
+
+    position: absolute;
+
+    top: calc(100% + 8px);
+    left: 0;
+
+    width: 100%;
+
+    padding: 8px 0;
+
+    background: var(--surface-neutral-strong-light);
+
+    z-index: 99;
+
+    overflow-y: auto;
+    max-height: 300px;
+  }
+
+  .subheadernav-mobile-dropdown.open
+  .subheadernav-dropdown-menu {
+
+    display: flex;
+  }
+
+  .subheadernav-mobile-dropdown.open
+  .subheadernav-dropdown-trigger::after {
+
+    transform: rotate(180deg);
+  }
+
+  .subheadernav-dropdown-menu
+  .subheadernav-item {
+
+    padding: var(--spacing-12) var(--spacing-20);
+
+    display: flex;
+
+    height: 51px;
+
+    align-items: center;
+
+    gap: 8px;
+
+    align-self: stretch;
+
+    background: #FFF;
+
+    border-bottom: none;
+  }
+
+  /* =====================================
+     TABLET
+  ===================================== */
+
+  @media (max-width: 991px) and (min-width: 768px) {
+
+    .subheadernav-wrapper {
+
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 16px;
+    }
+
+    .subheadernav-items {
+
+      display: none;
+    }
+
+    .subheadernav-mobile-dropdown {
+
+      display: block;
+    }
+
+    .subheadernav-links {
+
+      position: fixed;
+
+      bottom: 0;
+      left: 0;
+
+      width: 100%;
+
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+
+      gap: var(--Spacing-lg);
+
+      padding: 16px;
+
+      background: var(--surface-neutral-strong-light);
+
+      z-index: 999;
+
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
+    }
+
+    .pdp-subheadernav {
+
+      padding-bottom: 100px;
+    }
+  }
+
+  /* =====================================
+     MOBILE
+  ===================================== */
+
+  @media (max-width: 767px) {
+
+    .subheadernav-wrapper {
+
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 16px;
+    }
+
+    .subheadernav-items {
+
+      display: none;
+    }
+
+    .subheadernav-mobile-dropdown {
+
+      display: block;
+    }
+
+    .subheadernav-links {
+
+      position: fixed;
+
+      bottom: 0;
+      left: 0;
+
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+
+      padding: 16px;
+
+      background: var(--surface-neutral-strong-light);
+
+      z-index: 999;
+
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
+    }
+
+    .subheadernav-link {
+
+      flex: 1 0 0;
+
+      width: 100%;
+    }
+
+    .pdp-subheadernav {
+
+      padding-bottom: 100px;
+    }
+  }
+}
+
+
+
+
+
+-------------------------------------------------------------------------------------------- JS ----------------------------------------------------------
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* =====================================
+     MOBILE DROPDOWN
+  ====================================== */
+
+  const dropdown = document.querySelector(
+    ".subheadernav-mobile-dropdown"
+  ) as HTMLElement | null;
+
+  const trigger = document.querySelector(
+    ".subheadernav-dropdown-trigger"
+  ) as HTMLButtonElement | null;
+
+  if (dropdown && trigger) {
+
+    trigger.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.remove("open");
+    });
+
+    dropdown.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+    });
+  }
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+  const formatTitle = (value: string) =>
+    value
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")  // spaces + special chars → hyphen
+    .replace(/^-+|-+$/g, "");     // remove leading/trailing hyphens
+  /* =====================================
+     NAV CLICK HANDLER
+  ====================================== */
+
+  const navItems = document.querySelectorAll<HTMLElement>(
+    ".subheadernav-item"
+  );
+
+  navItems.forEach((item) => {
+
+    const rawTarget = item.dataset.target;
+
+    if (rawTarget) {
+      item.textContent = formatTitle(rawTarget);
+    }
+
+    item.addEventListener("click", () => {
+
+      const target = item.dataset.target;
+      if (!target) return;
+
+      const normalizedTarget = normalize(target);
+
+      const section = document.querySelector(
+        `.${normalizedTarget}`
+      ) as HTMLElement | null;
+
+      if (section) {
+
+        section.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+        navItems.forEach(n => n.classList.remove("active"));
+        item.classList.add("active");
+
+        dropdown?.classList.remove("open");
+      }
+    });
+  });
+
+  /* =====================================
+   STICKY NAV
+===================================== */
+
+const nav = document.querySelector(
+  ".pdp-subheadernav"
+) as HTMLElement | null;
+
+const header = document.querySelector(
+  ".header.header-v2"
+) as HTMLElement | null;
+
+if (nav) {
+
+  const stickyOffset = nav.offsetTop;
+
+  const updateStickyNav = () => {
+
+    const headerHeight =
+      header?.getBoundingClientRect().height || 0;
+
+    if (window.scrollY > stickyOffset - headerHeight) {
+
+      nav.classList.add("is-fixed");
+
+      nav.style.top = `${headerHeight}px`;
+
+      // prevent layout jump
+      nav.parentElement?.setAttribute(
+        "style",
+        `padding-top:${nav.offsetHeight}px`
+      );
+
+    } else {
+
+      nav.classList.remove("is-fixed");
+
+      nav.style.top = "";
+
+      nav.parentElement?.setAttribute(
+        "style",
+        ""
+      );
+    }
+  };
+
+  window.addEventListener("scroll", updateStickyNav);
+
+  window.addEventListener("resize", updateStickyNav);
+
+  updateStickyNav();
+}
+
+  /* =====================================
+     🔥 SCROLL SPY (ACTIVE STATE ON SCROLL)
+  ====================================== */
+
+  const sectionMap: { section: HTMLElement; id: string }[] = [];
+
+  navItems.forEach((item) => {
+
+    const raw = item.dataset.target;
+    if (!raw) return;
+
+    const normalized = normalize(raw);
+
+    const section = document.querySelector(
+      `.${normalized}`
+    ) as HTMLElement | null;
+
+    if (section) {
+      sectionMap.push({ section, id: raw });
+    }
+  });
+
+  const onScrollSpy = () => {
+
+    let active: string | null = null;
+
+    sectionMap.forEach(({ section, id }) => {
+
+      const rect = section.getBoundingClientRect();
+
+      if (rect.top <= 140 && rect.bottom >= 140) {
+        active = id;
+      }
+    });
+
+    if (!active) return;
+
+    navItems.forEach(item => {
+
+      if (item.dataset.target === active) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
+      }
+    });
+  };
+
+  window.addEventListener("scroll", onScrollSpy);
+  onScrollSpy();
+
+});
+
+
+
+------------------------------------------------------------------------- html ====================================
+
+<div data-sly-test="${wcmmode.edit}"
+     class="cq-placeholder"
+     data-emptytext="Edit ${component.title}">
+</div>
+
+<sly data-sly-use.model="com.centurylink.aem.core.models.SubHeaderStickyNavModel">
+
+<div class="subheader-wrapper">
+    <!-- =========================================
+         BREADCRUMB (NON STICKY)
+    ========================================== -->
+
+    <div class="breadcrumb">
+
+        <sly data-sly-resource="${'breadcrumb' @ resourceType='core/wcm/components/breadcrumb/v2/breadcrumb'}"/>
+
+    </div>
+
+    <!-- =========================================
+         STICKY SUB NAV
+    ========================================== -->
+
+    <div class="pdp-subheadernav">
+
+        <div class="subheadernav-wrapper"
+             data-cmp-data-layer='${model.data}'>
+
+            <!-- =========================================
+                 DESKTOP NAV
+            ========================================== -->
+
+            <div class="subheadernav-items">
+
+                <sly data-sly-list.titleList="${model.navTitle}">
+
+                    <span
+                        class="subheadernav-item ${titleListList.index == 0 ? 'active' : ''}"
+                        data-target="${titleList.title}">
+
+                        ${titleList.title}
+
+                    </span>
+
+                </sly>
+
+            </div>
+
+            <!-- =========================================
+                 MOBILE/TABLET DROPDOWN
+            ========================================== -->
+
+            <div class="subheadernav-mobile-dropdown">
+
+                <!-- Trigger -->
+
+                <button class="subheadernav-dropdown-trigger">
+
+                    <sly data-sly-list.titleList="${model.navTitle}">
+
+                        <sly data-sly-test="${titleListList.index == 0}">
+
+                            ${titleList.title}
+
+                        </sly>
+
+                    </sly>
+
+                </button>
+
+                <!-- Dropdown Menu -->
+
+                <div class="subheadernav-dropdown-menu">
+
+                    <sly data-sly-list.titleList="${model.navTitle}">
+
+                        <sly data-sly-test="${titleListList.index != 0}">
+
+                            <span
+                                class="subheadernav-item"
+                                data-target="${titleList.title}">
+
+                                ${titleList.title}
+
+                            </span>
+
+                        </sly>
+
+                    </sly>
+
+                </div>
+
+            </div>
+
+            <!-- =========================================
+                 CTA LINKS
+            ========================================== -->
+
+            <div class="subheadernav-links">
+
+                <a class="subheadernav-link secondary"
+                   href="${model.linkUrl}">
+
+                    ${model.linkText}
+
+                </a>
+
+                <a class="subheadernav-link primary"
+                   href="${model.secondLinkUrl}">
+
+                    ${model.secondLinkText}
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</sly>
+
+
+
+
