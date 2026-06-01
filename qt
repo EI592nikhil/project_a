@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-
   /* =====================================
      MOBILE DROPDOWN
   ====================================== */
@@ -37,13 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const normalize = (value: string) =>
-    value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-
   /* =====================================
      NAV CLICK HANDLER
   ====================================== */
@@ -55,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
   navItems.forEach((item) => {
 
     const rawTarget = item.dataset.target;
-
     if (rawTarget) {
       item.textContent = formatTitle(rawTarget);
     }
@@ -63,13 +54,11 @@ document.addEventListener("DOMContentLoaded", () => {
     item.addEventListener("click", () => {
 
       const target = item.dataset.target;
-
       if (!target) return;
 
-      const normalizedTarget = normalize(target);
-
+      // DIRECT MATCH (NO NORMALIZE)
       const section = document.querySelector(
-        `.${normalizedTarget}`
+        `.${target}`
       ) as HTMLElement | null;
 
       if (section) {
@@ -97,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         item.classList.add("active");
-
         dropdown?.classList.remove("open");
       }
     });
@@ -117,23 +105,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const navTop =
       nav.getBoundingClientRect().top +
       window.scrollY;
-
     const navHeight = nav.offsetHeight;
-
     const placeholder =
       document.createElement("div");
 
     const onScroll = () => {
 
       if (window.scrollY >= navTop) {
-
         if (!nav.classList.contains("fixed-nav")) {
-
           placeholder.style.height =
             `${navHeight}px`;
-
           placeholder.style.width = "100%";
-
           nav.parentNode?.insertBefore(
             placeholder,
             nav
@@ -145,13 +127,11 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
 
         nav.classList.remove("fixed-nav");
-
         placeholder.remove();
       }
     };
 
     window.addEventListener("scroll", onScroll);
-
     window.addEventListener("resize", onScroll);
 
     onScroll();
@@ -169,17 +149,13 @@ document.addEventListener("DOMContentLoaded", () => {
   navItems.forEach((item) => {
 
     const raw = item.dataset.target;
-
     if (!raw) return;
-
-    const normalized = normalize(raw);
-
+    // DIRECT MATCH (NO NORMALIZE)
     const section = document.querySelector(
-      `.${normalized}`
+      `.${raw}`
     ) as HTMLElement | null;
 
     if (section) {
-
       sectionMap.push({
         section,
         id: raw
@@ -190,9 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onScrollSpy = () => {
 
     let active: string | null = null;
-
     sectionMap.forEach(({ section, id }) => {
-
       const rect =
         section.getBoundingClientRect();
 
@@ -222,5 +196,4 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   onScrollSpy();
-
 });
