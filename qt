@@ -1,129 +1,226 @@
-/* Only in AEM author mode */
-.aem-AuthorLayer-Edit .cmp-quote {
-  min-height: 80px;     /* gives the overlay a comfortable click area on authoring side */
-  padding:  var(--spacing-2xs) var(--spacing-2xl);
-}
-.quote{
-  padding: var(--spacing-2xl) 0;
-  
-   @media only screen and (min-width: 768px) {
-        padding: var(--spacing-3xl) 0;
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* =====================================
+     MOBILE DROPDOWN
+  ====================================== */
+
+  const dropdown = document.querySelector(
+    ".subheadernav-mobile-dropdown"
+  ) as HTMLElement | null;
+
+  const trigger = document.querySelector(
+    ".subheadernav-dropdown-trigger"
+  ) as HTMLButtonElement | null;
+
+  if (dropdown && trigger) {
+
+    trigger.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.remove("open");
+    });
+
+    dropdown.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+    });
+  }
+
+  /* =====================================
+     HELPERS
+  ====================================== */
+
+  const formatTitle = (value: string) =>
+    value
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  /* =====================================
+     NAV CLICK HANDLER
+  ====================================== */
+
+  const navItems = document.querySelectorAll<HTMLElement>(
+    ".subheadernav-item"
+  );
+
+  navItems.forEach((item) => {
+
+    const rawTarget = item.dataset.target;
+
+    if (rawTarget) {
+      item.textContent = formatTitle(rawTarget);
     }
 
-    @media only screen and (min-width: 1280px) {
-        padding: var(--spacing-4xl) 0;
+    item.addEventListener("click", () => {
+
+      const target = item.dataset.target;
+
+      if (!target) return;
+
+      const normalizedTarget = normalize(target);
+
+      const section = document.querySelector(
+        `.${normalizedTarget}`
+      ) as HTMLElement | null;
+
+      if (section) {
+
+        const nav = document.querySelector(
+          ".pdp-subheadernav"
+        ) as HTMLElement | null;
+
+        const navHeight =
+          nav?.offsetHeight || 0;
+
+        const sectionTop =
+          section.getBoundingClientRect().top +
+          window.pageYOffset -
+          navHeight -
+          20;
+
+        window.scrollTo({
+          top: sectionTop,
+          behavior: "smooth"
+        });
+
+        navItems.forEach(n =>
+          n.classList.remove("active")
+        );
+
+        item.classList.add("active");
+
+        dropdown?.classList.remove("open");
+      }
+    });
+  });
+
+  /* =====================================
+     FIXED SUBHEADER
+     (AEM SAFE VERSION)
+  ====================================== */
+
+  const nav = document.querySelector(
+    ".pdp-subheadernav"
+  ) as HTMLElement | null;
+
+  if (nav) {
+
+    const navTop =
+      nav.getBoundingClientRect().top +
+      window.scrollY;
+
+    const navHeight = nav.offsetHeight;
+
+    const placeholder =
+      document.createElement("div");
+
+    const onScroll = () => {
+
+      if (window.scrollY >= navTop) {
+
+        if (!nav.classList.contains("fixed-nav")) {
+
+          placeholder.style.height =
+            `${navHeight}px`;
+
+          placeholder.style.width = "100%";
+
+          nav.parentNode?.insertBefore(
+            placeholder,
+            nav
+          );
+
+          nav.classList.add("fixed-nav");
+        }
+
+      } else {
+
+        nav.classList.remove("fixed-nav");
+
+        placeholder.remove();
+      }
+    };
+
+    window.addEventListener("scroll", onScroll);
+
+    window.addEventListener("resize", onScroll);
+
+    onScroll();
+  }
+
+  /* =====================================
+     SCROLL SPY
+  ====================================== */
+
+  const sectionMap: {
+    section: HTMLElement;
+    id: string;
+  }[] = [];
+
+  navItems.forEach((item) => {
+
+    const raw = item.dataset.target;
+
+    if (!raw) return;
+
+    const normalized = normalize(raw);
+
+    const section = document.querySelector(
+      `.${normalized}`
+    ) as HTMLElement | null;
+
+    if (section) {
+
+      sectionMap.push({
+        section,
+        id: raw
+      });
     }
-}
-.cmp-quote {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 690px;
-  padding: var(--spacing-2xs) var(--spacing-2xl);
-  align-items: flex-start;
-  gap: 24px;
-  background: var(--Surface-Neutral-Strong);
-  box-sizing: border-box;
+  });
 
-  /* Reset blockquote */
-  blockquote {
-    border-left: var(--spacing-2xs) solid var(--Color-Brand-Red-400);
-    font-style: var(--Font-Style-Normal);
-  }
+  const onScrollSpy = () => {
 
-   /* Image (TOP) */
-  &__image {
-    display: flex;
-    width: 100%;
-    aspect-ratio: 15 / 11;
-    border-radius: var(--radius-3xl);
-    overflow: hidden;
-  }
+    let active: string | null = null;
 
-  &__image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
+    sectionMap.forEach(({ section, id }) => {
 
-  &__content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
+      const rect =
+        section.getBoundingClientRect();
 
-  /* Quote Text */
-  &__text {
-    margin: 0;
-    color: var(--text-strong-light);
-    font-feature-settings: 'case' on;
-    font-family: var(--Font-Family-Gotham);
-    font-size: var(--Font-Size-H6);
-    font-weight: var(--Font-Weight-Book);
-    line-height: var(--Line-Height-150);
-    font-style: var(--Font-Style-Normal);
-    padding:0 var(--spacing-2xl);
+      if (
+        rect.top <= 180 &&
+        rect.bottom >= 180
+      ) {
+        active = id;
+      }
+    });
 
-    p {
-      margin: 0;
-      font-family: var(--Font-Family-Gotham) !important;
-    }
-  }
+    if (!active) return;
 
-  /* Attribution */
-  &__attribution {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    width: 100%;
-    margin-top: var(--Spacing-lg);
-    gap: var(--spacing-2xs);
+    navItems.forEach((item) => {
 
-    &:empty {
-      display: none;
-    }
-  }
+      if (item.dataset.target === active) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
+      }
+    });
+  };
 
-  /* Author */
-  &__author {
-    margin: 0;
-    color: var(--text-strong-light);
-    text-align: right;
-    font-feature-settings: 'case' on;
-    font-family: var(--Font-Family-Open);
-    font-size: var(--Font-Size-Title);
-    font-weight: var(--Font-Weight-Bold);
-    line-height: var(--Line-Height-150);
-    font-style: var(--Font-Style-Normal);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  window.addEventListener(
+    "scroll",
+    onScrollSpy
+  );
 
-    &::before {
-      content: "—";
-    }
+  onScrollSpy();
 
-    &:empty {
-      display: none;
-    }
-  }
-
-  /* Role */
-  &__role {
-    margin: 0;
-    color: var(--text-subtle-light);
-    opacity: 0.7;
-    text-align: right;
-    font-feature-settings: 'case' on;
-    font-family: var(--Font-Family-Open);
-    font-size: var(--Font-Size-Small);
-    font-weight: var(--Font-Weight-Regular);
-    line-height: var(--Line-Height-Body);
-    font-style: var(--Font-Style-Normal);
-
-    &:empty {
-      display: none;
-    }
-  }
-}
+});
