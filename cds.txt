@@ -1,3 +1,16 @@
+  public String getOotbBreadcrumb() {
+        return ootbBreadcrumb;
+    }
+=====
+<ootbBreadcrumb
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the breadcrumb will be displaying page hierarchy"
+                                                    name="./ootbBreadcrumb"
+                                                    text="Page Hierarchy Breadcrumb"
+                                                    uncheckedValue="false"
+                                                    value="true"/>
+
 old - 
     <div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb =='false'}">
         <a href="${model.parentPageUrl}">${model.parentPageTitle}</a> / <span>${model.productTitle}${model.solutionTitle}</span>
