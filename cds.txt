@@ -1,250 +1,96 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0"
-          xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
-          xmlns:cq="http://www.day.com/jcr/cq/1.0"
-          xmlns:granite="http://www.adobe.com/jcr/granite/1.0"
-          xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
-    jcr:primaryType="nt:unstructured"
-    jcr:title="FAQ With Agentic CTA"
-    sling:resourceType="cq/gui/components/authoring/dialog"
-          extraClientlibs="[lumen.pdpfaq.dialog.validation]">
 
-    <content
-        jcr:primaryType="nt:unstructured"
-        sling:resourceType="granite/ui/components/coral/foundation/container">
-        <items jcr:primaryType="nt:unstructured">
-            <tabs
-                jcr:primaryType="nt:unstructured"
-                sling:resourceType="granite/ui/components/coral/foundation/tabs"
-                maximized="{Boolean}true">
-                <items jcr:primaryType="nt:unstructured">
-                    <general
-                        jcr:primaryType="nt:unstructured"
-                        jcr:title="General"
-                        sling:resourceType="granite/ui/components/coral/foundation/container"
-                        margin="{Boolean}true">
-                        <items jcr:primaryType="nt:unstructured">
-                            <columns
-                                jcr:primaryType="nt:unstructured"
-                                sling:resourceType="granite/ui/components/coral/foundation/fixedcolumns"
-                                margin="{Boolean}true">
-                                <items jcr:primaryType="nt:unstructured">
-                                    <column
-                                        jcr:primaryType="nt:unstructured"
-                                        sling:resourceType="granite/ui/components/coral/foundation/container">
-                                        <items jcr:primaryType="nt:unstructured">
-                                            <title
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
-                                                fieldLabel="Title"
-                                                fieldDescription="Heading displayed on the left side of the component."
-                                                name="./title"
-                                                required="{Boolean}true"/>
-                                            <description
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
-                                                fieldLabel="Description"
-                                                fieldDescription="Sub-text displayed below the title."
-                                                name="./description"/>
-                                            <agenticCtaLabel
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
-                                                fieldLabel="Agentic CTA Label"
-                                                fieldDescription="Label text for the Agentic chat trigger button."
-                                                name="./agenticCtaLabel"
-                                                required="{Boolean}true"/>
-                                            <agenticCtaAriaLabel
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
-                                                fieldLabel="Agentic CTA Aria Label"
-                                                fieldDescription="Screen-reader label for the CTA. Falls back to CTA Label if blank."
-                                                name="./agenticCtaAriaLabel"/>
-                                        </items>
-                                    </column>
-                                </items>
-                            </columns>
-                        </items>
-                    </general>
-                    <items
-                        jcr:primaryType="nt:unstructured"
-                        jcr:title="FAQ Items"
-                        sling:resourceType="granite/ui/components/coral/foundation/container"
-                        margin="{Boolean}true">
-                        <items jcr:primaryType="nt:unstructured">
-                            <columns
-                                jcr:primaryType="nt:unstructured"
-                                sling:resourceType="granite/ui/components/coral/foundation/fixedcolumns"
-                                margin="{Boolean}true">
-                                <items jcr:primaryType="nt:unstructured">
-                                    <column
-                                        jcr:primaryType="nt:unstructured"
-                                        sling:resourceType="granite/ui/components/coral/foundation/container">
-                                        <items jcr:primaryType="nt:unstructured">
-                                            <faqList
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/form/multifield"
-                                                fieldLabel="FAQ Content Fragments"
-                                                fieldDescription="Add 2–6 FAQ Content Fragments. Each CF must use the FAQ model with 'question' and 'answer' fields."
-                                                composite="{Boolean}true"
-                                                name="./faqItems"
-                                                validation="faq-cf-count">
-                                                <granite:data
-                                                    jcr:primaryType="nt:unstructured"
-                                                    faq-multifield="true"
-                                                    faq-min="2"
-                                                    faq-max="6"/>
-                                                <field
-                                                    jcr:primaryType="nt:unstructured"
-                                                    sling:resourceType="granite/ui/components/coral/foundation/container"
-                                                    name="./faqItems">
-                                                    <items jcr:primaryType="nt:unstructured">
-                                                        <cfPath
-                                                            jcr:primaryType="nt:unstructured"
-                                                            sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
-                                                            fieldLabel="FAQ Content Fragment"
-                                                            fieldDescription="Select a Content Fragment from the FAQ model. Must contain 'question' (text) and 'answer' (rich text) fields."
-                                                            name="./cfPath"
-                                                            required="{Boolean}true"
-                                                            rootPath="/content/dam/lumen/content-fragments/faq"
-                                                            filter="hierarchyNotFile"
-                                                            emptyText="Browse to an FAQ Content Fragment …">
-                                                            <granite:data
-                                                                jcr:primaryType="nt:unstructured"
-                                                                validate="foundation-jcr-nodetype"
-                                                                nodeTypes="[dam:Asset]"/>
-                                                        </cfPath>
-                                                    </items>
-                                                </field>
-                                            </faqList>
-                                            <validationNote
-                                                jcr:primaryType="nt:unstructured"
-                                                sling:resourceType="granite/ui/components/coral/foundation/text"
-                                                text="Minimum 2, maximum 6 FAQ Content Fragments required. CF model must expose: question (Single-line text) and answer (Multi-line / rich text)."/>
-                                        </items>
-                                    </column>
-                                </items>
-                            </columns>
-                        </items>
-                    </items>
-                    <containerItems
-                        jcr:primaryType="nt:unstructured"
-                        sling:hideResource="{Boolean}true"/>
-                    <properties
-                        jcr:primaryType="nt:unstructured"
-                        jcr:title="Properties"
-                        sling:hideResource="{Boolean}true"
-                        sling:orderBefore="cq:styles"
-                        sling:resourceType="granite/ui/components/coral/foundation/container"
-                        maximized="{Boolean}true"/>
-                </items>
-            </tabs>
-        </items>
-    </content>
-</jcr:root>
+<div data-sly-test="${wcmmode.edit}"class="cq-placeholder" data-emptytext="Edit ${component.title}"> </div>
 
-
-
-
----------------------------------------------------------------------------
-
-<sly data-sly-use.model="com.centurylink.aem.core.models.PDPFaqWithAgenticModel"
-     data-sly-use.templates="core/wcm/components/commons/v1/templates.html"/>
-
-<sly data-sly-call="${templates.placeholder @ isEmpty=model.empty}"/>
-
-<sly data-sly-test="${!model.empty}">
-
-<div class="cmp-faq-agentic cmp-accordion"
-     id="${model.id @ context='attribute'}"
-     data-cmp-is="accordion"
-     data-cmp-expanded="[]"
-     data-cmp-data-layer="${model.faqData}"
-     data-sly-attribute.data-cmp-single-expansion="${model.singleExpansion ? '' : null}">
-
-    <div class="cmp-faq-agentic__left">
-
-        <sly data-sly-test="${model.title}">
-            <h2 class="cmp-faq-agentic__title">
-                ${model.title @ context='html'}
-            </h2>
-        </sly>
-
-        <sly data-sly-test="${model.description}">
-            <p class="cmp-faq-agentic__description">
-                ${model.description @ context='html'}
-            </p>
-        </sly>
-
-        <sly data-sly-test="${model.agenticCtaLabel}">
-            <button class="cmp-faq-agentic__cta"
-                    type="button"
-                    data-cmp-hook-faqAgentic="agenticCta"
-                    aria-label="${model.agenticCtaAriaLabel @ context='attribute'}">
-                ${model.agenticCtaLabel @ context='html'}
-            </button>
-        </sly>
-
-        <!-- Decorative blobs — non-authorable, driven by CSS/SVG (FE concern) -->
-        <div class="cmp-faq-agentic__blobs" aria-hidden="true"></div>
-
+<sly data-sly-use.model="com.centurylink.aem.core.models.SubHeaderStickyNavModel">
+<div class="subheader-wrapper">
+    <!-- =========================================
+         BREADCRUMB (NON STICKY)
+    ========================================== -->
+    <div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb =='true'}">
+        <sly data-sly-resource="${'breadcrumb' @ resourceType='core/wcm/components/breadcrumb/v2/breadcrumb'}"/>
     </div>
 
-    <!-- ── SEPARATOR ─────────────────────────────────────────── -->
-    <div class="cmp-faq-agentic__separator" role="separator" aria-hidden="true"></div>
+    <!--Breadcrumb enhancement-->
+    <div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb == false}">
+        <ol class="cmp-breadcrumb__list">
+            <li class="cmp-breadcrumb__item">
+                <a class="cmp-breadcrumb__item-link"
+                href="${model.parentPageUrl}">
+                    <span class="cmp-breadcrumb__item-title">
+                        ${model.parentPageTitle}
+                    </span>
+                </a>
+            </li>
 
-    <!-- ── RIGHT PANEL — FAQ ACCORDION ───────────────────────── -->
-    <div class="cmp-faq-agentic__right">
+            <li class="cmp-breadcrumb__item cmp-breadcrumb__item--active">
+                <span class="cmp-breadcrumb__item-title">
+                    ${model.productTitle ?: model.solutionTitle}
+                </span>
+            </li>
+        </ol>
+    </div>
 
-        <sly data-sly-list.item="${model.faqItems}">
+    <!-- =========================================
+         STICKY SUB NAV
+    ========================================== -->
+    <div class="pdp-subheadernav">
+        <div class="subheadernav-wrapper"
+             data-cmp-data-layer='${model.data}'>
+            <!-- =========================================
+                 DESKTOP NAV
+            ========================================== -->
+            <div class="subheadernav-items">
+                <sly data-sly-list.titleList="${model.navTitle}">
+                    <span
+                        class="subheadernav-item ${titleListList.index == 0 ? 'active' : ''}"
+                        data-target="${titleList.title}">
+                        ${titleList.title}
+                    </span>
 
-            <div class="cmp-accordion__item"
-                 data-cmp-hook-accordion="item">
-
-                <h3 class="cmp-accordion__header"
-                    data-sly-element="${model.headingElement @ context='elementName'}">
-
-                    <button class="cmp-accordion__button"
-                            type="button"
-                            id="${model.id @ context='attribute'}-button-${itemList.index @ context='attribute'}"
-                            aria-expanded="false"
-                            aria-controls="${model.id @ context='attribute'}-panel-${itemList.index @ context='attribute'}"
-                            data-cmp-hook-accordion="button"
-                            data-faq-cf-path="${item.cfPath @ context='attribute'}">
-
-                        <span class="cmp-accordion__title">
-                            ${item.question @ context='html'}
-                        </span>
-
-                        <span class="cmp-accordion__icon" aria-hidden="true"></span>
-
-                    </button>
-
-                </h3>
-
-                <div class="cmp-accordion__panel cmp-accordion__panel--hidden"
-                     id="${model.id @ context='attribute'}-panel-${itemList.index @ context='attribute'}"
-                     role="region"
-                     aria-labelledby="${model.id @ context='attribute'}-button-${itemList.index @ context='attribute'}"
-                     aria-hidden="true"
-                     hidden
-                     data-cmp-hook-accordion="panel">
-
-                    <div class="cmp-accordion__text cmp-faq-agentic__answer-inner">
-                        ${item.answer @ context='html'}
-                    </div>
-
-                </div>
+                </sly>
 
             </div>
 
-        </sly>
+            <!-- =========================================
+                 MOBILE/TABLET DROPDOWN
+            ========================================== -->
+            <div class="subheadernav-mobile-dropdown">
+                <!-- Trigger -->
+                <button class="subheadernav-dropdown-trigger">
+                    <sly data-sly-list.titleList="${model.navTitle}">
+                        <sly data-sly-test="${titleListList.index == 0}">
+                            ${titleList.title}
+                        </sly>
+                    </sly>
+                </button>
 
+                <!-- Dropdown Menu -->
+                <div class="subheadernav-dropdown-menu">
+                    <sly data-sly-list.titleList="${model.navTitle}">
+                        <sly data-sly-test="${titleListList.index != 0}">
+                            <span
+                                class="subheadernav-item"
+                                data-target="${titleList.title}">
+                                ${titleList.title}
+                            </span>
+                        </sly>
+                    </sly>
+                </div>
+            </div>
+            <!-- =========================================
+                 CTA LINKS
+            ========================================== -->
+            <div class="subheadernav-links">
+                <a class="subheadernav-link secondary"
+                   href="${model.linkUrl}">
+                    ${model.linkText}
+                </a>
+                <a class="subheadernav-link primary"
+                   href="${model.secondLinkUrl}">
+                    ${model.secondLinkText}
+                </a>
+            </div>
+        </div>
     </div>
-
 </div>
-
 </sly>
-
-
-
-
