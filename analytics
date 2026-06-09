@@ -1,0 +1,704 @@
+(function () {
+
+    'use strict';
+
+    var assetMap          = {};
+    var _lastModalKey     = null;
+    var _pendingQueue     = [];
+    var _replayInProgress = false;
+    var _origSatTrack     = null;
+    var _trackWrapVersion = 0;
+
+    function isRawDmId(str) {
+        return !!str && str.indexOf('dynamicmedia_') === 0 && str.indexOf('/') === -1;
+    }
+
+    function isPlay0Event(data) {
+        if (!data) return false;
+        return /^PLAY,0(\.0+)?$/.test((data.eventInfo || '').toString().trim());
+    }
+
+    function shallowCopy(obj) {
+        var out = {};
+        for (var k in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) out[k] = obj[k];
+        }
+        return out;
+    }
+
+    buildAssetMap();
+    wrapExistingS7dmUtilsViewers();
+    patchS7ViewersConstructors();
+    installSatelliteTrap();
+
+    function buildAssetMap() {
+        document.querySelectorAll('[data-asset-path]').forEach(function (el) {
+            var id = el.getAttribute('id');
+            var ap = el.getAttribute('data-asset-path');
+            var an = el.getAttribute('data-asset-name');
+            if (id && ap) {
+                assetMap[id] = { assetPath: ap, assetName: an || ap.split('/').pop() };
+            }
+        });
+    }
+
+    function getAssetData(key) {
+        if (!key) return null;
+        if (assetMap[key]) return assetMap[key];
+        buildAssetMap();
+        if (assetMap[key]) return assetMap[key];
+
+        var el = document.getElementById(key)
+              || document.querySelector('[id="' + key + '"][data-asset-path]');
+
+        if (!el) {
+            var containers = document.querySelectorAll(
+                '[class*="infomodal"],[class*="modal"],[class*="dialog"],[class*="overlay"],[class*="popup"]'
+            );
+            for (var i = 0; i < containers.length; i++) {
+                try { el = containers[i].querySelector('#' + CSS.escape(key)); }
+                catch (e) { el = containers[i].querySelector('[id="' + key + '"]'); }
+                if (el) break;
+            }
+        }
+
+        if (!el && _lastModalKey && assetMap[_lastModalKey]) {
+            return assetMap[_lastModalKey];
+        }
+
+        if (!el) return null;
+        var path = el.getAttribute('data-asset-path');
+        var name = el.getAttribute('data-asset-name') || (path ? path.split('/').pop() : '');
+        if (!path) return null;
+        assetMap[key] = { assetPath: path, assetName: name };
+        return assetMap[key];
+    }
+
+    function emitPlay0(asset, viewerKey) {
+        if (!_origSatTrack) {
+            var retries = 0;
+            var t = setInterval(function () {
+                retries++;
+                if (_origSatTrack) {
+                    clearInterval(t);
+                    doEmitPlay0(asset, viewerKey);
+                } else if (retries > 40) {
+                    clearInterval(t);
+                }
+            }, 50);
+            return;
+        }
+        doEmitPlay0(asset, viewerKey);
+    }
+
+    function doEmitPlay0(asset, viewerKey) {
+        var payload = {
+            objID     : asset.assetPath,
+            instName  : asset.assetName,
+            eventInfo : 'PLAY,0',
+            compClass : 'Container',
+            timeStamp : Date.now(),
+            _dmSynthetic: true
+        };
+        _replayInProgress = true;
+        try { _origSatTrack.call(null, 'Video Information', payload); }
+        finally { _replayInProgress = false; }
+    }
+
+    function onViewerPlay(key, viewer, pos) {
+        if (viewer._play0Fired) return;
+
+        var position = (pos === null || pos === undefined) ? 0 : Number(pos);
+        if (position > 1) return;
+
+        buildAssetMap();
+        var asset = getAssetData(key) || (_lastModalKey && assetMap[_lastModalKey]);
+
+        if (asset) {
+            viewer._play0Fired = true;
+            emitPlay0(asset, key);
+        } else {
+            var elapsed = 0;
+            var t = setInterval(function () {
+                elapsed += 50;
+                buildAssetMap();
+                var a = getAssetData(key) || (_lastModalKey && assetMap[_lastModalKey]);
+                if (a || elapsed >= 1000) {
+                    clearInterval(t);
+                    if (viewer._play0Fired) return;
+                    if (a) {
+                        viewer._play0Fired = true;
+                        emitPlay0(a, key);
+                    }
+                }
+            }, 50);
+        }
+    }
+
+    function resetPlay0(key) {
+        var s7dm = window.S7dmUtils;
+        if (s7dm && s7dm[key]) s7dm[key]._play0Fired = false;
+        var containerEl = document.getElementById(key);
+        if (containerEl && containerEl._dmViewerRef) {
+            containerEl._dmViewerRef._play0Fired = false;
+        }
+    }
+
+    function attachPlay0Listener(key, viewer) {
+        if (!viewer || viewer._play0ListenerAttached) return;
+        viewer._play0ListenerAttached = true;
+        viewer._play0Fired = false;
+
+        var containerEl = document.getElementById(key);
+        if (containerEl) containerEl._dmViewerRef = viewer;
+
+        if (typeof viewer.setHandlers === 'function') {
+            try {
+                var handlers = shallowCopy(viewer._s7Handlers || {});
+                var prevPlay = handlers.PLAY || null;
+                handlers.PLAY = function (e) {
+                    var pos = (e && e.position !== undefined) ? e.position
+                            : (typeof e === 'number' ? e : null);
+                    onViewerPlay(key, viewer, pos);
+                    if (prevPlay) prevPlay.call(this, e);
+                };
+                viewer.setHandlers(handlers);
+            } catch (ex) {}
+        }
+
+        if (containerEl && !containerEl._dmPlay0DomAttached) {
+            containerEl._dmPlay0DomAttached = true;
+            containerEl.addEventListener('s7event:PLAY', function (domEvt) {
+                var detail = domEvt && domEvt.detail;
+                var pos = (detail && detail.position !== undefined) ? detail.position
+                        : (typeof detail === 'number' ? detail : null);
+                onViewerPlay(key, viewer, pos);
+            });
+        }
+
+        attachVideoElementListener(key, viewer);
+    }
+
+    function attachVideoElementListener(key, viewer) {
+        var containerEl = document.getElementById(key);
+        if (!containerEl) return;
+
+        var existingVideo = containerEl.querySelector('video');
+        if (existingVideo) {
+            bindVideoPlaying(existingVideo, key, viewer);
+            return;
+        }
+
+        if (containerEl._dmVideoObserverAttached) return;
+        containerEl._dmVideoObserverAttached = true;
+
+        var obs = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var added = mutations[i].addedNodes;
+                for (var j = 0; j < added.length; j++) {
+                    var node = added[j];
+                    if (node.nodeType !== 1) continue;
+                    var vid = (node.tagName === 'VIDEO') ? node
+                            : node.querySelector && node.querySelector('video');
+                    if (vid) {
+                        obs.disconnect();
+                        bindVideoPlaying(vid, key, viewer);
+                        return;
+                    }
+                }
+            }
+        });
+        obs.observe(containerEl, { childList: true, subtree: true });
+    }
+
+   function bindVideoPlaying(videoEl, key, viewer) {
+    if (videoEl._dmPlayingAttached) return;
+    videoEl._dmPlayingAttached = true;
+
+    videoEl.autoplay = false;
+    videoEl.removeAttribute('autoplay');
+
+    videoEl._autoBlocked = false;
+
+    function handleAutoPlayBlock() {
+        if (!videoEl._autoBlocked && videoEl.currentTime < 0.5) {
+            videoEl.pause();
+            videoEl.currentTime = 0;
+            videoEl._autoBlocked = true;
+            videoEl.removeEventListener('playing', handleAutoPlayBlock);
+        }
+    }
+
+    videoEl.addEventListener('playing', handleAutoPlayBlock);
+
+    function onPlaying() {
+        var pos = videoEl.currentTime || 0;
+        onViewerPlay(key, viewer, pos);
+    }
+
+    videoEl.addEventListener('playing', onPlaying, { once: true });
+}
+
+    function reattachVideoListener(key, viewer) {
+        var containerEl = document.getElementById(key);
+        if (!containerEl) return;
+        var videoEl = containerEl._dmVideoEl || containerEl.querySelector('video');
+        if (!videoEl) {
+            containerEl._dmVideoObserverAttached = false;
+            attachVideoElementListener(key, viewer);
+            return;
+        }
+        videoEl._dmPlayingAttached = false;
+        bindVideoPlaying(videoEl, key, viewer);
+    }
+
+    function wrapViewerSetData(key, viewer) {
+        if (!viewer || !viewer.setData || viewer._setDataWrapped) return;
+
+        var orig = viewer.setData;
+        viewer.setData = function (e) {
+            if (e && isRawDmId(e.objID)) {
+                buildAssetMap();
+                var data = getAssetData(e.objID)
+                        || (_lastModalKey && assetMap[_lastModalKey])
+                        || getAssetData(key);
+                if (data) {
+                    e.objID    = data.assetPath;
+                    e.instName = data.assetName;
+                }
+            }
+            return orig.call(this, e);
+        };
+        viewer._setDataWrapped = true;
+    }
+
+    function wrapViewerInit(key, viewer) {
+        if (!viewer || typeof viewer.init !== 'function' || viewer._initWrapped) return;
+
+        var origInit = viewer.init;
+        viewer.init = function () {
+            wrapViewerSetData(key, this);
+            var result = origInit.apply(this, arguments);
+            wrapViewerSetData(key, this);
+            attachPlay0Listener(key, this);
+            return result;
+        };
+        viewer._initWrapped = true;
+    }
+
+    function wrapExistingS7dmUtilsViewers() {
+        var s7dm = window.S7dmUtils;
+        if (!s7dm || typeof s7dm !== 'object') return;
+
+        Object.keys(s7dm).forEach(function (key) {
+            var viewer = s7dm[key];
+            if (!viewer || typeof viewer !== 'object') return;
+            if (typeof viewer.setData !== 'function' && typeof viewer.init !== 'function') return;
+
+            buildAssetMap();
+            var el = document.getElementById(key);
+            if (el) {
+                var ap = el.getAttribute('data-asset-path');
+                var an = el.getAttribute('data-asset-name');
+                if (ap) {
+                    assetMap[key] = { assetPath: ap, assetName: an || ap.split('/').pop() };
+                }
+            }
+
+            wrapViewerSetData(key, viewer);
+            wrapViewerInit(key, viewer);
+            attachPlay0Listener(key, viewer);
+        });
+    }
+
+    function patchS7ViewersConstructors() {
+        if (window.s7viewers) {
+            doWrapConstructors(window.s7viewers);
+            return;
+        }
+
+        var _s7 = null;
+        try {
+            Object.defineProperty(window, 's7viewers', {
+                configurable: true, enumerable: true,
+                get: function () { return _s7; },
+                set: function (val) {
+                    _s7 = val;
+                    if (val) doWrapConstructors(val);
+                }
+            });
+        } catch (e) {
+            var t = setInterval(function () {
+                if (window.s7viewers) { clearInterval(t); doWrapConstructors(window.s7viewers); }
+            }, 20);
+        }
+    }
+
+    function doWrapConstructors(s7v) {
+        if (!s7v || s7v._dmConstructorsPatched) return;
+        s7v._dmConstructorsPatched = true;
+
+        var types = [
+            'VideoViewer', 'MixedMediaViewer', 'BasicZoomViewer',
+            'ZoomViewer', 'FlyoutViewer', 'SpinViewer', 'ZoomVerticalViewer'
+        ];
+
+        types.forEach(function (type) {
+            if (typeof s7v[type] !== 'function' || s7v[type]._dmWrappedCtor) return;
+
+            var Orig = s7v[type];
+            var Wrapped = function (settings) {
+                Orig.call(this, settings);
+                var containerId = settings && settings.containerId;
+                if (!containerId) return;
+
+                buildAssetMap();
+                var el = document.getElementById(containerId);
+                if (el) {
+                    var ap = el.getAttribute('data-asset-path');
+                    var an = el.getAttribute('data-asset-name');
+                    if (ap) {
+                        assetMap[containerId] = { assetPath: ap, assetName: an || ap.split('/').pop() };
+                        _lastModalKey = containerId;
+                    }
+                }
+
+                wrapViewerSetData(containerId, this);
+                wrapViewerInit(containerId, this);
+                attachPlay0Listener(containerId, this);
+            };
+
+            Wrapped.prototype        = Orig.prototype;
+            Wrapped._dmWrappedCtor   = true;
+            Wrapped._origConstructor = Orig;
+            Object.keys(Orig).forEach(function (k) {
+                try { Wrapped[k] = Orig[k]; } catch (e) {}
+            });
+            s7v[type] = Wrapped;
+        });
+    }
+
+    function makeTrackWrapper(origTrack) {
+        var wrapper = function (eventName, data) {
+            if (_replayInProgress) return origTrack.apply(this, arguments);
+
+            if (data && data._dmSynthetic) {
+                delete data._dmSynthetic;
+                return origTrack.apply(this, arguments);
+            }
+
+            if (isPlay0Event(data) && data && isRawDmId(data.objID)) {
+                return;
+            }
+
+            if (data && isRawDmId(data.objID)) {
+                buildAssetMap();
+                var rawId = data.objID;
+                var asset = getAssetData(rawId) || (_lastModalKey && assetMap[_lastModalKey]);
+                if (asset) {
+                    data.objID    = asset.assetPath;
+                    data.instName = asset.assetName;
+                    return origTrack.call(this, eventName, data);
+                }
+                enqueueCall(origTrack, eventName, data, rawId);
+                return;
+            }
+
+            return origTrack.apply(this, arguments);
+        };
+        wrapper._dmTrackWrapper = true;
+        wrapper._dmOrigTrack    = origTrack;
+        wrapper._dmWrapVersion  = _trackWrapVersion;
+        return wrapper;
+    }
+
+    function wrapSatelliteTrack(sat) {
+        if (!sat || typeof sat.track !== 'function') return;
+        var candidateOrig = sat.track._dmOrigTrack || sat.track;
+        if (!_origSatTrack) _origSatTrack = candidateOrig;
+        if (sat.track._dmWrapVersion === _trackWrapVersion) return;
+        _trackWrapVersion++;
+        var wrapped = makeTrackWrapper(_origSatTrack);
+        wrapped._dmWrapVersion = _trackWrapVersion;
+        try {
+            sat.track = wrapped;
+        } catch (e) {
+            try {
+                Object.defineProperty(sat, 'track', {
+                    configurable: true, enumerable: true,
+                    get: function () { return wrapped; },
+                    set: function (v) {
+                        if (v && !v._dmTrackWrapper) {
+                            _origSatTrack = v;
+                            wrapped = makeTrackWrapper(v);
+                        }
+                    }
+                });
+            } catch (e2) {}
+        }
+    }
+
+    function installSatelliteTrap() {
+        if (window._satellite) {
+            wrapSatelliteTrack(window._satellite);
+            patchDmViewersFn(window._satellite);
+            tryGetAndPatchDmInst(window._satellite);
+            return;
+        }
+
+        var _sat = null, trapped = false;
+        try {
+            Object.defineProperty(window, '_satellite', {
+                configurable: true, enumerable: true,
+                get: function () { return _sat; },
+                set: function (val) {
+                    _sat = val;
+                    if (val && !trapped) {
+                        trapped = true;
+                        buildAssetMap();
+                        wrapSatelliteTrack(val);
+                        patchDmViewersFn(val);
+                        tryGetAndPatchDmInst(val);
+                    }
+                }
+            });
+        } catch (e) {}
+
+        var fast = setInterval(function () {
+            if (trapped) { clearInterval(fast); return; }
+            if (window._satellite) {
+                clearInterval(fast); trapped = true;
+                buildAssetMap();
+                wrapSatelliteTrack(window._satellite);
+                patchDmViewersFn(window._satellite);
+                tryGetAndPatchDmInst(window._satellite);
+            }
+        }, 50);
+
+        var slowCount = 0;
+        var slow = setInterval(function () {
+            if (++slowCount > 50) { clearInterval(slow); return; }
+            if (window._satellite) {
+                wrapSatelliteTrack(window._satellite);
+                patchDmViewersFn(window._satellite);
+            }
+        }, 200);
+    }
+
+    function patchDmInst(dmInst) {
+        if (!dmInst) return;
+        try {
+            var existing = dmInst.getRegisteredViewers();
+            Object.keys(existing).forEach(function (k) {
+                if (k !== 'COMMON_TRACK') {
+                    wrapViewerSetData(k, existing[k]);
+                    attachPlay0Listener(k, existing[k]);
+                }
+            });
+        } catch (e) {}
+
+        ['registerViewer', 'addViewer'].forEach(function (method) {
+            if (typeof dmInst[method] !== 'function' || dmInst[method]._dmWrapped) return;
+            var orig = dmInst[method];
+            dmInst[method] = function (key, viewer) {
+                if (key && key !== 'COMMON_TRACK') {
+                    wrapViewerSetData(key, viewer);
+                    wrapViewerInit(key, viewer);
+                    attachPlay0Listener(key, viewer);
+                }
+                return orig.apply(this, arguments);
+            };
+            dmInst[method]._dmWrapped = true;
+        });
+    }
+
+    var _lastDmViewersFnRef = null;
+
+    function patchDmViewersFn(sat) {
+        if (!sat || typeof sat._dmviewers_v001 !== 'function') return false;
+        var currentFn = sat._dmviewers_v001;
+        if (currentFn._dmProxied && currentFn === _lastDmViewersFnRef) return true;
+        var origFn = currentFn._dmProxied ? (currentFn._origFn || currentFn) : currentFn;
+        var patchedFn = function () {
+            var dmInst = origFn.apply(this, arguments);
+            if (dmInst) patchDmInst(dmInst);
+            return dmInst;
+        };
+        patchedFn._dmProxied = true;
+        patchedFn._origFn    = origFn;
+        try {
+            sat._dmviewers_v001 = patchedFn;
+            _lastDmViewersFnRef = patchedFn;
+            return true;
+        } catch (e) { return false; }
+    }
+
+    function tryGetAndPatchDmInst(sat) {
+        if (!sat || typeof sat._dmviewers_v001 !== 'function') return;
+        try { var d = sat._dmviewers_v001(); if (d) patchDmInst(d); } catch (e) {}
+    }
+
+    function enqueueCall(origTrack, eventName, data, rawId) {
+        var q = { origTrack: origTrack, eventName: eventName, data: data, rawId: rawId, fired: false };
+        _pendingQueue.push(q);
+        var elapsed = 0, maxWait = 2000, step = 50;
+        var t = setInterval(function () {
+            if (q.fired) { clearInterval(t); return; }
+            elapsed += step;
+            buildAssetMap();
+            var asset = getAssetData(rawId) || (_lastModalKey && assetMap[_lastModalKey]);
+            if (asset || elapsed >= maxWait) {
+                clearInterval(t);
+                if (q.fired) return;
+                q.fired = true;
+                _pendingQueue = _pendingQueue.filter(function (x) { return x !== q; });
+                if (asset) {
+                    data.objID    = asset.assetPath;
+                    data.instName = asset.assetName;
+                }
+                _replayInProgress = true;
+                try { origTrack.call(null, eventName, data); }
+                finally { _replayInProgress = false; }
+            }
+        }, step);
+    }
+
+    function flushPendingQueue() {
+        var remaining = [];
+        _pendingQueue.forEach(function (q) {
+            if (q.fired) return;
+            var asset = getAssetData(q.rawId) || (_lastModalKey && assetMap[_lastModalKey]);
+            if (asset) {
+                q.fired = true;
+                q.data.objID    = asset.assetPath;
+                q.data.instName = asset.assetName;
+                _replayInProgress = true;
+                try { q.origTrack.call(null, q.eventName, q.data); }
+                finally { _replayInProgress = false; }
+            } else { remaining.push(q); }
+        });
+        _pendingQueue = remaining;
+    }
+
+    function onModalOpen(modalEl) {
+        buildAssetMap();
+        var firstKey = null;
+        modalEl.querySelectorAll('[data-asset-path]').forEach(function (el) {
+            var id = el.getAttribute('id');
+            var ap = el.getAttribute('data-asset-path');
+            var an = el.getAttribute('data-asset-name');
+            if (id && ap) {
+                assetMap[id] = { assetPath: ap, assetName: an || ap.split('/').pop() };
+                if (!firstKey) firstKey = id;
+            }
+        });
+
+        if (firstKey) {
+            _lastModalKey = firstKey;
+            resetPlay0(firstKey);
+            var s7dm = window.S7dmUtils;
+            var viewer = s7dm && s7dm[firstKey];
+            if (viewer) reattachVideoListener(firstKey, viewer);
+        }
+
+        wrapExistingS7dmUtilsViewers();
+        flushPendingQueue();
+
+        var sat = window._satellite;
+        if (sat) {
+            wrapSatelliteTrack(sat);
+            patchDmViewersFn(sat);
+            tryGetAndPatchDmInst(sat);
+        }
+    }
+
+    function bindModalListeners() {
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest
+                ? e.target.closest(
+                    '.infomodal-link-tag, .infomodal-link, [data-modal], ' +
+                    '.video-overlay, .peek-modal a, [data-toggle="modal"]'
+                  )
+                : null;
+            if (!trigger) return;
+
+            var modal   = null;
+            var modalId = trigger.getAttribute('data-modal');
+            if (modalId) {
+                modal = document.getElementById(modalId)
+                     || document.getElementById(modalId.replace('#', ''));
+            }
+            if (!modal) {
+                var wrap = trigger.closest('.infomodal');
+                if (wrap) modal = wrap.querySelector('.infomodal-modal');
+            }
+            if (!modal) return;
+
+            onModalOpen(modal);
+        }, true);
+    }
+
+    function observeModalVisibility() {
+        function attachObserver(el) {
+            if (el._dmClassObserved) return;
+            el._dmClassObserved = true;
+            new MutationObserver(function (mutations) {
+                mutations.forEach(function (m) {
+                    if (m.attributeName !== 'class') return;
+                    if (m.target.classList.contains('show')) onModalOpen(m.target);
+                });
+            }).observe(el, { attributes: true, attributeFilter: ['class'] });
+        }
+        document.querySelectorAll('.infomodal-modal, .modal').forEach(attachObserver);
+        new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+                m.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    if (node.classList &&
+                        (node.classList.contains('infomodal-modal') || node.classList.contains('modal'))) {
+                        attachObserver(node);
+                    }
+                    if (node.querySelectorAll) {
+                        node.querySelectorAll('.infomodal-modal, .modal').forEach(attachObserver);
+                    }
+                });
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    var MAX_RETRIES = 20, RETRY_DELAY = 500, attempts = 0;
+
+    function tryWrapViewers() {
+        attempts++;
+        buildAssetMap();
+        wrapExistingS7dmUtilsViewers();
+        var sat = window._satellite;
+        if (sat) {
+            wrapSatelliteTrack(sat);
+            patchDmViewersFn(sat);
+            tryGetAndPatchDmInst(sat);
+        }
+        if (attempts < MAX_RETRIES) setTimeout(tryWrapViewers, RETRY_DELAY);
+    }
+
+    function init() {
+        buildAssetMap();
+        wrapExistingS7dmUtilsViewers();
+        var sat = window._satellite;
+        if (sat) {
+            wrapSatelliteTrack(sat);
+            patchDmViewersFn(sat);
+            tryGetAndPatchDmInst(sat);
+        }
+        bindModalListeners();
+        observeModalVisibility();
+        setTimeout(tryWrapViewers, 800);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
