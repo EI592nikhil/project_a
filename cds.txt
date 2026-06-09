@@ -1,3 +1,10 @@
+old - 
+    <div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb =='false'}">
+        <a href="${model.parentPageUrl}">${model.parentPageTitle}</a> / <span>${model.productTitle}${model.solutionTitle}</span>
+    </div>
+
+---------
+
 
 <div data-sly-test="${wcmmode.edit}"class="cq-placeholder" data-emptytext="Edit ${component.title}"> </div>
 
