@@ -1,3 +1,11 @@
+   public String getSecondLinkUrl() {
+        if(secondLinkUrl != null) {
+            if (!secondLinkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
+                secondLinkUrl = secondLinkUrl + CtlConstants.HTML_EXTENSION;
+            }
+        }
+        return secondLinkUrl;
+    }
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================================
