@@ -1,481 +1,3 @@
-/* =====================================
-   STICKY SUBNAV
-===================================== */
-
-.pdp-subheadernav {
-  width: 100%;
-  background: var(--surface-neutral-strong-light);
-  transition: box-shadow 0.2s ease;
-}
-
-/* active sticky state */
-.pdp-subheadernav.is-fixed {
-  position: fixed;
-  padding: 5px;
-  left: 0;
-  width: 100%;
-  z-index: 999;
-  background: var(--surface-neutral-strong-light);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-}
-
-/* smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-.subheader-wrapper {
-  padding:
-var(--Spacing-xl) var(--Spacing-4xl)
-}
-
-@media (max-width: 767px) {
-
-  .subheader-wrapper {
-    padding:
-      var(--Spacing-lg)
-      var(--Spacing-xl);
-  }
-}
-/* =====================================
-   PDP SUB HEADER NAV
-===================================== */
-
-.pdp-subheadernav {
-
-  /* =====================================
-     STICKY NAV
-  ===================================== */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  width: 100%;
-  gap: 12px;
-
-  background: var(--surface-neutral-strong-light);
-
-  /* =====================================
-     INNER WRAPPER
-  ===================================== */
-
-  .subheadernav-wrapper {
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    width: 100%;
-
-    gap: var(--Spacing-xl);
-  }
-
-  /* =====================================
-     LEFT NAV SECTION
-  ===================================== */
-
-  .subheadernav-items {
-
-    display: flex;
-    align-items: center;
-
-    gap: var(--Spacing-3xl);
-
-    flex: 1;
-    flex-wrap: wrap;
-  }
-
-  .subheadernav-item {
-
-    color: var(--text-headline-light);
-
-    font-family: var(--Font-Family-Open);
-    font-size: var(--Font-Size-Desktop-MD);
-    font-style: var(--Font-Style-Normal);
-    font-weight: var(--Font-Weight-Bold);
-    line-height: var(--Line-Height-166);
-
-    white-space: nowrap;
-    cursor: pointer;
-
-    position: relative;
-  }
-
-  .subheadernav-item.active {
-
-    color: var(--text-link-light);
-  }
-
-  .subheadernav-item.active::after {
-
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    bottom: -10px;
-
-    width: 100%;
-    height: 2px;
-
-    background: var(--text-link-light);
-  }
-
-  /* =====================================
-     CTA BUTTON WRAPPER
-  ===================================== */
-
-  .subheadernav-links {
-
-    display: flex;
-    align-items: unset;
-
-    gap: var(--Spacing-lg);
-
-    flex-shrink: 0;
-  }
-
-  /* =====================================
-     BUTTON BASE
-  ===================================== */
-
-  .subheadernav-link {
-
-    display: flex;
-
-    padding:
-      14px
-      var(--Spacing-3xl);
-
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    gap: 1px;
-
-    border-radius: 8px;
-
-    text-decoration: none;
-    white-space: nowrap;
-
-    transition: all 0.3s ease;
-
-    color: var(--text-button-secondary-light);
-
-    font-family: var(--Font-Family-Gotham);
-    font-size: var(--Font-Size-Desktop-MD);
-    font-style: var(--Font-Style-Normal);
-    font-weight: var(--Font-Weight-Medium);
-    line-height: var(--Line-Height-125);
-  }
-
-  /* =====================================
-     SECONDARY BUTTON
-  ===================================== */
-
-  .subheadernav-link.secondary {
-
-    border: 2px solid var(--color-brand-red-400);
-
-    background: transparent;
-  }
-
-  /* =====================================
-     PRIMARY BUTTON
-  ===================================== */
-
-  .subheadernav-link.primary {
-
-    border: none;
-
-    background: var(--Red-Orange-Gradient);
-  }
-
-  .subheadernav-link.primary:hover {
-
-    opacity: 0.92;
-  }
-
-  /* =====================================
-     BREADCRUMB
-  ===================================== */
-
-  .breadcrumb {
-
-    .cmp-breadcrumb__list {
-
-      display: flex;
-      align-items: center;
-
-      gap: 8px;
-    }
-
-    .cmp-breadcrumb__separator {
-
-      font-size: 0;
-
-      &::before {
-
-        content: "/";
-
-        font-size: 14px;
-      }
-    }
-
-    .cmp-breadcrumb__item,
-    .cmp-breadcrumb__item-link,
-    .cmp-breadcrumb__item--active {
-
-      color: var(--text-default-light);
-
-      font-family: var(--Font-Family-Gotham);
-      font-size: var(--Font-Size-Desktop-SM);
-      font-style: var(--Font-Style-Normal);
-      font-weight: var(--Font-Weight-Regular);
-      line-height: var(--Line-Height-125);
-    }
-
-    .cmp-breadcrumb__item-link {
-
-      text-decoration: none;
-    }
-  }
-
-  /* =====================================
-     MOBILE/TABLET DROPDOWN
-  ===================================== */
-
-  .subheadernav-mobile-dropdown {
-
-    display: none;
-
-    position: relative;
-
-    width: 100%;
-  }
-
-  .subheadernav-dropdown-trigger {
-
-    width: 100%;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding:
-      var(--Spacing-lg)
-      var(--Spacing-xl);
-
-    align-self: stretch;
-
-    background: var(--surface-neutral-strong-light);
-
-    border: none;
-    border-bottom: 1px solid var(--border-subtle-light);
-
-    outline: none;
-    box-shadow: none;
-
-    cursor: pointer;
-
-    appearance: none;
-    -webkit-appearance: none;
-  }
-
-  .subheadernav-dropdown-trigger::after {
-
-    content: "";
-
-    width: 24px;
-    height: 24px;
-
-    flex-shrink: 0;
-
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-
-    transition: transform 0.3s ease;
-
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 12.6L7.4 8L6 9.4L12 15.4L18 9.4L16.6 8L12 12.6Z' fill='%2335373B'/%3E%3C/svg%3E");
-  }
-
-  .subheadernav-dropdown-menu {
-
-    display: none;
-
-    flex-direction: column;
-
-    position: absolute;
-
-    top: calc(100% + 8px);
-    left: 0;
-
-    width: 100%;
-
-    padding: 8px 0;
-
-    background: var(--surface-neutral-strong-light);
-
-    z-index: 99;
-
-    overflow-y: auto;
-    max-height: 300px;
-  }
-
-  .subheadernav-mobile-dropdown.open
-  .subheadernav-dropdown-menu {
-
-    display: flex;
-  }
-
-  .subheadernav-mobile-dropdown.open
-  .subheadernav-dropdown-trigger::after {
-
-    transform: rotate(180deg);
-  }
-
-  .subheadernav-dropdown-menu
-  .subheadernav-item {
-
-    padding: var(--spacing-12) var(--spacing-20);
-
-    display: flex;
-
-    height: 51px;
-
-    align-items: center;
-
-    gap: 8px;
-
-    align-self: stretch;
-
-    background: #FFF;
-
-    border-bottom: none;
-  }
-
-  /* =====================================
-     TABLET
-  ===================================== */
-
-  @media (max-width: 991px) and (min-width: 768px) {
-
-    .subheadernav-wrapper {
-
-      flex-direction: column;
-      align-items: flex-start;
-
-      gap: 16px;
-    }
-
-    .subheadernav-items {
-
-      display: none;
-    }
-
-    .subheadernav-mobile-dropdown {
-
-      display: block;
-    }
-
-    .subheadernav-links {
-
-      position: fixed;
-
-      bottom: 0;
-      left: 0;
-
-      width: 100%;
-
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
-
-      gap: var(--Spacing-lg);
-
-      padding: 16px;
-
-      background: var(--surface-neutral-strong-light);
-
-      z-index: 999;
-
-      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
-    }
-
-    .pdp-subheadernav {
-
-      padding-bottom: 100px;
-    }
-  }
-
-  /* =====================================
-     MOBILE
-  ===================================== */
-
-  @media (max-width: 767px) {
-
-    .subheadernav-wrapper {
-
-      flex-direction: column;
-      align-items: flex-start;
-
-      gap: 16px;
-    }
-
-    .subheadernav-items {
-
-      display: none;
-    }
-
-    .subheadernav-mobile-dropdown {
-
-      display: block;
-    }
-
-    .subheadernav-links {
-
-      position: fixed;
-
-      bottom: 0;
-      left: 0;
-
-      width: 100%;
-
-      display: flex;
-      align-items: center;
-
-      gap: 8px;
-
-      padding: 16px;
-
-      background: var(--surface-neutral-strong-light);
-
-      z-index: 999;
-
-      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
-    }
-
-    .subheadernav-link {
-
-      flex: 1 0 0;
-
-      width: 100%;
-    }
-
-    .pdp-subheadernav {
-
-      padding-bottom: 100px;
-    }
-  }
-}
-
-
-
-
-
--------------------------------------------------------------------------------------------- JS ----------------------------------------------------------
-
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================================
@@ -515,14 +37,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
-const normalize = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")  // spaces + special chars → hyphen
-    .replace(/^-+|-+$/g, "");     // remove leading/trailing hyphens
+  const normalizeClass = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
   /* =====================================
-     NAV CLICK HANDLER
+     NAV ITEMS
   ====================================== */
 
   const navItems = document.querySelectorAll<HTMLElement>(
@@ -542,7 +64,7 @@ const normalize = (value: string) =>
       const target = item.dataset.target;
       if (!target) return;
 
-      const normalizedTarget = normalize(target);
+      const normalizedTarget = normalizeClass(target);
 
       const section = document.querySelector(
         `.${normalizedTarget}`
@@ -550,91 +72,128 @@ const normalize = (value: string) =>
 
       if (section) {
 
-        section.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
+        const nav = document.querySelector(
+          ".pdp-subheadernav"
+        ) as HTMLElement | null;
+
+        const navHeight = nav?.offsetHeight || 0;
+
+        const sectionTop =
+          section.getBoundingClientRect().top +
+          window.pageYOffset -
+          navHeight -
+          20;
+
+        window.scrollTo({
+          top: sectionTop,
+          behavior: "smooth"
         });
 
-        navItems.forEach(n => n.classList.remove("active"));
-        item.classList.add("active");
+        navItems.forEach(n =>
+          n.classList.remove("active")
+        );
 
+        item.classList.add("active");
         dropdown?.classList.remove("open");
       }
     });
   });
 
   /* =====================================
-   STICKY NAV
-===================================== */
-
+     FIXED SUBHEADER
+  ====================================== */
 const nav = document.querySelector(
   ".pdp-subheadernav"
 ) as HTMLElement | null;
 
-const header = document.querySelector(
-  ".header.header-v2"
-) as HTMLElement | null;
-
 if (nav) {
 
-  const stickyOffset = nav.offsetTop;
+  const navTop =
+    nav.getBoundingClientRect().top +
+    window.scrollY;
 
-  const updateStickyNav = () => {
+  const navHeight = nav.offsetHeight;
 
-    const headerHeight =
-      header?.getBoundingClientRect().height || 0;
+  const placeholder = document.createElement("div");
 
-    if (window.scrollY > stickyOffset - headerHeight) {
+  const header = document.querySelector(
+    ".cmp-header-v2-wrapper"
+  ) as HTMLElement | null;
 
-      nav.classList.add("is-fixed");
+  let lastScrollTop = window.scrollY;
 
-      nav.style.top = `${headerHeight}px`;
+  const onScroll = () => {
 
-      // prevent layout jump
-      nav.parentElement?.setAttribute(
-        "style",
-        `padding-top:${nav.offsetHeight}px`
-      );
+    const currentScrollTop = window.scrollY;
+
+    if (currentScrollTop >= navTop) {
+
+      if (!nav.classList.contains("fixed-nav")) {
+
+        placeholder.style.height = `${navHeight}px`;
+        placeholder.style.width = "100%";
+
+        nav.parentNode?.insertBefore(
+          placeholder,
+          nav
+        );
+
+        nav.classList.add("fixed-nav");
+      }
+
+      const headerHeight =
+        header?.offsetHeight || 0;
+
+      if (currentScrollTop < lastScrollTop) {
+
+        nav.style.top = `${headerHeight}px`;
+
+      } else {
+
+        nav.style.top = "0px";
+      }
 
     } else {
 
-      nav.classList.remove("is-fixed");
-
+      nav.classList.remove("fixed-nav");
       nav.style.top = "";
-
-      nav.parentElement?.setAttribute(
-        "style",
-        ""
-      );
+      placeholder.remove();
     }
+
+    lastScrollTop = currentScrollTop;
   };
 
-  window.addEventListener("scroll", updateStickyNav);
+  window.addEventListener("scroll", onScroll);
+  window.addEventListener("resize", onScroll);
 
-  window.addEventListener("resize", updateStickyNav);
-
-  updateStickyNav();
+  onScroll();
 }
 
   /* =====================================
-     🔥 SCROLL SPY (ACTIVE STATE ON SCROLL)
+     SCROLL SPY
   ====================================== */
 
-  const sectionMap: { section: HTMLElement; id: string }[] = [];
+  const sectionMap: {
+    section: HTMLElement;
+    id: string;
+  }[] = [];
 
   navItems.forEach((item) => {
 
     const raw = item.dataset.target;
     if (!raw) return;
 
-    const normalized = normalize(raw);
+    const normalized = normalizeClass(raw);
 
     const section = document.querySelector(
       `.${normalized}`
     ) as HTMLElement | null;
 
     if (section) {
-      sectionMap.push({ section, id: raw });
+      sectionMap.push({
+        section,
+        id: raw
+      });
     }
   });
 
@@ -646,14 +205,14 @@ if (nav) {
 
       const rect = section.getBoundingClientRect();
 
-      if (rect.top <= 140 && rect.bottom >= 140) {
+      if (rect.top <= 180 && rect.bottom >= 180) {
         active = id;
       }
     });
 
     if (!active) return;
 
-    navItems.forEach(item => {
+    navItems.forEach((item) => {
 
       if (item.dataset.target === active) {
         item.classList.add("active");
@@ -664,135 +223,493 @@ if (nav) {
   };
 
   window.addEventListener("scroll", onScrollSpy);
-  onScrollSpy();
 
+  onScrollSpy();
 });
 
 
 
-------------------------------------------------------------------------- html ====================================
 
-<div data-sly-test="${wcmmode.edit}"
-     class="cq-placeholder"
-     data-emptytext="Edit ${component.title}">
-</div>
+==============================
 
-<sly data-sly-use.model="com.centurylink.aem.core.models.SubHeaderStickyNavModel">
 
-<div class="subheader-wrapper">
-    <!-- =========================================
-         BREADCRUMB (NON STICKY)
-    ========================================== -->
+/* =====================================
+   Breadcrumb 
+===================================== */
+.breadcrumb {
 
-    <div class="breadcrumb">
+  .cmp-breadcrumb__list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+  }
 
-        <sly data-sly-resource="${'breadcrumb' @ resourceType='core/wcm/components/breadcrumb/v2/breadcrumb'}"/>
+  /* =====================================
+     Breadcrumb Typography
+  ===================================== */
+  .cmp-breadcrumb__item,
+  .cmp-breadcrumb__item-link,
+  .cmp-breadcrumb__item span,
+  .cmp-breadcrumb__item-link span,
+  .cmp-breadcrumb__item--active span {
 
-    </div>
+    font-feature-settings: 'case' on;
+    color: var(--text-default-light);
+    font-family: var(--Font-Family-Gotham);
+	  font-size: var(--Font-Size-Desktop-SM);
+    font-style: var(--Font-Style-Normal);
+    font-weight: var(--Font-Weight-Regular);
+    line-height: 125%;
 
-    <!-- =========================================
-         STICKY SUB NAV
-    ========================================== -->
+    text-decoration: none;
+  }
 
-    <div class="pdp-subheadernav">
+  /* =====================================
+     Remove Hover / Focus / Visited Styles
+  ===================================== */
+  .cmp-breadcrumb__item-link,
+  .cmp-breadcrumb__item-link span {
+    text-decoration: none;
+  }
 
-        <div class="subheadernav-wrapper"
-             data-cmp-data-layer='${model.data}'>
+  .cmp-breadcrumb__item-link:hover,
+  .cmp-breadcrumb__item-link:hover span,
 
-            <!-- =========================================
-                 DESKTOP NAV
-            ========================================== -->
+  .cmp-breadcrumb__item-link:focus,
+  .cmp-breadcrumb__item-link:focus span,
 
-            <div class="subheadernav-items">
+  .cmp-breadcrumb__item-link:active,
+  .cmp-breadcrumb__item-link:active span,
 
-                <sly data-sly-list.titleList="${model.navTitle}">
+  .cmp-breadcrumb__item-link:visited,
+  .cmp-breadcrumb__item-link:visited span {
 
-                    <span
-                        class="subheadernav-item ${titleListList.index == 0 ? 'active' : ''}"
-                        data-target="${titleList.title}">
+    color: var(--text-default-light);
+    text-decoration: none;
+    border-bottom: none;
+    box-shadow: none;
+  }
 
-                        ${titleList.title}
+  /* =====================================
+     Remove Core Component Separator
+  ===================================== */
+  .cmp-breadcrumb__item::before {
+    content: none;
+  }
 
-                    </span>
+  /* =====================================
+     Custom "/" Separator
+  ===================================== */
+  .cmp-breadcrumb__list .cmp-breadcrumb__item:not(:first-child)::before {
+    content: "/";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 8px;
+    height: 18px;
+    color: var(--text-default-light);
+    font-family: var(--Font-Family-Gotham);
+	  font-size: var(--Font-Size-Desktop-SM);
+    font-style: var(--Font-Style-Normal);
+    font-weight: 400;
+    line-height: 125%;
+  }
 
-                </sly>
+  /* =====================================
+     Mobile 
+  ===================================== */
+  @media (max-width: 767px) {
 
-            </div>
+    .cmp-breadcrumb__list {
+      row-gap: 4px;
+      column-gap: 6px;
+      align-items: flex-start;
+    }
 
-            <!-- =========================================
-                 MOBILE/TABLET DROPDOWN
-            ========================================== -->
+    .cmp-breadcrumb__item {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+/* =====================================
+   STICKY SUBNAV
+===================================== */
+.pdp-subheadernav {
+  width: 100%;
+  background: #fff;
+  position: relative;
+  z-index: 20;
+  transition: box-shadow 0.2s ease;
 
-            <div class="subheadernav-mobile-dropdown">
+  &.fixed-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+}
 
-                <!-- Trigger -->
+/* optional smooth rendering */
+.pdp-subheadernav-inner {
+  width: 100%;
+}
 
-                <button class="subheadernav-dropdown-trigger">
+/* prevent content jump */
+body {
+  overflow-x: hidden;
+}
 
-                    <sly data-sly-list.titleList="${model.navTitle}">
+/* smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
 
-                        <sly data-sly-test="${titleListList.index == 0}">
+.subheader-wrapper {
+  padding:
+var(--Spacing-xl) var(--Spacing-4xl)
+}
 
-                            ${titleList.title}
+@media (max-width: 767px) {
+  .subheader-wrapper {
+    padding:0;
+  }
+   .subheader-wrapper .breadcrumb {
+    padding:
+      var(--Spacing-lg)
+      var(--Spacing-xl);
+    }
+}
 
-                        </sly>
+ /* Tablet: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
 
-                    </sly>
+  .subheader-wrapper {
+    padding: 0;
+  }
 
-                </button>
+  .subheader-wrapper .breadcrumb {
+    padding: var(--Spacing-lg) var(--Spacing-4xl);
+  }
 
-                <!-- Dropdown Menu -->
+}
+/* =====================================
+   PDP SUB HEADER NAV
+===================================== */
+.pdp-subheadernav {
+  /* =====================================
+     STICKY NAV
+  ===================================== */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  gap: 12px;
+  background: var(--surface-neutral-strong-light);
 
-                <div class="subheadernav-dropdown-menu">
+  /* =====================================
+     INNER WRAPPER
+  ==================================== */
+  .subheadernav-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--Spacing-xl);
+  }
 
-                    <sly data-sly-list.titleList="${model.navTitle}">
+  /* =====================================
+     LEFT NAV SECTION
+  ===================================== */
+  .subheadernav-items {
+    display: flex;
+    align-items: center;
+    gap: var(--Spacing-3xl);
+    flex: 1;
+    flex-wrap: wrap;
+  }
 
-                        <sly data-sly-test="${titleListList.index != 0}">
+  .subheadernav-item {
+    color: var(--text-headline-light);
+    font-family: var(--Font-Family-Open);
+    font-size: var(--Font-Size-Desktop-MD);
+    font-style: var(--Font-Style-Normal);
+    font-weight: var(--Font-Weight-Regular);
+    line-height: var(--Line-Height-166);
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+  }
 
-                            <span
-                                class="subheadernav-item"
-                                data-target="${titleList.title}">
+  .subheadernav-item.active {
+    border-bottom: 2px solid var(--text-link-light);
+    font-weight: var(--Font-Weight-Bold);
+  }
 
-                                ${titleList.title}
+  .subheadernav-item.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 100%;
+    height: 2px;
+  }
 
-                            </span>
+  /* =====================================
+     CTA BUTTON WRAPPER
+  ===================================== */
+  .subheadernav-links {
+    display: flex;
+    align-items: unset;
+    gap: var(--Spacing-lg);
+    flex-shrink: 0;
+  }
 
-                        </sly>
+  /* =====================================
+     BUTTON BASE
+  ===================================== */
+  .subheadernav-link {
+    display: flex;
+    padding:
+      14px
+      var(--Spacing-3xl);
 
-                    </sly>
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    color: var(--text-button-secondary-light);
+    font-family: var(--Font-Family-Gotham);
+    font-size: var(--Font-Size-Desktop-MD);
+    font-style: var(--Font-Style-Normal);
+    font-weight: var(--Font-Weight-Medium);
+    line-height: var(--Line-Height-125);
+  }
 
-                </div>
+  /* =====================================
+     SECONDARY BUTTON
+  ===================================== */
 
-            </div>
+  .subheadernav-link.secondary {
+    border: 2px solid var(--color-brand-red-400);
+    background: transparent;
+  }
+  .subheadernav-link.secondary:hover{
+    text-decoration: none !important;
+  }
+  /* =====================================
+     PRIMARY BUTTON
+  ===================================== */
 
-            <!-- =========================================
-                 CTA LINKS
-            ========================================== -->
+  .subheadernav-link.primary {
+    border: none;
+    background: var(--Red-Orange-Gradient);
+  }
 
-            <div class="subheadernav-links">
+  .subheadernav-link.primary:hover {
+    opacity: 0.92;
+    text-decoration: none !important;
+  }
 
-                <a class="subheadernav-link secondary"
-                   href="${model.linkUrl}">
+  /* =====================================
+     MOBILE/TABLET DROPDOWN
+  ===================================== */
 
-                    ${model.linkText}
+  .subheadernav-mobile-dropdown {
+    display: none;
+    position: relative;
+    width: 100%;
+  }
 
-                </a>
+  .subheadernav-dropdown-trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding:
+      var(--Spacing-lg)
+      var(--Spacing-xl);
 
-                <a class="subheadernav-link primary"
-                   href="${model.secondLinkUrl}">
+    align-self: stretch;
+    background: var(--surface-neutral-strong-light);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle-light);
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
 
-                    ${model.secondLinkText}
+  .subheadernav-dropdown-trigger::after {
+    content: "";
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    transition: transform 0.3s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 12.6L7.4 8L6 9.4L12 15.4L18 9.4L16.6 8L12 12.6Z' fill='%2335373B'/%3E%3C/svg%3E");
+  }
 
-                </a>
+  .subheadernav-dropdown-menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 0px);
+    left: 0;
+    width: 100%;
+    padding: 8px 0;
+    background: var(--surface-neutral-strong-light);
+    z-index: 99;
+    overflow-y: auto;
+    max-height: 300px;
+  }
 
-            </div>
+  /* =====================================
+   DROPDOWN ACTIVE ITEM FIX
+===================================== */
 
-        </div>
+.subheadernav-dropdown-menu {
 
-    </div>
-</div>
-</sly>
+ .subheadernav-item{
+    font-weight: 400;
+  }
+  .subheadernav-item.active {
+    font-weight: 700;
+  }
+}
 
+  .subheadernav-mobile-dropdown.open
+  .subheadernav-dropdown-menu {
+    display: flex;
+  }
+
+  .subheadernav-mobile-dropdown.open
+  .subheadernav-dropdown-trigger::after {
+    transform: rotate(180deg);
+  }
+
+  .subheadernav-dropdown-menu
+  .subheadernav-item {
+    padding: var(--spacing-12) var(--spacing-20);
+    display: flex;
+    height: 51px;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+    background: #FFF;
+    border-bottom: none;
+  }
+
+  /* =====================================
+     TABLET
+  ===================================== */
+
+  @media (max-width: 991px) and (min-width: 768px) {
+
+    .subheadernav-wrapper {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .subheadernav-items {
+      display: none;
+    }
+
+    .subheadernav-mobile-dropdown {
+      display: block;
+    }
+
+    .subheadernav-links {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between; 
+      align-items: stretch;
+      gap: var(--Spacing-lg);
+      padding: 16px;
+      background: var(--surface-neutral-strong-light);
+      z-index: 999;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
+    }
+    .subheadernav-link {
+      flex: 1;
+      width: 100%;
+      text-align: center;
+    }
+
+    .pdp-subheadernav {
+      padding-bottom: 100px;
+    }
+  }
+
+  /* =====================================
+     MOBILE
+  ===================================== */
+
+  @media (max-width: 767px) {
+
+    .subheadernav-wrapper {
+
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 16px;
+    }
+
+    .subheadernav-items {
+
+      display: none;
+    }
+
+    .subheadernav-mobile-dropdown {
+
+      display: block;
+    }
+
+    .subheadernav-links {
+
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      background: var(--surface-neutral-strong-light);
+      z-index: 999;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.16);
+    }
+
+    .subheadernav-link {
+      flex: 1 0 0;
+      width: 100%;
+    }
+
+    .pdp-subheadernav {
+      padding-bottom: 100px;
+    }
+  }
+}
 
 
 
