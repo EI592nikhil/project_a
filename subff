@@ -6,6 +6,60 @@
         }
         return secondLinkUrl;
     }
+==================================
+public String getLinkUrl() {
+
+    if (linkUrl == null) {
+        return null;
+    }
+
+    // 🔹 do not touch external links
+    if (linkUrl.startsWith("http://") ||
+        linkUrl.startsWith("https://")) {
+        return linkUrl;
+    }
+
+    // 🔹 do not touch anchor links
+    if (linkUrl.contains("#")) {
+        return linkUrl;
+    }
+
+    // 🔹 already has .html extension
+    if (linkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
+        return linkUrl;
+    }
+
+    // 🔹 append .html only for normal internal pages
+    return linkUrl + CtlConstants.HTML_EXTENSION;
+}
+
+public String getSecondLinkUrl() {
+
+    if (secondLinkUrl == null) {
+        return null;
+    }
+
+    // 🔹 do not touch external URLs
+    if (secondLinkUrl.startsWith("http://") ||
+        secondLinkUrl.startsWith("https://")) {
+        return secondLinkUrl;
+    }
+
+    // 🔹 do not touch anchor links
+    if (secondLinkUrl.contains("#")) {
+        return secondLinkUrl;
+    }
+
+    // 🔹 already has extension
+    if (secondLinkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
+        return secondLinkUrl;
+    }
+
+    // 🔹 only normal page path
+    return secondLinkUrl + CtlConstants.HTML_EXTENSION;
+}
+
+==============================
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================================
