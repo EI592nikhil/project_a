@@ -1,4 +1,489 @@
-   public String getSecondLinkUrl() {
+content.xml ----------------
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:granite="http://www.adobe.com/jcr/granite/1.0" xmlns:rep="internal" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
+    cq:dialogMode="floating"
+    jcr:primaryType="nt:unstructured"
+    jcr:title="Sub-Header Navigation"
+    extraClientlibs="[ewcmams.components.subheadernav.editor]"
+    sling:resourceType="cq/gui/components/authoring/dialog">
+    <content
+        jcr:primaryType="nt:unstructured"
+        sling:resourceType="granite/ui/components/coral/foundation/container">
+        <items jcr:primaryType="nt:unstructured">
+        <tabs
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="granite/ui/components/coral/foundation/tabs"
+            maximized="{Boolean}true">
+            <items jcr:primaryType="nt:unstructured">
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    jcr:title="General"
+                    sling:resourceType="granite/ui/components/coral/foundation/container"
+                    margin="{Boolean}true">
+                    <items jcr:primaryType="nt:unstructured">
+                    <columns
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="granite/ui/components/coral/foundation/fixedcolumns"
+                            margin="{Boolean}true">
+                            <items jcr:primaryType="nt:unstructured">
+                                <column
+                                        jcr:primaryType="nt:unstructured"
+                                        sling:resourceType="granite/ui/components/coral/foundation/container">
+                                        <items jcr:primaryType="nt:unstructured">
+                                            <ootbBreadcrumb
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the breadcrumb will be displaying page hierarchy"
+                                                    name="./ootbBreadcrumb"
+                                                    text="Page Hierarchy Breadcrumb"
+                                                    uncheckedValue="false"
+                                                    value="true"/>
+                                            <ctaText
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                    emptyText="Text"
+                                                    fieldLabel="CTA Text 1"
+                                                    name="./linkText"/>
+                                            <ctaLink
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
+                                                    emptyText="Link"
+                                                    fieldLabel="CTA Link 1"
+                                                    name="./linkUrl"
+                                                    rootPath="/content"/>
+                                        <showLink1
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                name="./showLink1"
+                                                text="Show CTA 1"
+                                                value="{Boolean}true"/>
+                                            <target
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the link will be opened in a new browser tab."
+                                                    name="./linkTarget"
+                                                    text="CTA Target"
+                                                    uncheckedValue="_self"
+                                                    value="_blank"/>
+                                            <ctaText2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                    emptyText="Text"
+                                                    fieldLabel="CTA Text 2"
+                                                    name="./secondLinkText"/>
+                                            <ctaLink2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
+                                                    emptyText="Link"
+                                                    fieldLabel="CTA Link 2"
+                                                    name="./secondLinkUrl"
+                                                    rootPath="/content"/>
+                                                <showLink2
+                                                            jcr:primaryType="nt:unstructured"
+                                                            sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                            name="./showLink2"
+                                                            text="Show CTA 2"
+                                                            value="{Boolean}true"/>
+                                            <target2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the link will be opened in a new browser tab."
+                                                    name="./secondLinkTarget"
+                                                    text="CTA Target 2"
+                                                    uncheckedValue="_self"
+                                                    value="_blank"/>
+                                            <linkMultifield
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/multifield"
+                                                composite="{Boolean}true"
+                                                validation="subheadernav-multifield-validation"
+                                                fieldLabel="Add Multiple Titles">
+                                                <granite:data
+                                                        jcr:primaryType="nt:unstructured"
+                                                        min-items="{Long}5"
+                                                        max-items="{Long}6"/>
+                                                <field
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/container"
+                                                    name="./navTitle">
+                                                    <items jcr:primaryType="nt:unstructured">
+                                                        <title
+                                                            jcr:primaryType="nt:unstructured"
+                                                            sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                            fieldLabel="Nav Titles"
+                                                            name="./title"
+                                                            required="{Boolean}true"/>
+                                                    </items>
+                                                </field>
+                                            </linkMultifield>
+                                        </items>
+                                </column>
+                            </items>
+                    </columns>
+                </items>
+            </text>
+            </items>
+            </tabs>
+            </items>
+    </content>
+</jcr:root>
+
+=======================+++++++++++++++++++++++
+package com.centurylink.aem.core.models;
+
+import com.centurylink.aem.core.models.constants.CtlConstants;
+import com.centurylink.aem.core.models.utils.ProductSolutionPagePropertyUtil;
+import com.centurylink.aem.core.services.ContentFragmentDataService;
+import com.centurylink.aem.core.utils.DataLayerUtil;
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageManager;
+import com.drew.lang.annotations.Nullable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
+
+@Model(
+        adaptables = {SlingHttpServletRequest.class, Resource.class},
+        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
+)
+public class SubHeaderStickyNavModel {
+
+    public static final String RESOURCE_TYPE = "ewcmams/components/subheadernav";
+
+    private String id;
+
+    private boolean dataLayerEnabled;
+
+    @ValueMapValue
+    private String linkText;
+
+    @ValueMapValue
+    private String showLink1;
+    
+    @ValueMapValue
+    private String showLink2;
+
+    @ValueMapValue
+    private String linkUrl;
+
+    @ValueMapValue
+    private String linkTarget;
+
+    @ValueMapValue
+    private String secondLinkText;
+
+    @ValueMapValue
+    private String secondLinkUrl;
+
+    @ValueMapValue
+    private String secondLinkTarget;
+
+    @ValueMapValue
+    private String ootbBreadcrumb;
+
+    @ChildResource(name = "navTitle")
+    private List<NavigationTitle> navTitle;
+
+    @SlingObject
+    private ResourceResolver resolver;
+
+    @SlingObject
+    private Resource resource;
+
+    @OSGiService
+    private ContentFragmentDataService cfService;
+
+    private String productTitle;
+
+    private String solutionTitle;
+
+    private String parentPageTitle;
+
+    private String parentPageUrl;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubHeaderStickyNavModel.class);
+
+    @PostConstruct
+    protected void init() {
+        id = DataLayerUtil.generateId("SubHeader-Navigation", resource.getPath());
+        dataLayerEnabled = StringUtils.isNotBlank(id);
+
+        LOGGER.info("Initialized component id :: {}", id);
+
+        PageManager pageManager = resource.getResourceResolver().adaptTo(PageManager.class);
+        if (pageManager != null) {
+            Page currentPage = pageManager.getContainingPage(resource);
+            if (currentPage != null) {
+                parentPageTitle = ProductSolutionPagePropertyUtil.getParentTitle(currentPage);
+                parentPageUrl = ProductSolutionPagePropertyUtil.getParentPath(currentPage);
+                productTitle = ProductSolutionPagePropertyUtil.getCfTitleField(currentPage, "productCfPath", resolver, cfService);
+                solutionTitle = ProductSolutionPagePropertyUtil.getCfTitleField(currentPage, "solutionContentFragment", resolver, cfService);
+
+            }
+        }
+
+    }
+
+    public String getProductTitle() {
+        return productTitle;
+    }
+
+    public String getSolutionTitle() {
+        return solutionTitle;
+    }
+
+    public List<NavigationTitle> getNavTitle() {
+        return navTitle == null ? Collections.emptyList() : Collections.unmodifiableList(navTitle);
+    }
+
+    public String getLinkText() {
+        return linkText;
+    }
+    
+    public String getLinkUrl() {
+
+        if (linkUrl == null) {
+            return null;
+        }
+
+        if (linkUrl.startsWith("http://") ||
+            linkUrl.startsWith("https://")) {
+            return linkUrl;
+        }
+
+        if (linkUrl.contains("#")) {
+            return linkUrl;
+        }
+
+        if (linkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
+            return linkUrl;
+        }
+
+        return linkUrl + CtlConstants.HTML_EXTENSION;
+    }
+
+
+    public String getLinkTarget() {
+        return linkTarget;
+    }
+
+    public boolean isShowLink1() {
+    return Boolean.TRUE.equals(showLink1);
+    }
+
+    public boolean isShowLink2() {
+        return Boolean.TRUE.equals(showLink2);
+    }
+
+    public String getSecondLinkText() {
+        return secondLinkText;
+    }
+
+    public String getSecondLinkUrl() {
+
+        if (secondLinkUrl == null) {
+            return null;
+        }
+
+        if (secondLinkUrl.startsWith("http://") ||
+            secondLinkUrl.startsWith("https://")) {
+            return secondLinkUrl;
+        }
+
+        if (secondLinkUrl.contains("#")) {
+            return secondLinkUrl;
+        }
+
+        if (secondLinkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
+            return secondLinkUrl;
+        }
+
+        return secondLinkUrl + CtlConstants.HTML_EXTENSION;
+    }
+
+    public String getSecondLinkTarget() {
+        return secondLinkTarget;
+    }
+
+    @Nullable
+    public String getId() {
+        return id;
+    }
+
+    public boolean isDataLayerEnabled() {
+        return dataLayerEnabled;
+    }
+
+    public String getData() {
+        if (!dataLayerEnabled || navTitle.isEmpty()) {
+            return null;
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("componentName", "SubHeader-Navigation");
+        data.put("resourceType", RESOURCE_TYPE);
+        data.put("navTitle", navTitle);
+        data.put("linkText", linkText);
+        data.put("linkUrl", linkUrl);
+        data.put("secondLinkText", secondLinkText);
+        data.put("secondLinkUrl", secondLinkUrl);
+        data.put("id", id);
+        if (StringUtils.isBlank(id)) {
+            return null;
+        }
+        try {
+            return String.format("{\"%s\":%s}",
+                    id,
+                    new ObjectMapper().writeValueAsString(data));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Unable to generate dataLayer JSON string for Subheader Navigation component", e);
+        }
+        return null;
+    }
+
+    public String getParentPageTitle() {
+        return parentPageTitle;
+    }
+
+    public String getParentPageUrl(){
+        return parentPageUrl;
+    }
+
+    public String getOotbBreadcrumb() {
+        return ootbBreadcrumb;
+    }
+
+    @Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+    public static class NavigationTitle {
+
+        @ValueMapValue
+        private String title;
+
+        public String getTitle() {
+            return title;
+        }
+    }
+
+}
+
+
+=========================+++++++++++++++++++++++++++++++++++++
+
+<div data-sly-test="${wcmmode.edit}"class="cq-placeholder" data-emptytext="Edit ${component.title}"> </div>
+
+<sly data-sly-use.model="com.centurylink.aem.core.models.SubHeaderStickyNavModel">
+<div class="subheader-wrapper">
+    <!-- =========================================
+         BREADCRUMB (NON STICKY)
+    ========================================== -->
+    <div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb =='true'}">
+        <sly data-sly-resource="${'breadcrumb' @ resourceType='core/wcm/components/breadcrumb/v2/breadcrumb'}"/>
+    </div>
+
+<!-- Breadcrumb enhancement -->
+<div class="breadcrumb" data-sly-test="${model.ootbBreadcrumb != 'true'}">
+    <ol class="cmp-breadcrumb__list">
+
+        <li class="cmp-breadcrumb__item">
+            <a class="cmp-breadcrumb__item-link"
+               href="${model.parentPageUrl}">
+                <span class="cmp-breadcrumb__item-title">
+                    ${model.parentPageTitle}
+                </span>
+            </a>
+        </li>
+
+        <li class="cmp-breadcrumb__item cmp-breadcrumb__item--active">
+            <span>
+                ${model.productTitle}${model.solutionTitle}
+            </span>
+        </li>
+
+    </ol>
+</div>
+ 
+
+    <!-- =========================================
+         STICKY SUB NAV
+    ========================================== -->
+    <div class="pdp-subheadernav">
+        <div class="subheadernav-wrapper"
+             data-cmp-data-layer='${model.data}'>
+            <!-- =========================================
+                 DESKTOP NAV
+            ========================================== -->
+            <div class="subheadernav-items">
+                <sly data-sly-list.titleList="${model.navTitle}">
+                    <span
+                        class="subheadernav-item ${titleListList.index == 0 ? 'active' : ''}"
+                        data-target="${titleList.title}">
+                        ${titleList.title}
+                    </span>
+
+                </sly>
+
+            </div>
+
+            <!-- =========================================
+                 MOBILE/TABLET DROPDOWN
+            ========================================== -->
+            <div class="subheadernav-mobile-dropdown">
+                <!-- Trigger -->
+                <button class="subheadernav-dropdown-trigger">
+                    <sly data-sly-list.titleList="${model.navTitle}">
+                        <sly data-sly-test="${titleListList.index == 0}">
+                            ${titleList.title}
+                        </sly>
+                    </sly>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div class="subheadernav-dropdown-menu">
+                    <sly data-sly-list.titleList="${model.navTitle}">
+                        <sly data-sly-test="${titleListList.index != 0}">
+                            <span
+                                class="subheadernav-item"
+                                data-target="${titleList.title}">
+                                ${titleList.title}
+                            </span>
+                        </sly>
+                    </sly>
+                </div>
+            </div>
+            <!-- =========================================
+                 CTA LINKS
+            ========================================== -->
+            <div class="subheadernav-links">
+                <a class="subheadernav-link secondary" data-sly-test="${model.showLink1}"
+                   href="${model.linkUrl}">
+                    ${model.linkText}
+                </a>
+                <a class="subheadernav-link primary" data-sly-test="${model.showLink2}"
+                   href="${model.secondLinkUrl}">
+                    ${model.secondLinkText}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</sly>
+
+++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++
+public String getSecondLinkUrl() {
         if(secondLinkUrl != null) {
             if (!secondLinkUrl.endsWith(CtlConstants.HTML_EXTENSION)) {
                 secondLinkUrl = secondLinkUrl + CtlConstants.HTML_EXTENSION;
