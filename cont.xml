@@ -1,0 +1,74 @@
+  <items jcr:primaryType="nt:unstructured">
+                                <column
+                                        jcr:primaryType="nt:unstructured"
+                                        sling:resourceType="granite/ui/components/coral/foundation/container">
+                                        <items jcr:primaryType="nt:unstructured">
+                                            <ctaText
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                    emptyText="Text"
+                                                    fieldLabel="CTA Text 1"
+                                                    name="./linkText"/>
+                                            <ctaLink
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
+                                                    emptyText="Link"
+                                                    fieldLabel="CTA Link 1"
+                                                    name="./linkUrl"
+                                                    rootPath="/content"/>
+                                            <target
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the link will be opened in a new browser tab."
+                                                    name="./linkTarget"
+                                                    text="CTA Target"
+                                                    uncheckedValue="_self"
+                                                    value="_blank"/>
+                                            <ctaText2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                    emptyText="Text"
+                                                    fieldLabel="CTA Text 2"
+                                                    name="./secondLinkText"/>
+                                            <ctaLink2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/pathfield"
+                                                    emptyText="Link"
+                                                    fieldLabel="CTA Link 2"
+                                                    name="./secondLinkUrl"
+                                                    rootPath="/content"/>
+                                            <target2
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/form/checkbox"
+                                                    fieldDescription="If checked the link will be opened in a new browser tab."
+                                                    name="./secondLinkTarget"
+                                                    text="CTA Target 2"
+                                                    uncheckedValue="_self"
+                                                    value="_blank"/>
+                                            <linkMultifield
+                                                jcr:primaryType="nt:unstructured"
+                                                sling:resourceType="granite/ui/components/coral/foundation/form/multifield"
+                                                composite="{Boolean}true"
+                                                validation="subheadernav-multifield-validation"
+                                                fieldLabel="Add Multiple Titles">
+                                                <granite:data
+                                                        jcr:primaryType="nt:unstructured"
+                                                        min-items="{Long}5"
+                                                        max-items="{Long}6"/>
+                                                <field
+                                                    jcr:primaryType="nt:unstructured"
+                                                    sling:resourceType="granite/ui/components/coral/foundation/container"
+                                                    name="./navTitle">
+                                                    <items jcr:primaryType="nt:unstructured">
+                                                        <title
+                                                            jcr:primaryType="nt:unstructured"
+                                                            sling:resourceType="granite/ui/components/coral/foundation/form/textfield"
+                                                            fieldLabel="Nav Titles"
+                                                            name="./title"
+                                                            required="{Boolean}true"/>
+                                                    </items>
+                                                </field>
+                                            </linkMultifield>
+                                        </items>
+                                </column>
+                            </items>
