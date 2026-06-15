@@ -291,19 +291,32 @@ $pdp-hero-shape-orange-gradient: linear-gradient(270deg, #F95D93 0%, #FB862D 100
 
     a.pdp-hero__download-btn {
         background: var(--Red-Orange-Gradient);
+        box-shadow: inset 0 0 0 2px var(--Color-Brand-Red-400);
+        border: none;
     }
 
     a.pdp-hero__download-btn:hover {
-        background: transparent;
+        background: var(--Surface-Neutral-Light);
+        box-shadow: inset 0 0 0 2px var(--Color-Brand-Red-400);
+
+    }
+    a.pdp-hero__secondary-cta {
+        box-shadow: inset 0 0 0 2px var(--Color-Brand-Red-400);
+        border: none;
     }
      a.pdp-hero__secondary-cta:hover {
+        box-shadow:none;
         background: var(--Red-Orange-Gradient);
     }
 
-    .pdp-hero__actions{
-        display:flex;
-        gap:20px;
-      }
+    .pdp-hero__actions {
+        display: block;
+
+        @media (min-width: $pdp-hero-breakpoint-md) {
+            display: flex;
+            gap: 20px;
+        }
+    }
 
     img.cmp-image__image {
         border-radius: var(--radius-3xl);
