@@ -1,419 +1,254 @@
-/* =====================================
-   SDP PDP TEXT CONTAINER
-===================================== */
-.sdppdptextcontainer {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 548px;
-  padding:
-    72px
-    var(--Spacing-4xl);
-  background: var(--surface-neutral-strong-light);
+document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================================
-     CONTENT WRAPPER
-  ===================================== */
-  .content-wrapper {
-    position: relative;
-    z-index: 2;
-    width: 100%;
+     MOBILE DROPDOWN
+  ====================================== */
+
+  const dropdown = document.querySelector(
+    ".subheadernav-mobile-dropdown"
+  ) as HTMLElement | null;
+
+  const trigger = document.querySelector(
+    ".subheadernav-dropdown-trigger"
+  ) as HTMLButtonElement | null;
+
+  if (dropdown && trigger) {
+
+    trigger.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      dropdown.classList.remove("open");
+    });
+
+    dropdown.addEventListener("click", (e: MouseEvent) => {
+      e.stopPropagation();
+    });
   }
 
   /* =====================================
-     TITLE
-  ===================================== */
-  .title {
-    margin: 0;
-    color: var(--text-headline-light);
-    font-family: var(--Font-Family-Gotham);
-    font-size: var(--Font-Size-H4);
-    font-style: normal;
-    font-weight: var(--Font-Weight-Book);
-    line-height: var(--Line-Height-125);
-  }
+     HELPERS
+  ====================================== */
+
+    const formatTitle = (value: string) =>
+      value
+        .replace(/-/g, " ")
+        .replace(/\s*&\s*/g, " & ")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .map(word =>
+          word === "&"
+            ? "&"
+            : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join(" ");
+
+    const normalizeClass = (value: string) =>
+      value
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, "")              
+        .replace(/[^a-z0-9\s]/g, "")   
+        .replace(/\s+/g, "-")           
+        .replace(/-+/g, "-");          
 
   /* =====================================
-     DESCRIPTION
-  ===================================== */
-  .description_one,
-  .description_two {
-    width: 100%;
-    color: var(--text-subtle-light);
-    font-family: var(--Font-Family-Open);
-    font-size: var(--Font-Size-Desktop-LG);
-    font-style: normal;
-    font-weight: var(--Font-Weight-Regular);
-    line-height: var(--Line-Height-166);
-    p {
-      margin: 0;
-    width: 100%;
-    color: var(--text-subtle-light);
-    font-family: var(--Font-Family-Open) !important;
-    font-size: var(--Font-Size-Desktop-LG);
-    font-style: normal;
-    font-weight: var(--Font-Weight-Regular);
-    line-height: var(--Line-Height-166);
-    }
-  }
-  /* =====================================
-     CTA WRAPPER
-  ===================================== */
-  .cta-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
+     NAV ITEMS
+  ====================================== */
 
-  /* =====================================
-     PRIMARY CTA
-  ===================================== */
-  .primary_cta {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding:
-      14px
-      var(--Spacing-3xl);
-    border-radius: 8px;
-    background:var(
-    --Red-Orange-Gradient,
-    linear-gradient(
-      90deg,
-      var(--Color-Brand-Red-400, #FA6E5C) 0%,
-      var(--Color-Brand-Orange-500, #FB862D) 100%
-    )
+  const navItems = document.querySelectorAll<HTMLElement>(
+    ".subheadernav-item"
   );
-    color: var(--text-button-primary-light);
-    text-decoration: none;
-    font-family: var(--Font-Family-Gotham);
-    font-size: var(--Font-Size-Desktop-MD);
-    font-style: normal;
-    font-weight: var(--Font-Weight-Medium);
-    line-height: var(--Line-Height-125);
-    transition: 0.3s ease;
-  }
 
-  /* =====================================
-     SECONDARY CTA
-  ===================================== */
-  .secondary_cta {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding:
-      14px
-      var(--Spacing-3xl);
-    border-radius: 8px;
-    border:
-      2px
-      solid
-      var(--color-brand-orange-500);
-    background: transparent;
-    color: var(--text-headline-light);
-    text-decoration: none;
-    font-family: var(--Font-Family-Gotham);
-    font-size: var(--Font-Size-Desktop-MD);
-    font-style: normal;
-    font-weight: var(--Font-Weight-Medium);
-    line-height: var(--Line-Height-125);
-    transition: 0.3s ease;
-  }
+  navItems.forEach((item) => {
 
-  /* =====================================
-     SINGLE COLUMN LEFT
-  ===================================== */
-  &.singlecolumn_left,
-  &:not(.doublecolumn):not(.singlecolumn_right) {
+    const rawTarget = item.dataset.target;
 
-    .content-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-      max-width: 900px;
-      gap: 32px;
+    if (rawTarget) {
+      item.textContent = formatTitle(rawTarget);
     }
 
-    .cta-wrapper {
-      justify-content: flex-start;
-    }
-  }
+    item.addEventListener("click", () => {
 
-  /* =====================================
-     SINGLE COLUMN RIGHT
-  ===================================== */
-  &.singlecolumn_right {
-    justify-content: flex-end;
+      const target = item.dataset.target;
+      if (!target) return;
 
-    .content-wrapper {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      max-width: 900px;
-      margin-left: auto;
-      gap: 32px;
-    }
+      const normalizedTarget = normalizeClass(target);
 
-    .title,
-    .description_one,
-    .description_two,
-    .cta-wrapper {
-      width: 100%;
-    }
+      const section = document.querySelector(
+        `.${normalizedTarget}`
+      ) as HTMLElement | null;
 
-    .title,
-    .description_one,
-    .description_two {
-      text-align: left;
-    }
+      if (section) {
 
-    .description_one p,
-    .description_two p {
-      text-align: left;
-      margin: 0;
-    }
+        const nav = document.querySelector(
+          ".pdp-subheadernav"
+        ) as HTMLElement | null;
 
-    .cta-wrapper {
-      justify-content: flex-start;
-    }
-  }
+       const header = document.querySelector(".header.header-v2") as HTMLElement | null;
+        const headerHeight = header?.offsetHeight || 0;
+        const navHeight = nav?.offsetHeight || 0;
 
-  /* =====================================
-     DOUBLE COLUMN
-  ===================================== */
-  &.doublecolumn {
+        const sectionTop =
+          section.getBoundingClientRect().top +
+          window.pageYOffset -
+          headerHeight -
+          navHeight -
+          20;
 
-    .content-wrapper {
-      display: grid;
-      grid-template-areas:
-        "title title"
-        "desc1 desc2"
-        "cta cta";
-      grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr);
-      column-gap: 20px;
-      row-gap: 32px;
-      width: 100%;
-    }
+        window.scrollTo({
+          top: sectionTop,
+          behavior: "smooth"
+        });
 
-    .title {
-      grid-area: title;
-    }
-
-    .description_one {
-      grid-area: desc1;
-    }
-
-    .description_two {
-      grid-area: desc2;
-    }
-
-    .cta-wrapper {
-      grid-area: cta;
-      justify-content: end;
-    }
-  }
-
-  /* =====================================
-     BLOB DEFAULT
-  ===================================== */
-  &::after {
-    display: none;
-  }
-
-  /* =====================================
-     WITH BLOB
-  ===================================== */
-  &.with_blob {
-
-    &::after {
-      content: "";
-
-      position: absolute;
-      display: block;
-      background:
-        linear-gradient(
-          270deg,
-          var(--color-brand-yellowbright-500) 0%,
-          var(--color-brand-orange-500) 100%
+        navItems.forEach(n =>
+          n.classList.remove("active")
         );
 
-      background-blend-mode: plus-darker;
-      transform: rotate(90deg);
-      z-index: 1;
-    }
-
-    /* =====================================
-       SINGLE LEFT BLOB
-    ===================================== */
-
-    &.singlecolumn_left {
-
-      &::after {
-        width: 280px;
-        height: 100px;
-        border-radius:
-          82px
-          82px
-          82px
-          0;
-        top: -60px;
-        right: 40px;
+        item.classList.add("active");
+        dropdown?.classList.remove("open");
       }
-    }
+    });
+  });
 
-    /* =====================================
-       SINGLE RIGHT BLOB
-    ===================================== */
+  /* =====================================
+     FIXED SUBHEADER
+  ====================================== */
+const nav = document.querySelector(
+  ".pdp-subheadernav"
+) as HTMLElement | null;
 
-    &.singlecolumn_right {
+if (nav) {
 
-      &::after {
-        width: 280px;
-        height: 100px;
-        border-radius:
-          82px
-          82px
-          82px
-          0;
-        top: -60px;
-        left: 40px;
+  const navTop =
+    nav.getBoundingClientRect().top +
+    window.scrollY;
+
+  const navHeight = nav.offsetHeight;
+
+  const placeholder = document.createElement("div");
+
+  const header = document.querySelector(
+    ".cmp-header-v2-wrapper"
+  ) as HTMLElement | null;
+
+  let lastScrollTop = window.scrollY;
+
+  const onScroll = () => {
+
+    const currentScrollTop = window.scrollY;
+
+    if (currentScrollTop >= navTop) {
+
+      if (!nav.classList.contains("fixed-nav")) {
+
+        placeholder.style.height = `${navHeight}px`;
+        placeholder.style.width = "100%";
+
+        nav.parentNode?.insertBefore(
+          placeholder,
+          nav
+        );
+
+        nav.classList.add("fixed-nav");
       }
-    }
 
-    /* =====================================
-       DOUBLE COLUMN BLOB
-    ===================================== */
-    &.doublecolumn {
+      const headerHeight =
+        header?.offsetHeight || 0;
 
-      &::after {
-        width: 272px;
-        height: 100px;
-        border-radius:
-          80px
-          80px
-          80px
-          0;
-        top: -80px;
-        right: 40px;
+      if (currentScrollTop < lastScrollTop) {
+
+        nav.style.top = `${headerHeight}px`;
+
+      } else {
+
+        nav.style.top = "0px";
       }
+
+    } else {
+
+      nav.classList.remove("fixed-nav");
+      nav.style.top = "";
+      placeholder.remove();
     }
-  }
+
+    lastScrollTop = currentScrollTop;
+  };
+
+  window.addEventListener("scroll", onScroll);
+  window.addEventListener("resize", onScroll);
+
+  onScroll();
 }
 
-/* =====================================
-   TABLET
-===================================== */
-@media screen and (max-width: 1024px) {
+  /* =====================================
+     SCROLL SPY
+  ====================================== */
 
-  .sdppdptextcontainer {
-    min-height: auto;
-    padding:64px 20px;
+  const sectionMap: {
+    section: HTMLElement;
+    id: string;
+  }[] = [];
 
-    .title {
-      font-size: var(--Font-Size-Tablet-H4);
+  navItems.forEach((item) => {
+
+    const raw = item.dataset.target;
+    if (!raw) return;
+
+    const normalized = normalizeClass(raw);
+
+    const section = document.querySelector(
+      `.${normalized}`
+    ) as HTMLElement | null;
+
+    if (section) {
+      sectionMap.push({
+        section,
+        id: raw
+      });
+    }
+  });
+
+  const onScrollSpy = () => {
+  const lastSection = sectionMap[sectionMap.length - 1]?.section;
+    if (
+      lastSection &&
+      window.scrollY >
+        lastSection.offsetTop + lastSection.offsetHeight
+    ) {
+      navItems.forEach(item => {
+        item.classList.remove("active");
+      });
+      return;
     }
 
-    .description_one,
-    .description_two {
-      font-size: var(--Font-Size-Tablet-MD);
-    }
+    let active: string | null = null;
 
-    &.singlecolumn_right {
+    sectionMap.forEach(({ section, id }) => {
 
-      .content-wrapper {
-        align-items: flex-start;
-        margin-left: 0;
+      const rect = section.getBoundingClientRect();
+
+      if (rect.top <= 220 && rect.bottom >= 220) {
+        active = id;
       }
-    }
+    });
 
-    &.doublecolumn {
-      .content-wrapper {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-          "title"
-          "desc1"
-          "desc2"
-          "cta";
+    if (!active) return;
+
+    navItems.forEach((item) => {
+
+      if (item.dataset.target === active) {
+        item.classList.add("active");
+      } else {
+        item.classList.remove("active");
       }
-    }
+    });
+  };
 
-    &.with_blob {
+  window.addEventListener("scroll", onScrollSpy);
 
-      &::after {
-        width: 200px !important;
-        height: 80px !important;
-        border-radius:
-          58.824px
-          58.824px
-          58.824px
-          0 !important;
-        top: -50px !important;
-        right: 32px !important;
-        left: auto !important;
-      }
-    }
-  }
-}
-
-/* =====================================
-   MOBILE
-===================================== */
-
-@media screen and (max-width: 767px) {
-
-  .sdppdptextcontainer {
-    min-height: auto;
-    padding:48px 20px;
-    .content-wrapper {
-      gap: 24px !important;
-    }
-
-    .title {
-      font-size: var(--Font-Size-Mobile-H4);
-    }
-
-    .description_one,
-    .description_two {
-      font-size: var(--Font-Size-Mobile-SM);
-    }
-
-    .cta-wrapper {
-      width: 100%;
-      flex-direction: column;
-    }
-
-    .primary_cta,
-    .secondary_cta {
-      width: 100%;
-    }
-
-    &.singlecolumn_right {
-
-      .content-wrapper {
-        margin-left: 0;
-        align-items: flex-start;
-      }
-    }
-
-    &.with_blob {
-
-      &::after {
-        width: 135.593px !important;
-        height: 60px !important;
-        border-radius:
-          39.88px
-          39.88px
-          39.88px
-          0 !important;
-        top:-60px !important;
-        right:-10px !important;
-        left: auto !important;
-      }
-    }
-  }
-}
+  onScrollSpy();
+});
