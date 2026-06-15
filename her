@@ -1,0 +1,978 @@
+$pdp-hero-bg: #F1EFF0;
+$pdp-hero-download-btn-text-color: #111213;
+
+// Spacing / Sizes
+$pdp-hero-title-margin-bottom: 10px;
+$pdp-hero-download-btn-padding-y: 14px;
+$pdp-hero-image-max-width: 608px;
+$pdp-hero-image-max-height: 400px;
+
+// Layout
+$pdp-hero-wrapper-max-width: 1440px;
+$pdp-hero-content-width: 58%;
+
+// Media query breakpoints
+$pdp-hero-breakpoint-md: 768px;
+$pdp-hero-breakpoint-lg: 1200px;
+
+// Image/Video padding
+$pdp-hero-media-padding-y: 48px;
+$pdp-hero-media-padding-tablet: 29px;
+$pdp-hero-media-padding-desktop-x: 75px;
+$pdp-hero-media-max-width-tablet: 708px;
+
+// Decorative shapes
+$pdp-hero-shape-small-size: 120px;
+$pdp-hero-shape-medium-size: 200px;
+$pdp-hero-shape-large-width: 240px;
+$pdp-hero-shape-large-height: 141px;
+$pdp-hero-shape-small-height: 94.118px;
+
+$pdp-hero-shape-offset-right-mobile: -48px;
+$pdp-hero-shape-offset-right-tablet: -32px;
+$pdp-hero-shape-offset-right-desktop: -50px;
+
+$pdp-hero-shape-offset-top-tablet: -64px;
+$pdp-hero-shape-offset-top-desktop: -105px;
+
+$pdp-hero-shape-offset-left-mobile: -60px;
+$pdp-hero-shape-offset-left-tablet: -48px;
+$pdp-hero-shape-offset-left-desktop: -50px;
+
+$pdp-hero-shape-offset-bottom-mobile: 24px;
+$pdp-hero-shape-offset-bottom-tablet: 16px;
+$pdp-hero-shape-offset-bottom-desktop: -45px;
+
+// Border radius
+$pdp-hero-shape-radius-full: 600px;
+$pdp-hero-shape-radius-custom: 47.059px 47.059px 47.059px 0;
+$pdp-hero-shape-radius-desktop: 70.588px 70.588px 70.588px 0;
+
+// Gradients
+$pdp-hero-shape-teal-gradient: linear-gradient(270deg, #3AEEE8 0%, #195457 100%);
+$pdp-hero-shape-orange-gradient: linear-gradient(270deg, #F95D93 0%, #FB862D 100%);
+
+// ============================================
+// Component
+// ============================================
+.pdp-hero {
+    background: $pdp-hero-bg;
+    overflow: hidden;
+
+    .pdp-hero {
+        &__eyebrow {
+            color: var(--Text-Subtle);
+            font-family: var(--Font-Family-Open);
+            font-size: var(--Font-Size-Mobile-MD);
+            font-weight: var(--Font-Weight-Bold);
+            line-height: var(--Line-Height-166);
+        }
+
+        &__title {
+            color: var(--Text-Headline-color);
+            font-family: var(--Font-Family-Gotham);
+            font-size: var(--Font-Size-Mobile-H4);
+            font-weight: var(--Font-Weight-Book);
+            line-height: var(--Line-Height-125);
+            margin-top: var(--spacing-lg);
+            margin-bottom: $pdp-hero-title-margin-bottom;
+
+            @media (min-width: $pdp-hero-breakpoint-md) {
+                font-size: var(--Font-Size-Tablet-H4);
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                font-size: var(--Font-Size-H4);
+            }
+        }
+
+        &__description {
+            p {
+                color: var(--Text-Default-color);
+                font-family: var(--Font-Family-Open);
+                font-size: var(--Font-Size-Mobile-LG);
+                font-weight: var(--Font-Weight-Book);
+                line-height: var(--Line-Height-166);
+            }
+        }
+
+        &__wrapper {
+            padding: var(--spacing-5xl) var(--spacing-lg);
+
+            @media (min-width: $pdp-hero-breakpoint-md) {
+                padding: var(--spacing-7xl) var(--spacing-lg);
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                display: flex;
+                padding: 0;
+                gap: var(--spacing-lg);
+                max-width: $pdp-hero-wrapper-max-width;
+                margin: 0 auto;
+                align-items: center;
+            }
+        }
+
+        &__content {
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                padding: var(--spacing-8xl) 0 var(--spacing-8xl) var(--spacing-4xl);
+                flex: 0 0 $pdp-hero-content-width;
+                max-width: $pdp-hero-content-width;
+            }
+        }
+
+        &__media {
+            position: relative;
+
+            &::before {
+                background-image: url('../resources/images/background-wave-pdp-hero.png');
+                background-repeat: no-repeat;
+                background-size: cover;
+                content: '';
+                height: 550px;
+                width: 600px;
+                display: block;
+                position: absolute;
+                bottom: -50px;
+                left: -115px;
+                z-index: 1;
+                transform: rotate(-5deg);
+
+                @media (min-width: $pdp-hero-breakpoint-md) {
+                    height: 900px;
+                    width: 1150px;
+                    bottom: -60px;
+                    left: -229px;
+                }
+
+                @media (min-width: 992px) {
+                    width: 1250px;
+                }
+
+                @media (min-width: $pdp-hero-breakpoint-lg) {
+                    height: 667px;
+                    width: 725px;
+                    bottom: -75px;
+                    left: -90px;
+                    transform: rotate(-15deg);
+                }
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                flex: 1 0 0;
+            }
+        }
+
+        &__image,
+        &__video {
+            padding: $pdp-hero-media-padding-y 0;
+            position: relative;
+
+            @media (min-width: $pdp-hero-breakpoint-md) {
+                padding: $pdp-hero-media-padding-tablet var(--spacing-4xl);
+                max-width: $pdp-hero-media-max-width-tablet;
+                margin: 0 auto;
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                padding: $pdp-hero-media-padding-tablet $pdp-hero-media-padding-desktop-x;
+            }
+        }
+
+        &__image {
+
+            .cmp-custom-image,
+            .cmp-image {
+                max-width: $pdp-hero-image-max-width;
+            }
+        }
+
+        &__video {
+            aspect-ratio: 87/49;
+
+            .cq-dd-image {
+                position: relative;
+                z-index: 1;
+            }
+        }
+
+        // Shapes
+        &__image::before,
+        &__video::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: $pdp-hero-shape-offset-right-mobile;
+            width: $pdp-hero-shape-small-size;
+            height: $pdp-hero-shape-small-size;
+            border-radius: $pdp-hero-shape-radius-full;
+            transform: rotate(90deg);
+            background: $pdp-hero-shape-teal-gradient;
+            opacity: 0.95;
+            z-index: 0;
+
+            @media (min-width: $pdp-hero-breakpoint-md) {
+                width: $pdp-hero-shape-medium-size;
+                height: $pdp-hero-shape-medium-size;
+                right: $pdp-hero-shape-offset-right-tablet;
+                top: $pdp-hero-shape-offset-top-tablet;
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                right: $pdp-hero-shape-offset-right-desktop;
+                top: $pdp-hero-shape-offset-top-desktop;
+            }
+        }
+
+        &__image::after,
+        &__video::after {
+            content: '';
+            position: absolute;
+            bottom: $pdp-hero-shape-offset-bottom-mobile;
+            left: $pdp-hero-shape-offset-left-mobile;
+            width: 160px;
+            height: $pdp-hero-shape-small-height;
+            border-radius: $pdp-hero-shape-radius-custom;
+            transform: rotate(270deg);
+            background: $pdp-hero-shape-orange-gradient;
+            opacity: 0.95;
+            z-index: 0;
+
+            @media (min-width: $pdp-hero-breakpoint-md) {
+                width: $pdp-hero-shape-large-width;
+                height: $pdp-hero-shape-large-height;
+                left: $pdp-hero-shape-offset-left-tablet;
+                bottom: $pdp-hero-shape-offset-bottom-tablet;
+                border-radius: $pdp-hero-shape-radius-desktop;
+            }
+
+            @media (min-width: $pdp-hero-breakpoint-lg) {
+                left: $pdp-hero-shape-offset-left-desktop;
+                bottom: $pdp-hero-shape-offset-bottom-desktop;
+            }
+        }
+    }
+
+    a.pdp-hero__secondary-cta,
+    a.pdp-hero__download-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        padding: $pdp-hero-download-btn-padding-y var(--Spacing-3xl);
+        width: 100%;
+        margin: var(--spacing-2xl) 0;
+        border: 2px solid var(--Color-Brand-Red-400);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+
+        &:hover {
+            background: var(--Red-Orange-Gradient);
+        }
+
+        @media (min-width: $pdp-hero-breakpoint-md) {
+            width: auto;
+            display: inline-flex;
+            margin-bottom: var(--spacing-7xl);
+        }
+
+        @media (min-width: $pdp-hero-breakpoint-lg) {
+            margin-bottom: 0;
+        }
+
+        span {
+            color: $pdp-hero-download-btn-text-color;
+            font-family: var(--Font-Family-Gotham);
+            font-size: var(--Font-Size-Small);
+            font-weight: var(--Font-Weight-Medium);
+            line-height: var(--Line-Height-125);
+        }
+    }
+
+    a.pdp-hero__download-btn {
+        background: var(--Red-Orange-Gradient);
+    }
+
+    a.pdp-hero__download-btn:hover {
+        background: transparent;
+    }
+     a.pdp-hero__secondary-cta:hover {
+        background: var(--Red-Orange-Gradient);
+    }
+
+    .pdp-hero__actions{
+        display:flex;
+        gap:20px;
+      }
+
+    img.cmp-image__image {
+        border-radius: var(--radius-3xl);
+        object-fit: cover;
+        object-position: center;
+        max-height: $pdp-hero-image-max-height;
+        max-width: $pdp-hero-image-max-width;
+        aspect-ratio: 87/49;
+        position: relative;
+        z-index: 1;
+    }
+
+    .dynamicmedia .s7container,
+    .custom-video-modal .modal-content .s7container {
+        border-radius: var(--radius-3xl);
+        height: auto !important;
+        aspect-ratio: 87/49;
+    }
+}
+
+.pdp-hero {
+    .pdp-hero__video {
+        @media (max-width: 767px), (min-width: 1200px) {
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            cursor: default;
+        }
+    }
+}
+
+.pdp-hero-video-modal-open {
+    overflow: hidden;
+}
+
+.pdp-hero-video-modal {
+    .modal-content {
+        width: 100%;
+        max-width: 1130px;
+    }
+
+    .s7dm-dynamic-media,
+    .s7container {
+        width: 100%;
+    }
+}
+
+.pdp-hero {
+    .pdp-hero__video {
+        @media (max-width: 767px), (min-width: 1200px) {
+            .s7controlbar,
+            .controls-row,
+            .s7videoscrubber,
+            .s7mutablevolume,
+            .speed-wrapper,
+            .pip-wrapper,
+            .s7fullscreenbutton,
+            .s7videotime,
+            .s7playpausebutton {
+                display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+            }
+
+            .s7iconeffect[state="play"] {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+        }
+    }
+}
+
+/* Inside modal, show full controls again */
+.custom-video-modal {
+    .pdp-hero__video,
+    .s7dm-dynamic-media {
+        .s7controlbar,
+        .controls-row,
+        .s7videoscrubber,
+        .s7mutablevolume,
+        .speed-wrapper,
+        .pip-wrapper,
+        .s7fullscreenbutton,
+        .s7videotime,
+        .s7playpausebutton {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+
+        .s7videoscrubber {
+            display: block !important;
+        }
+    }
+}
+
+/* PDP Custom Modal Styles */
+/* modal */
+.pdp-hero-video-modal {
+    position: fixed;
+    inset: 0;
+    background: #2C4142;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.pdp-hero-video-modal .modal-content {
+    position: static;
+    width: 100%;
+    max-width: 1130px;
+    height: auto;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 96px 80px;
+}
+
+.pdp-hero-video-modal .modal-content .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: url("/content/dam/lumen/icons/dynamicmedia/Modal-Close.png") no-repeat center/contain;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 20;
+    font-size: 0;
+    background-size: auto;
+}
+
+/* Outer wrapper */
+.pdp-hero-video-modal .modal-content .s7container {
+    display: flex;
+    flex-direction: column;
+    border-radius: 50px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Instance Swap */
+.pdp-hero-video-modal .modal-content.instance-swap {
+    padding: 80px 270px;
+    background-color: #ffffff;
+}
+
+/* Video player */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7videoplayer {
+    width: 100%;
+    height: auto;
+}
+
+/* Control bar */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7controlbar {
+    padding: 12px 16px 20px;
+    background-color: #050505;
+    overflow: visible;
+    height: 76px !important;
+}
+
+
+/* Track styles */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7videoscrubber .s7track {
+    border-radius: 2px;
+    background: #292B2E;
+    height: 8px;
+    width: 100%;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7videoscrubber .s7trackplayed {
+    border-radius: 2px;
+    background: linear-gradient(90deg, #FA6E5C 0%, #FB862D 100%);
+    height: 8px;
+}
+
+/* Hide knob */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7videoscrubber .s7knob {
+    display: none !important;
+}
+
+/* ===== ROW 2: FLEX CONTAINER (FAKE ROW) ===== */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7innercontrolbarcontainer::after {
+    content: "";
+    grid-row: 2;
+}
+
+/* Convert all row 2 elements into flex flow */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7innercontrolbarcontainer {
+    position: relative;
+}
+
+/* left group (play + time) */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7playpausebutton,
+.pdp-hero-video-modal .modal-content
+.s7videoviewer
+.s7innercontrolbarcontainer > .s7videotime{
+    grid-row: 2;
+    display: block;
+    align-items: center;
+}
+
+/* right group (volume + fullscreen) */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton {
+    grid-row: 2;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Push right controls fully right */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume {
+    margin-left: auto;
+    right: 0 !important;
+    display: flex !important;
+    justify-content: flex-end;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7controlbar {
+    padding: 20px 16px 20px;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer.s7mouseinput .s7videoscrubber,
+.pdp-hero-video-modal .modal-content .s7videoscrubber {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 2 !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7videotime {
+    color: var(--Text-Strong-Invert, #FAFAFA);
+    font-feature-settings: 'case' on;
+    font-family: var(--Font-Family-Title, Gotham);
+    font-size: var(--Font-Size-SM, 14px);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 17.5px;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer.s7mouseinput .s7videotime {
+    right: unset !important;
+    left: 36px !important;
+    height: 15px !important;
+    display: flex !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7videotime[data-component="VideoTime"][id*="Scrubber"] {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    overflow: hidden !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer.s7mouseinput .s7mutablevolume .s7verticalvolume {
+    z-index: 999;
+}
+
+/* FULLSCREEN BUTTON RESET */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[selected],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state][selected],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton:hover,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton:focus,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton:active {
+    width: 24px !important;
+    height: 24px !important;
+    background-color: transparent !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 24px 24px !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* CLOSED STATE */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="closed"],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="closed"]:hover,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="closed"][selected] {
+
+    background-image: url("/content/dam/lumen/icons/dynamicmedia/Fullscreen-On.svg") !important;
+}
+
+/* OPEN STATE */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="open"],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="open"]:hover,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7fullscreenbutton[state="open"][selected] {
+
+    background-image: url("/content/dam/lumen/icons/dynamicmedia/Fullscreen-Off.svg") !important;
+}
+
+/* volume reset default */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume {
+    background: none !important;
+}
+
+/* volume high */
+.pdp-hero-video-modal .modal-content .s7videoviewer
+.s7mutablevolume[data-volume-state="high"]::before {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: url("/content/dam/lumen/icons/dynamicmedia/Volume-High.svg") no-repeat center/contain;
+}
+
+/* volume mute */
+.pdp-hero-video-modal .modal-content .s7videoviewer
+.s7mutablevolume[data-volume-state="mute"]::before {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: url("/content/dam/lumen/icons/dynamicmedia/Volume-Off.svg") no-repeat center/contain;
+}
+
+/* volume low */
+.pdp-hero-video-modal .modal-content .s7videoviewer
+.s7mutablevolume[data-volume-state="low"]::before {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: url("/content/dam/lumen/icons/dynamicmedia/Volume-Low.svg") no-repeat center/contain;
+}
+
+.pdp-hero-video-modal .modal-content
+.s7videoviewer
+.s7mutablevolume
+.s7verticalvolume {
+    display: none !important;
+}
+
+/* remove default playpause */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7playpausebutton {
+    background: none !important;
+}
+
+/* play icon (video is paused → ready to play) */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7playpausebutton[selected="true"] {
+    background: url("/content/dam/lumen/icons/dynamicmedia/Play.svg") no-repeat center/contain !important;
+    width: 24px;
+    top: 0 !important;
+    cursor: pointer;
+}
+
+/* pause icon (video is playing) */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7playpausebutton[selected="false"] {
+    background: url("/content/dam/lumen/icons/dynamicmedia/Pause.svg") no-repeat center/contain !important;
+    width: 24px;
+    top: 0 !important;
+    cursor: pointer;
+}
+
+/* Remove default */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7iconeffect {
+    background: none !important;
+}
+
+/* center play button */
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7iconeffect[state="play"] {
+    background: url("/content/dam/lumen/icons/dynamicmedia/Play-Center.png") no-repeat center/contain !important;
+    width: 56px;
+    height: 56px;
+}
+
+/* Hide center replay icon */
+.pdp-hero-video-modal .modal-content
+.s7videoviewer
+.s7iconeffect[state="replay"] {
+    display: none !important;
+}
+
+/* replay icon in play button */
+.pdp-hero-video-modal .modal-content
+.s7videoviewer
+.s7playpausebutton[replay="true"] {
+    background: url("/content/dam/lumen/icons/dynamicmedia/Replay.svg") no-repeat center/contain !important;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.pdp-hero-video-modal .modal-content .s7innercontrolbarcontainer {
+    position: relative;
+}
+
+.pdp-hero-video-modal .modal-content .s7playpausebutton,
+.pdp-hero-video-modal .modal-content .s7videotime {
+    display: inline-flex;
+    align-items: center;
+}
+
+.pdp-hero-video-modal .modal-content .s7mutablevolume {
+    margin-left: auto;
+}
+
+.pdp-hero-video-modal .modal-content .s7mutablevolume,
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton,
+.pdp-hero-video-modal .modal-content .speed-wrapper,
+.pdp-hero-video-modal .modal-content .pip-wrapper {
+    display: inline-flex !important;
+    align-items: center !important;
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: 1 !important;
+}
+
+.pdp-hero-video-modal .modal-content .speed-wrapper {
+    order: 2;
+}
+
+.pdp-hero-video-modal .modal-content .pip-wrapper {
+    order: 3;
+}
+
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton {
+    order: 4;
+}
+
+/* speed button*/
+.pdp-hero-video-modal .modal-content .speed-toggle {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* pip button */
+.pdp-hero-video-modal .modal-content .pip-toggle {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.pdp-hero-video-modal .modal-content .pip-toggle .pip-icon {
+    width: 24px;
+    height: 24px;
+    margin: auto;
+    position: relative !important;
+    inset: 0;
+    background-size: contain;
+}
+
+.pdp-hero-video-modal .modal-content .pip-toggle[state="up"] .pip-icon,
+.pdp-hero-video-modal .modal-content .pip-toggle:not([state="down"]) .pip-icon {
+    background: url("/content/dam/lumen/icons/dynamicmedia/PIP-On.svg") no-repeat center;
+}
+
+/* pip active */
+.pdp-hero-video-modal .modal-content .pip-toggle[state="down"] .pip-icon {
+    background: url("/content/dam/lumen/icons/dynamicmedia/PIP-Off.svg") no-repeat center;
+}
+
+/* left group */
+.pdp-hero-video-modal .modal-content .s7videoviewer .controls-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* right group */
+.pdp-hero-video-modal .modal-content .s7videoviewer .controls-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton {
+    right: 0 !important;
+    display: flex !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume .s7mutebutton,
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume .s7mutebutton[state],
+.pdp-hero-video-modal .modal-content .s7videoviewer .s7mutablevolume .s7mutebutton[selected] {
+    background-image: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Hide social share */
+.pdp-hero-video-modal .modal-content .s7socialshare {
+    display: none !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7innercontrolbarcontainer {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    height: auto !important;
+}
+
+.pdp-hero-video-modal .modal-content .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+/* left side controls */
+.pdp-hero-video-modal .modal-content .controls-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* right side controls*/
+.pdp-hero-video-modal .modal-content .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+}
+
+/* override Scene7 inline positioning */
+.pdp-hero-video-modal .modal-content .s7playpausebutton,
+.pdp-hero-video-modal .modal-content .s7videotime {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.pdp-hero-video-modal .modal-content .controls-right {
+    margin-left: auto;
+}
+
+.pdp-hero-video-modal .modal-content .s7innercontrolbarcontainer * {
+    box-sizing: border-box;
+}
+
+.pdp-hero-video-modal .modal-content .s7dm-dynamic-media.mini-player {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 999999;
+}
+
+.pdp-hero-video-modal .modal-content .s7container * {
+    pointer-events: auto !important;
+}
+
+.pdp-hero-video-modal .modal-content .controls-row,
+.pdp-hero-video-modal .modal-content .s7innercontrolbarcontainer,
+.pdp-hero-video-modal .modal-content .s7videoscrubber {
+    pointer-events: auto !important;
+}
+
+.pdp-hero-video-modal .modal-content video {
+    pointer-events: none !important;
+}
+
+.pdp-hero-video-modal .modal-content .s7dm-dynamic-media {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: transparent;
+    isolation: isolate;
+    transform: translateZ(0);
+}
+
+.pdp-hero-video-modal .modal-content .s7container,
+.pdp-hero-video-modal .modal-content .s7responsiveViewer,
+.pdp-hero-video-modal .modal-content .s7videoplayer {
+    overflow: hidden;
+    background: transparent !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.pdp-hero-video-modal .modal-content video {
+    display: block;
+    width: 100%;
+    height: auto !important;
+}
+
+.custom-tooltip {
+    position: absolute;
+    background: #E0E0E0;
+    color: #000;
+    font-family: var(--Font-Family-Title, Gotham);
+    font-size: 12px;
+    line-height: 14px;
+    font-weight: 400;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 9999999;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    text-align: center;
+    transform: translateY(-5px);
+}
+
+/* keep fullscreen button interactive; native tooltip suppression must be handled by removing tooltip attributes in JS*/
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton {
+    pointer-events: auto;
+}
+
+/* caption */
+.dynamic-media-caption {
+    font: var(--Typography-Caption-Regular);
+    font-weight: 400;
+    color: var(--Text-Default-color);
+    font-feature-settings: 'case' on;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton,
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton[state],
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton[selected],
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton[state][selected],
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton:hover,
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton:focus,
+.pdp-hero-video-modal .modal-content .s7fullscreenbutton:active {
+    background-image: inherit !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+}
+
+/* Tablet (iPad) */
+@media (max-width: 1024px) {
+    /* Fix scrubber */
+    .pdp-hero-video-modal .modal-content .s7videoviewer .s7videoscrubber {
+        top: 0;
+        left: 0;
+        width: 100% !important;
+    }
+
+    .pdp-hero-video-modal .modal-content .s7videoviewer .s7videotime {
+    	right: unset !important;
+        left: 36px !important;
+        height: 15px !important;
+        display: flex !important;
+        top: 20px !important;
+    }
+
+    .pdp-hero-video-modal .modal-content .s7mutablevolume {
+    	width: 24px !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .pdp-hero-video-modal .modal-content .s7videoviewer .s7iconeffect[state="play"] {
+        width: 40px;
+        height: 40px;
+    }
+}
