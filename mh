@@ -1,254 +1,228 @@
-document.addEventListener("DOMContentLoaded", () => {
+function convertRawSupTags(root = document.body) {
+    const regex = /<sup>(.*?)<\/sup>/gi;
 
-  /* =====================================
-     MOBILE DROPDOWN
-  ====================================== */
+    // Only target elements that actually contain raw <sup> in their text
+    // TreeWalker is faster than querySelectorAll for text node traversal
+    const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: node =>
+                node.nodeValue?.includes('<sup>')
+                    ? NodeFilter.FILTER_ACCEPT
+                    : NodeFilter.FILTER_REJECT
+        }
+    );
 
-  const dropdown = document.querySelector(
-    ".subheadernav-mobile-dropdown"
-  ) as HTMLElement | null;
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
 
-  const trigger = document.querySelector(
-    ".subheadernav-dropdown-trigger"
-  ) as HTMLButtonElement | null;
+    // Batch all DOM writes after reads — avoid layout thrashing
+    textNodes.forEach(textNode => {
+        const raw = textNode.nodeValue;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
 
-  if (dropdown && trigger) {
+        regex.lastIndex = 0; // reset since regex is reused
+        while ((match = regex.exec(raw)) !== null) {
+            // Text before <sup>
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(raw.slice(lastIndex, match.index)));
+            }
 
-    trigger.addEventListener("click", (e: MouseEvent) => {
-      e.stopPropagation();
-      dropdown.classList.toggle("open");
+            // Safe sup element — textContent prevents XSS
+            const sup = document.createElement('sup');
+            sup.textContent = match[1];
+            fragment.appendChild(sup);
+
+            lastIndex = regex.lastIndex;
+        }
+
+        // Remaining text after last </sup>
+        if (lastIndex < raw.length) {
+            fragment.appendChild(document.createTextNode(raw.slice(lastIndex)));
+        }
+
+        textNode.parentNode.replaceChild(fragment, textNode);
     });
-
-    document.addEventListener("click", () => {
-      dropdown.classList.remove("open");
-    });
-
-    dropdown.addEventListener("click", (e: MouseEvent) => {
-      e.stopPropagation();
-    });
-  }
-
-  /* =====================================
-     HELPERS
-  ====================================== */
-
-    const formatTitle = (value: string) =>
-      value
-        .replace(/-/g, " ")
-        .replace(/\s*&\s*/g, " & ")
-        .trim()
-        .split(" ")
-        .filter(Boolean)
-        .map(word =>
-          word === "&"
-            ? "&"
-            : word.charAt(0).toUpperCase() + word.slice(1)
-        )
-        .join(" ");
-
-    const normalizeClass = (value: string) =>
-      value
-        .trim()
-        .toLowerCase()
-        .replace(/&/g, "")              
-        .replace(/[^a-z0-9\s]/g, "")   
-        .replace(/\s+/g, "-")           
-        .replace(/-+/g, "-");          
-
-  /* =====================================
-     NAV ITEMS
-  ====================================== */
-
-  const navItems = document.querySelectorAll<HTMLElement>(
-    ".subheadernav-item"
-  );
-
-  navItems.forEach((item) => {
-
-    const rawTarget = item.dataset.target;
-
-    if (rawTarget) {
-      item.textContent = formatTitle(rawTarget);
-    }
-
-    item.addEventListener("click", () => {
-
-      const target = item.dataset.target;
-      if (!target) return;
-
-      const normalizedTarget = normalizeClass(target);
-
-      const section = document.querySelector(
-        `.${normalizedTarget}`
-      ) as HTMLElement | null;
-
-      if (section) {
-
-        const nav = document.querySelector(
-          ".pdp-subheadernav"
-        ) as HTMLElement | null;
-
-       const header = document.querySelector(".header.header-v2") as HTMLElement | null;
-        const headerHeight = header?.offsetHeight || 0;
-        const navHeight = nav?.offsetHeight || 0;
-
-        const sectionTop =
-          section.getBoundingClientRect().top +
-          window.pageYOffset -
-          headerHeight -
-          navHeight -
-          20;
-
-        window.scrollTo({
-          top: sectionTop,
-          behavior: "smooth"
-        });
-
-        navItems.forEach(n =>
-          n.classList.remove("active")
-        );
-
-        item.classList.add("active");
-        dropdown?.classList.remove("open");
-      }
-    });
-  });
-
-  /* =====================================
-     FIXED SUBHEADER
-  ====================================== */
-const nav = document.querySelector(
-  ".pdp-subheadernav"
-) as HTMLElement | null;
-
-if (nav) {
-
-  const navTop =
-    nav.getBoundingClientRect().top +
-    window.scrollY;
-
-  const navHeight = nav.offsetHeight;
-
-  const placeholder = document.createElement("div");
-
-  const header = document.querySelector(
-    ".cmp-header-v2-wrapper"
-  ) as HTMLElement | null;
-
-  let lastScrollTop = window.scrollY;
-
-  const onScroll = () => {
-
-    const currentScrollTop = window.scrollY;
-
-    if (currentScrollTop >= navTop) {
-
-      if (!nav.classList.contains("fixed-nav")) {
-
-        placeholder.style.height = `${navHeight}px`;
-        placeholder.style.width = "100%";
-
-        nav.parentNode?.insertBefore(
-          placeholder,
-          nav
-        );
-
-        nav.classList.add("fixed-nav");
-      }
-
-      const headerHeight =
-        header?.offsetHeight || 0;
-
-      if (currentScrollTop < lastScrollTop) {
-
-        nav.style.top = `${headerHeight}px`;
-
-      } else {
-
-        nav.style.top = "0px";
-      }
-
-    } else {
-
-      nav.classList.remove("fixed-nav");
-      nav.style.top = "";
-      placeholder.remove();
-    }
-
-    lastScrollTop = currentScrollTop;
-  };
-
-  window.addEventListener("scroll", onScroll);
-  window.addEventListener("resize", onScroll);
-
-  onScroll();
 }
 
-  /* =====================================
-     SCROLL SPY
-  ====================================== */
+function initSuperscript(): void {
+    'use strict';
 
-  const sectionMap: {
-    section: HTMLElement;
-    id: string;
-  }[] = [];
+    const NS = 'cmp-superscript';
 
-  navItems.forEach((item) => {
+    const SEL = {
+        component: '.' + NS,
+        modal: '.' + NS + '__modal',
+        footnote: '.' + NS + '__footnote',
+        overlay: '.' + NS + '__overlay',
+        close: '.' + NS + '__close',
+        trigger: '.' + NS + '__trigger'
+    };
 
-    const raw = item.dataset.target;
-    if (!raw) return;
-
-    const normalized = normalizeClass(raw);
-
-    const section = document.querySelector(
-      `.${normalized}`
-    ) as HTMLElement | null;
-
-    if (section) {
-      sectionMap.push({
-        section,
-        id: raw
-      });
-    }
-  });
-
-  const onScrollSpy = () => {
-  const lastSection = sectionMap[sectionMap.length - 1]?.section;
-    if (
-      lastSection &&
-      window.scrollY >
-        lastSection.offsetTop + lastSection.offsetHeight
-    ) {
-      navItems.forEach(item => {
-        item.classList.remove("active");
-      });
-      return;
+    interface DataLayerEvent {
+        event: string;
+        eventInfo: {
+            path: string;
+            ref: string;
+        };
     }
 
-    let active: string | null = null;
+    class SuperscriptComponent {
+        el: Element;
+        overlay: Element | null;
 
-    sectionMap.forEach(({ section, id }) => {
+        constructor(el: Element) {
+            this.el = el;
+            this.overlay = el.querySelector(SEL.overlay);
+            this._scanTriggers();
+            this._bindEvents();
+        }
 
-      const rect = section.getBoundingClientRect();
+        private _scanTriggers(): void {
+            document.querySelectorAll('sup').forEach((sup) => {
+                const ref = sup.textContent?.trim() || '';
+                if (ref) {
+                    if (ref.includes('*') || ref.includes('†') || ref.includes('‡')) {
+                        sup.textContent = '';
+                        sup.appendChild(document.createTextNode('['));
+                        const symbol = document.createElement('span');
+                        symbol.classList.add('specialSymbol');
+                        if (ref.includes('*') || ref.includes('†')) {
+                            symbol.classList.add('subbed');
+                        }
+                        symbol.textContent = ref;
+                        sup.appendChild(symbol);
+                        sup.appendChild(document.createTextNode(']'));
+                    } else {
+                        sup.textContent = '[' + ref + ']';
+                    }
+                    sup.setAttribute('data-ref', ref);
+                    sup.setAttribute('role', 'button');
+                    sup.setAttribute('tabindex', '0');
+                    sup.setAttribute('aria-label', 'See reference ' + ref);
+                    sup.classList.add(NS + '__trigger');
+                }
+            });
+        }
 
-      if (rect.top <= 220 && rect.bottom >= 220) {
-        active = id;
-      }
-    });
+        private _bindEvents(): void {
+            const self = this;
 
-    if (!active) return;
+            document.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                const trigger = target.closest(SEL.trigger);
+                if (trigger) {
+                    self._open(trigger.getAttribute('data-ref') || '');
+                }
+            });
 
-    navItems.forEach((item) => {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const target = e.target as Element;
+                    const trigger = target.closest(SEL.trigger);
+                    if (trigger) {
+                        e.preventDefault();
+                        self._open(trigger.getAttribute('data-ref') || '');
+                    }
+                }
+                if (e.key === 'Escape') {
+                    self._closeAll();
+                }
+            });
 
-      if (item.dataset.target === active) {
-        item.classList.add("active");
-      } else {
-        item.classList.remove("active");
-      }
-    });
-  };
+            this.el.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                if (target.closest(SEL.close)) {
+                    self._closeAll();
+                }
+            });
 
-  window.addEventListener("scroll", onScrollSpy);
+            if (this.overlay) {
+                this.overlay.addEventListener('click', () => {
+                    self._closeAll();
+                });
+            }
+        }
 
-  onScrollSpy();
+        private _open(ref: string): void {
+            const modal = this.el.querySelector(SEL.modal + '[data-ref="' + ref + '"]');
+            const footnote = this.el.querySelector(SEL.footnote + '[data-ref="' + ref + '"]');
+            const target = modal || footnote;
+
+            if (!target) {
+                return;
+            }
+
+            this._closeAll();
+
+            target.setAttribute('aria-hidden', 'false');
+            target.classList.add('is-open');
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'false');
+                this.overlay.classList.add('is-active');
+            }
+            document.body.classList.add(NS + '--body-lock');
+
+            const closeBtn = target.querySelector(SEL.close);
+            if (closeBtn) {
+                (closeBtn as HTMLElement).focus();
+            }
+
+            this._pushDataLayerEvent(ref);
+        }
+
+        private _closeAll(): void {
+            const self = this;
+
+            [SEL.modal, SEL.footnote].forEach((sel) => {
+                self.el.querySelectorAll(sel + '.is-open').forEach((panel) => {
+                    panel.setAttribute('aria-hidden', 'true');
+                    panel.classList.remove('is-open');
+                });
+            });
+
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'true');
+                this.overlay.classList.remove('is-active');
+            }
+            document.body.classList.remove(NS + '--body-lock');
+        }
+
+        private _pushDataLayerEvent(ref: string): void {
+            const adobeDataLayer = (window as unknown as { adobeDataLayer?: DataLayerEvent[] }).adobeDataLayer;
+            if (adobeDataLayer) {
+                adobeDataLayer.push({
+                    event: 'cmp:click',
+                    eventInfo: {
+                        path: 'component.' + this.el.id,
+                        ref: ref
+                    }
+                });
+            }
+        }
+    }
+
+    function onReady(): void {
+        document.querySelectorAll(SEL.component).forEach((el) => {
+            new SuperscriptComponent(el);
+        });
+    }
+
+    if (document.readyState !== 'loading') {
+        onReady();
+    } else {
+        document.addEventListener('DOMContentLoaded', onReady);
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const isSuperScriptOnPage = document.querySelectorAll<HTMLElement>(".cmp-superscript");
+    if (isSuperScriptOnPage.length > 0) {
+        convertRawSupTags()
+        initSuperscript();
+    }
 });
