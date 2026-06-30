@@ -49,6 +49,12 @@
                 let stackedContentTab = this.closest('.lumen-tabs__content');
                 let industrySelectorItem = this.closest('.industry-selector-item');
                 let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
+				// ---------------------------------------------
+				// Media Highlight / Solution Highlight Analytics
+				// ---------------------------------------------
+				const mediaHighlight = this.closest('.media_highlight');
+				const solutionHighlight = this.closest('.solution-highlight');
+				
                 // --- REGION DROPDOWN FIX ---
                 const isRegionDropdown =
                     this.classList.contains('cmp-onelinknav__lang-link') &&
@@ -206,19 +212,80 @@
                             });
                         }
 
-                        // Normal links
-                    } else {
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.linkClick,
-                            linkDetails: {
-                                clickName: linkName.toLowerCase(),
-                                clickElementType: linkType.toLowerCase(),
-                                clickDestination: (linkHref || "").toLowerCase(),
-                                clickLocation: linkLocation.toLowerCase(),
-                                clickType: linkClickType.toLowerCase()
-                            }
-                        });
-                    }
+                    // Normal links
+					} else {
+
+						// Build full destination URL
+						let fullDestination = "NA";
+						if (linkHref) {
+							try {
+								fullDestination = new URL(linkHref, window.location.origin).href;
+							} catch (e) {
+								fullDestination = linkHref;
+							}
+						}
+
+						// -----------------------------
+						// Media Highlight
+						// -----------------------------
+						if (mediaHighlight) {
+
+							const mediaTitle =
+								mediaHighlight.querySelector(".title")?.textContent.trim() || "";
+
+							adobeDataLayer.push({
+								event: adobeDataLayerEvents.component.linkClick,
+								linkDetails: {
+									clickName: linkName,
+									clickElementType: linkType.toLowerCase(),
+									clickDestination: fullDestination,
+									clickLocation: "body",
+									clickType: linkClickType.toLowerCase(),
+									clickContext: mediaTitle,
+									componentContext: "media highlight"
+								}
+							});
+
+							return;
+						}
+
+						// -----------------------------
+						// Solution Highlight
+						// -----------------------------
+						if (solutionHighlight) {
+
+							const solutionContext =
+								solutionHighlight.querySelector(".solution-highlight__label")
+									?.textContent.trim() || "";
+
+							adobeDataLayer.push({
+								event: adobeDataLayerEvents.component.linkClick,
+								linkDetails: {
+									clickName: linkName,
+									clickElementType: linkType.toLowerCase(),
+									clickDestination: fullDestination,
+									clickLocation: "body",
+									clickType: linkClickType.toLowerCase(),
+									clickContext: solutionContext,
+									componentContext: "solution highlight"
+								}
+							});
+
+							return;
+						}
+
+						// Existing Analytics
+						adobeDataLayer.push({
+							event: adobeDataLayerEvents.component.linkClick,
+							linkDetails: {
+								clickName: linkName.toLowerCase(),
+								clickElementType: linkType.toLowerCase(),
+								clickDestination: (linkHref || "").toLowerCase(),
+								clickLocation: linkLocation.toLowerCase(),
+								clickType: linkClickType.toLowerCase()
+							}
+						});
+					}
                 }
             });
         }
@@ -442,12 +509,5 @@
         });
     }
 }());
-
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++
 
 
