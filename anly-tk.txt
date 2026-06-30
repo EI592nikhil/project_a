@@ -1,0 +1,124 @@
+Solution High -
+Acceptance Criteria
+When a user clicks a CTA in the solution highlight component, a Link Click event fires with the following payload:
+
+
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>
+clickContext: <#3 text field>,
+componentContext: <component name>
+}
+}
+When the payload is inspected on any of the above components that fire a Link Click event, the clickName dynamically reflects the actual rendered button or link text — not a hardcoded value.
+
+ clickDestination if there is a value for this field, the destination URL must always be a full URL. If there is a hashed component, please include that, as an example https://www.lumen.com/en-us/page.html#products. If there is no value (e.g. a toggle click) set this value to "NA".
+
+clickLocation the values for this field will always be header, body or footer - this value should be “body” for all solution highlight click events
+
+clickContext DIA + LCV essentials (Identify what offer / card / module that CTA belonged to and provide a friendly name for reporting). 
+
+componentContext this value should match the name of the component, for this ticket it should be “solution highlight”
+
+When the event fires a single user interaction (one click), exactly one Link Click event is emitted — no duplicate events on a single click interaction.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Media High -
+Acceptance Criteria
+When a user clicks a CTA in a medium highlight component, a Link Click event fires with the following payload:
+
+
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>
+clickContext: <title>,
+componentContext: <component name>
+}
+}
+When the payload is inspected on any of the above components that fire a Link Click event, the clickName dynamically reflects the actual rendered button or link text — not a hardcoded value.
+
+ clickDestination if there is a value for this field, the destination URL must always be a full URL. If there is a hashed component, please include that, eg https://www.lumen.com/en-us/page.html#products. If there is no value (e.g. a toogle click) set this value to "NA".
+
+clickLocation the values for this field will always be header, body or footer - this value should be “body” for all media highlight events
+
+clickContext DIA + LCV essentials (Identify what offer / card / module that CTA belonged to and provide a friendly name for reporting). 
+
+componentContext this value should match the name of the component, for this ticket it should be “media highlight”
+
+When the event fires a single user interaction (one click), exactly one Link Click event is emitted — no duplicate events on a single click interaction.
+
+
+
++++++++++++++++++++++++++++++++++++++++++
+
+Sub header - 
+Acceptance Criteria
+When a user clicks a breadcrumb link in the Breadcrumb component, a Link Click event fires with the following payload:
+
+
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: header,
+clickType: <autopopulated>
+clickContext: subheader,
+componentContext: <component name>
+}
+}
+When a user clicks a sticky nav link in the Sticky Nav component, a Link Click event fires with the following payload:
+
+
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: header,
+clickType: <autopopulated>
+clickContext: subheader,
+componentContext: <component name>
+}
+}
+When a user clicks the CTA, a Link Click event fires with the following payload:
+
+
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: header,
+clickType: <autopopulated>
+clickContext: subheader,
+componentContext: <component name>
+}
+}
+When the payload is inspected on any of the above components that fire a Link Click event, the clickName dynamically reflects the actual rendered button or link text — not a hardcoded value.
+
+ clickDestination if there is a value for this field, the destination URL must always be a full URL. If there is a hashed component, please include that, eg https://www.lumen.com/en-us/page.html#products. If there is no value (e.g. a toogle click) set this value to "NA".
+
+clickLocation the values for this field will always be header, body or footer - this value should be “header” for all subheader events
+
+clickContext DIA + LCV essentials (Identify what offer / card / module that CTA belonged to and provide a friendly name for reporting). the value for subheader navigation will always be subheader
+
+componentContext this value should match the name of the component, for this ticket it should be “subheader navigation”
+
+When the event fires a single user interaction (one click), exactly one Link Click event is emitted — no duplicate events on a single click interaction.

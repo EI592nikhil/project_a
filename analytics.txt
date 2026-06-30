@@ -1,0 +1,453 @@
+(function () {
+    "use strict";
+
+    function isLumenHost(href) {
+        // Treat relative URLs as internal; absolute URLs are checked by hostname.
+        if (!href || href.startsWith("/")) {
+            return true;
+        }
+        try {
+            var url = new URL(href, window.location.origin);
+            var host = url.hostname.toLowerCase();
+            return host === "lumen.com" || host.endsWith(".lumen.com");
+        } catch (e) {
+            // If URL parsing fails, fall back to treating as external.
+            return false;
+        }
+    }
+
+    if (window.adobeDataLayer) {
+        // Links
+        const links = document.querySelectorAll('a');
+        for (let i = 0; i < links.length; i++) {
+
+            links[i].addEventListener('click', function (event) {
+                let linkGrandParent = this.closest('.cmp-teaser__content');
+                let parent = this.parentElement;
+                let linkName = this.textContent.trim();
+                let ariaLabel = this.getAttribute('aria-label');
+                if (ariaLabel == 'Link to Homepage') {
+                    linkName = 'Lumen Logo';
+                }
+                let linkClickType = "exit";
+                if (this.getAttribute('href') != null) {
+                    let href = this.getAttribute('href');
+                    if (href.startsWith("/content/lumen") || isLumenHost(href)) {
+                        linkClickType = "other";
+                    }
+                }
+                let linkType = 'Link';
+                let linkHref = this.getAttribute('href');
+                let linkLocation = 'main container';
+                let downloadType = 'AEM asset';
+                let parentID = this.closest('[id]');
+                let parentIDAtt = parentID.getAttribute('id').split('-')[0];
+                let grandParentID = parentID.parentElement.closest('[id]');
+                let grandParentIDAtt = grandParentID.getAttribute('id').split('-')[0];
+                let teaserTitle;
+                let industrySelectorContainer = this.closest('.industry-selector-container');
+                let stackedContentTab = this.closest('.lumen-tabs__content');
+                let industrySelectorItem = this.closest('.industry-selector-item');
+                let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
+                // --- REGION DROPDOWN FIX ---
+                const isRegionDropdown =
+                    this.classList.contains('cmp-onelinknav__lang-link') &&
+                    this.closest('.cmp-onelinknav__popover');
+
+                if (isRegionDropdown) {
+                    // Ensure clickName is the visible country text
+                    linkName = this.textContent.trim();
+
+                    // Per acceptance criteria
+                    linkClickType = "other";
+                    linkHref = ""; // clickDestination must be empty string
+                }
+
+                if (linkGrandParent) {
+                    teaserTitle = linkGrandParent.querySelector('.cmp-teaser__pretitle') || linkGrandParent.querySelector('.cmp-teaser__title');
+                }
+
+                if (stackedContentTab) {
+                    teaserTitle = stackedContentTab.querySelector('.lumen-tabs__title');
+                }
+
+                if (industrySelectorContainer) {
+                    teaserTitle = industrySelectorContainer.querySelector('#selectedOption');
+                }
+
+                if (linkName === 'Larry' && linkGrandParent) {
+                    const titleEl = linkGrandParent.querySelector('.cmp-teaser__title')
+                    if (titleEl) {
+                        linkName = titleEl.textContent.trim();
+                    }
+                }
+
+                if (linkHref || isRegionDropdown) {
+
+                    // Link Type
+                    if (this.closest('.teaser')) {
+                        if (this.closest('.teaser').classList.contains('lmn-light-teal-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-secondary-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-deep-orange-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-goldenrod-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-dark-teal-1')) {
+                            linkType = 'Button';
+                        }
+                    }
+
+                    if (parent.classList.contains('button') || parent.classList.contains('cmp-button') || parent.classList.contains('industry-selector-cta-containers')) {
+                        linkType = 'Button';
+                    }
+
+                    // Link location
+                    if (this.getAttribute('am-region')) {
+                        linkLocation = this.getAttribute('am-region');
+                    } else if (parent.getAttribute('am-region')) {
+                        linkLocation = parent.getAttribute('am-region');
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') !== 'Link to Homepage') {
+                        linkLocation = 'navigation bar';
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') == 'Link to Homepage') {
+                        linkLocation = 'header';
+                    } else if (this.closest('.cmp-experiencefragment--legal-footer') || this.closest('.cmp-experiencefragment--enterprise-portfolio-footer')) {
+                        linkLocation = 'footer';
+                    } else if (parentIDAtt && grandParentIDAtt && teaserTitle) {
+                        linkLocation = teaserTitle.textContent.trim();
+                    } else if (parentIDAtt && grandParentIDAtt) {
+                        linkLocation = 'main container | ' + grandParentIDAtt + ' | ' + parentIDAtt;
+                    }
+
+                    if (industrySelectorContainer && industrySelectorTitle?.textContent) {
+                        linkLocation = industrySelectorTitle.textContent.trim();
+                    }
+
+                    // Add name for footer links
+                    if (linkHref.includes('twitter') || linkHref.includes('x.com')) {
+                        linkName = 'Twitter/X Platform';
+                    } else if (linkHref.includes('linkedin')) {
+                        linkName = 'LinkedIn';
+                    } else if (linkHref.includes('facebook')) {
+                        linkName = 'Facebook';
+                    } else if (linkHref.includes('youtube')) {
+                        linkName = 'YouTube';
+                    }
+
+                    // Download links
+                    if (linkHref.match("assets.lumen.com")) {
+
+                        // Determine filename
+                        const fileNameArray = linkHref.split('/');
+                        const fileNameArrayComp = fileNameArray.length - 1;
+                        for (let i = 0; i < fileNameArray.length; i++) {
+
+                            if (i == fileNameArrayComp) {
+                                let fileNameTitle = fileNameArray[i].replaceAll('-', ' ').split('?')[0].split(' ');
+
+                                for (let i = 0; i < fileNameTitle.length; i++) {
+                                    fileNameTitle[i] = fileNameTitle[i][0].toUpperCase() + fileNameTitle[i].substring(1);
+                                }
+
+                                fileNameTitle = fileNameTitle.toString().replaceAll(',', ' ');
+                                downloadDataLayer(fileNameTitle);
+                            }
+                        }
+
+                        // Determine download type
+                        if (linkHref.includes('.pdf')) {
+                            downloadType = 'pdf';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.mp3')) {
+                            downloadType = 'mp3';
+                        } else if (linkHref.includes('.exe')) {
+                            downloadType = 'exe';
+                        } else if (linkHref.includes('.zip')) {
+                            downloadType = 'zip';
+                        } else if (linkHref.includes('.wav')) {
+                            downloadType = 'wav';
+                        } else if (linkHref.includes('.mov')) {
+                            downloadType = 'mov';
+                        } else if (linkHref.includes('.mpg')) {
+                            downloadType = 'mpg';
+                        } else if (linkHref.includes('.avi')) {
+                            downloadType = 'avi';
+                        } else if (linkHref.includes('.wmv')) {
+                            downloadType = 'wmv';
+                        } else if (linkHref.includes('.docx')) {
+                            downloadType = 'docx';
+                        } else if (linkHref.includes('.doc')) {
+                            downloadType = 'doc';
+                        } else if (linkHref.includes('.xlsx')) {
+                            downloadType = 'xlsx';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.pptx')) {
+                            downloadType = 'pptx';
+                        } else if (linkHref.includes('.ppt')) {
+                            downloadType = 'ppt';
+                        }
+
+                        function downloadDataLayer(title) {
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.fileDownload,
+                                linkDetails: {
+                                    clickName: linkName,
+                                    clickType: 'download',
+                                    clickDestination: linkHref,
+                                    clickLocation: linkLocation,
+                                    fileDownload: {
+                                        filename: title,
+                                        type: downloadType,
+                                    }
+                                }
+                            });
+                        }
+
+                        // Normal links
+                    } else {
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: linkName.toLowerCase(),
+                                clickElementType: linkType.toLowerCase(),
+                                clickDestination: (linkHref || "").toLowerCase(),
+                                clickLocation: linkLocation.toLowerCase(),
+                                clickType: linkClickType.toLowerCase()
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // Sign In Button
+
+        const signInBtn = document.querySelector('button.signInButton');
+        if (signInBtn) {
+            const signInBtnOverride = signInBtn.getAttribute('data-linkOverride');
+            signInBtn.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents?.component.linkClick,
+                    linkDetails: {
+                        clickName: 'sign in',
+                        clickElementType: 'button',
+                        clickDestination: (signInBtnOverride ? signInBtnOverride : "sign in authentication"),
+                        clickLocation: 'header',
+                        clickType: 'other'
+                    }
+                });
+            });
+        }
+
+        function pushAdobeDataLayerForDropdown(optionName) {
+            const industryEybrowText = document.querySelector('.industry-selector-eybrow-text');
+            optionName = optionName ? optionName.trim() : optionName;
+            adobeDataLayer.push({
+                event: adobeDataLayerEvents.component.linkClick,
+                linkDetails: {
+                    clickDestination: '',
+                    clickLocation: industryEybrowText.textContent.toLocaleLowerCase(),
+                    clickName: 'industry dropdown|'+optionName.toLowerCase(),
+                    clickElementType: 'button',
+                    clickType: 'other'
+                }
+            });
+        }
+
+        // Industry Selector Dropdown Analytics
+        const dropdownHeader = document.getElementById('dropdownHeader');
+        const dropdownList = document.getElementById('dropdownList');
+        if (dropdownHeader && dropdownList) {
+            dropdownHeader.addEventListener('click', function (event) {
+                const isOpen = dropdownHeader.classList.contains('open');
+                pushAdobeDataLayerForDropdown(isOpen ? 'collapse' : 'expand');
+            });
+
+            dropdownList.addEventListener('click', function (event) {
+                pushAdobeDataLayerForDropdown(event.target.textContent);
+            });
+        }
+
+        // Chat Transcript
+        const chatSaveTranscript = document.querySelector('#downloadBtn');
+        if (chatSaveTranscript) {
+            chatSaveTranscript.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.fileDownload,
+                    linkDetails: {
+                        clickName: 'save transcript',
+                        clickType: 'download',
+                        clickDestination: 'transcript.txt',
+                        clickLocation: 'lumen chat dialog box',
+                        fileDownload: {
+                            filename: 'transcript of chat session',
+                            type: 'txt'
+                        }
+                    }
+                });
+            });
+        }
+
+        // Forms
+        function trackForms() {
+            try {
+                MktoForms2.whenReady(function (form) {
+                    const fields = document.querySelectorAll('.mktoField');
+                    const pageTitle = document.querySelector('title') ? document.querySelector('title').textContent : 'Page Title Unavailable';
+                    const formID = form.getId() ? 'mktoForm_' + form.getId().toString() : 'Form ID Unavailable';
+                    let counter = 1;
+
+                    // Form Start
+                    for (let i = 0; i < fields.length; i++) {
+                        if (fields[i]?.type !== 'hidden') {
+                            fields[i].addEventListener('focus', function (event) {
+                                if (counter == 1) { // Fire only once per page load
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formStart,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID
+                                        }
+                                    });
+                                    counter++;
+                                }
+                            });
+                        }
+                    }
+
+                    // Form Error
+                    form.onValidate(function (nativeValid) {
+                        if (!nativeValid) {
+                            setTimeout(function () { // Wait half a second so that the mktoErrorMsg html will be added first
+                                let mktoError = document.querySelector('.mktoErrorMsg');
+                                if (mktoError) {
+                                    let mktoErrorMsg = mktoError.textContent;
+                                    let mktoErrorField = mktoError.getAttribute('id');
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formError,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID,
+                                            formError: mktoErrorField + ': ' + mktoErrorMsg
+                                        }
+                                    });
+                                }
+                            }, 500);
+                        }
+                    });
+
+                    // Form Submit
+                    form.onSuccess(function (valsObj, destStr) {
+                        const email = valsObj?.Email || valsObj?.email || valsObj?.userEmail || '';
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.formSubmit,
+                            details: {
+                                formName: pageTitle + ': ' + formID,
+                                formID: formID,
+                                emailID: email
+                            }
+                        });
+                    });
+                });
+            }
+            catch (e) {
+                console.log('Error in trackForms: ', e);
+            }
+        }
+
+        if (typeof MktoForms2 !== 'undefined') {
+            trackForms();
+        } else {
+            window.addEventListener("mkto-script-loaded", (e) => {
+                trackForms();
+            }, false,
+            );
+        }
+
+        // Chat
+        const chatLink = document.querySelector("a[href='#chat']");
+        let chatClickName = 'Chat';
+        let chatClickType = 'Button';
+        let chatClickDestination = 'launchChat';
+        let newUser = 'new';
+
+        if (chatLink) {
+            chatLink.addEventListener('click', function (event) {
+                chatClickName = chatLink.textContent.trim();
+                chatClickType = 'Link';
+                chatClickDestination = '#chat';
+            });
+        }
+
+        // Chat Initiated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationStarted", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+                
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatInitiated,
+                    linkDetails: {
+                        clickName: chatClickName,
+                        clickType: chatClickType,
+                        clickDestination: chatClickDestination,
+                        clickLocation: 'main container'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
+                    }
+                });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation started.", e);
+            }
+        });
+
+        // Chat Terminated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationClosed", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+                
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatTerminated,
+                    linkDetails: {
+                        clickName: 'end chat',
+                        clickType: 'user',
+                        clickLocation: 'chat'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
+                    }
+                });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation closed.", e);
+            }
+        });
+    }
+}());
+
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++
+
+
