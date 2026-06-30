@@ -1,0 +1,102 @@
+Media high -
+<div data-sly-test="${wcmmode.edit}"
+   class="cq-placeholder"
+   data-emptytext="Edit ${component.title}"></div>
+<sly data-sly-use.mediaModel="com.centurylink.aem.core.models.MediaHighlightModel"
+   data-sly-test="${mediaModel}">
+   <div class ="media_highlight ${properties.cqStyleClasses} ${mediaModel.subheaderClass}" id='${mediaModel.id}' data-cmp-data-layer='${mediaModel.data}'>
+      <!-- Section One -->
+      <div class="section-one">
+         <h1 class="title"
+            data-sly-test="${mediaModel.mediaTitle}">
+            ${mediaModel.mediaTitle}
+         </h1>
+         <div class="description"
+            data-sly-test="${mediaModel.mediaDescription}">
+            ${mediaModel.mediaDescription @context='html'}
+      </div>
+         <div data-sly-test="${mediaModel.ctas}"
+            data-sly-list.cta="${mediaModel.ctas}">
+            <a href="${cta.link}"
+               target="${cta.linkTarget}"
+               class="cta-button"
+               data-sly-test="${cta.link && cta.text}">
+            ${cta.text}
+            </a>
+         </div>
+      </div>
+      <!-- Section Two -->
+      <div class="section-two"
+         data-sly-test="${mediaModel.mediaType}">
+         <div class="media-wrapper">
+             <sly data-sly-test.image="${mediaModel.mediaType == 'media-image'}">
+                 <div class="media-highlight-image"
+                      data-sly-resource="${'image' @ resourceType='ewcmams/components/imageV3'}">
+                 </div>
+             </sly>
+             <sly data-sly-test.video="${mediaModel.mediaType == 'media-video'}">
+                 <div class="media-highlight-video dynamicmedia"
+                      data-sly-resource="${'dm' @ resourceType='dam/components/scene7/dynamicmedia'}">
+                 </div>
+             </sly>
+         </div>
+      </div>
+   </div>
+</sly>
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+<div data-sly-test="${wcmmode.edit}" class="cq-placeholder" data-emptytext="Edit ${component.title}"></div>
+
+<div data-sly-use.model="com.centurylink.aem.core.models.SolutionHighlightModel"
+     data-sly-attribute.data-cmp-data-layer="${model.isDataLayerEnabled ? model.data : null}">
+
+  <div class="solution-highlight ${model.subheaderClass}">
+    <div class="solution-highlight__inner">
+
+      <!-- LEFT: Intro copy -->
+      <div class="solution-highlight__intro">
+        <h4 class="solution-highlight__title">${model.title}</h4>
+        <div class="solution-highlight__description">${model.description @ context='html'}</div>
+      </div>
+
+      <!-- RIGHT: Featured solutions -->
+      <div class="solution-highlight__solutions">
+        <p class="solution-highlight__label">${model.text ? model.text : 'Featured solutions'}</p>
+
+        <div class="solution-highlight__list" data-sly-list.solution="${model.solutionList}">
+          <div class="solution-highlight__card">
+            <h4 class="solution-highlight__card-title">${solution.title}</h4>
+            <div class="solution-highlight__card-desc">${solution.description @ context='html'}</div>
+            <a class="solution-highlight__card-link"
+               href="${solution.linkUrl}"
+               target="${solution.linkTarget ? '_blank' : '_self'}">
+              ${solution.linkText}<span class="arrow" aria-hidden="true"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5905 3.88084C10.9577 3.52314 11.5442 3.52698 11.9067 3.88946L17.2348 9.21758C17.6254 9.60811 17.6254 10.2413 17.2348 10.6318L11.9168 15.9498C11.5486 16.3181 10.9516 16.3184 10.583 15.9505C10.2137 15.582 10.2135 14.9837 10.5826 14.615L14.3388 10.8622H3.125C2.60723 10.8622 2.1875 10.4425 2.1875 9.92469C2.1875 9.40692 2.60723 8.98719 3.125 8.98719H14.3412L10.5806 5.21321C10.2125 4.84375 10.2169 4.24477 10.5905 3.88084Z" fill="url(#paint0_linear_11328_3687)"/>
+  <defs>
+    <linearGradient id="paint0_linear_11328_3687" x1="2.1875" y1="11.3829" x2="17.9419" y2="11.3829" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FA6E5C"/>
+      <stop offset="1" stop-color="#FB862D"/>
+    </linearGradient>
+  </defs>
+</svg></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Bottom CTA button -->
+        <div class="solution-highlight__more">
+          <a class="solution-highlight__more-btn"
+             href="${model.solutionLinkUrl}"
+             target="${model.solutionLinkTarget ? '_blank' : '_self'}">
+            ${model.solutionLinkText}
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
