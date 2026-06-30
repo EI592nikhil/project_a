@@ -55,6 +55,8 @@
 				const mediaHighlight = this.closest('.media_highlight');
 				const solutionHighlight = this.closest('.solution-highlight');
 				
+				const subheaderNav = this.closest(".pdp-subheadernav");
+				
                 // --- REGION DROPDOWN FIX ---
                 const isRegionDropdown =
                     this.classList.contains('cmp-onelinknav__lang-link') &&
@@ -228,7 +230,7 @@
 						// -----------------------------
 						// Media Highlight
 						// -----------------------------
-						if (mediaHighlight) {
+						if(mediaHighlight) {
 
 							const mediaTitle =
 								mediaHighlight.querySelector(".title")?.textContent.trim() || "";
@@ -252,7 +254,7 @@
 						// -----------------------------
 						// Solution Highlight
 						// -----------------------------
-						if (solutionHighlight) {
+						else if(solutionHighlight){
 
 							const solutionContext =
 								solutionHighlight.querySelector(".solution-highlight__label")
@@ -273,7 +275,36 @@
 
 							return;
 						}
+						
+						// Subheader 
+						else if(subheaderNav) {
 
+							let fullDestination = "NA";
+							if (linkHref) {
+								try {
+									fullDestination = new URL(linkHref, window.location.origin).href;
+								} catch (e) {
+									fullDestination = linkHref;
+								}
+							}
+
+							adobeDataLayer.push({
+								event: adobeDataLayerEvents.component.linkClick,
+								linkDetails: {
+									clickName: linkName,                          // dynamic ✔
+									clickElementType: linkType.toLowerCase(),     // consistent ✔
+									clickDestination: fullDestination || "NA",    // FULL URL ✔
+									clickLocation: "header",                      // FIXED ✔
+									clickType: linkClickType?.toLowerCase(),      // safe ✔
+									clickContext: "subheader",                   // REQUIRED ✔
+									componentContext: "subheader navigation"     // REQUIRED ✔
+								}
+							});
+
+							return;
+						}
+
+						else{
 						// Existing Analytics
 						adobeDataLayer.push({
 							event: adobeDataLayerEvents.component.linkClick,
@@ -285,6 +316,7 @@
 								clickType: linkClickType.toLowerCase()
 							}
 						});
+						}
 					}
                 }
             });
