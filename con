@@ -54,6 +54,9 @@
 				// ---------------------------------------------
 				const mediaHighlight = this.closest('.media_highlight');
 				const solutionHighlight = this.closest('.solution-highlight');
+                const subHeader = this.closest(".subheader-wrapper");
+                const breadcrumbLink = this.closest(".breadcrumb");
+                const subHeaderCTA = this.closest(".subheadernav-links");
 				
                 // --- REGION DROPDOWN FIX ---
                 const isRegionDropdown =
@@ -272,7 +275,28 @@
 							});
 
 							return;
-						}
+						} 
+
+                            // ---------------------------------------------
+                            // Subheader Breadcrumb + CTA
+                            // ---------------------------------------------
+                           else if (subHeader && (breadcrumbLink || subHeaderCTA)) {
+                        
+                                adobeDataLayer.push({
+                                    event: adobeDataLayerEvents.component.linkClick,
+                                    linkDetails: {
+                                        clickName: linkName,
+                                        clickElementType: linkType.toLowerCase(),
+                                        clickDestination: fullDestination,
+                                        clickLocation: "header",
+                                        clickType: linkClickType.toLowerCase(),
+                                        clickContext: "subheader",
+                                        componentContext: "subheader navigation"
+                                    }
+                                });
+                        
+                                return;
+                            }
 						
 						else{
 						// Existing Analytics
@@ -307,13 +331,14 @@
 
 				const linkName = item.textContent.trim();
 				const dataTarget = item.getAttribute("data-target") || "";
+                const destination = dataTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
 
 				adobeDataLayer.push({
 					event: adobeDataLayerEvents.component.linkClick,
 					linkDetails: {
 						clickName: linkName,
 						clickElementType: "button",
-						clickDestination: dataTarget,   // IMPORTANT: use section id
+						clickDestination: destination,   // IMPORTANT: use section id
 						clickLocation: "header",
 						clickType: "other",
 						clickContext: "subheader",
