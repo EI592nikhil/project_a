@@ -331,6 +331,10 @@
 
 				const linkName = item.textContent.trim();
 				const dataTarget = item.getAttribute("data-target") || "";
+                const formattedTarget = dataTarget
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
                 const destination = dataTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
 
 				adobeDataLayer.push({
