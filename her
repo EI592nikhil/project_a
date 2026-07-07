@@ -1,465 +1,97 @@
-document.addEventListener("DOMContentLoaded", () => {
+// ==========================================
+// PRODUCT HERO - CTA CLICK ANALYTICS
+// ==========================================
 
-  /* =====================================
-     MOBILE DROPDOWN
-  ====================================== */
+const productHeroComponents = document.querySelectorAll(".pdp-hero");
 
-  const dropdown = document.querySelector(
-    ".subheadernav-mobile-dropdown"
-  ) as HTMLElement | null;
+productHeroComponents.forEach(hero => {
 
-  const trigger = document.querySelector(
-    ".subheadernav-dropdown-trigger"
-  ) as HTMLButtonElement | null;
-
-  if (dropdown && trigger) {
-
-    trigger.addEventListener("click", (e: MouseEvent) => {
-      e.stopPropagation();
-      dropdown.classList.toggle("open");
-    });
-
-    document.addEventListener("click", () => {
-      dropdown.classList.remove("open");
-    });
-
-    dropdown.addEventListener("click", (e: MouseEvent) => {
-      e.stopPropagation();
-    });
-  }
-
-  /* =====================================
-     HELPERS
-  ====================================== */
-
-  const formatTitle = (value: string) =>
-    value
-      .replace(/-/g, " ")
-      .replace(/\s*&\s*/g, " & ")
-      .trim()
-      .split(" ")
-      .filter(Boolean)
-      .map(word =>
-        word === "&"
-          ? "&"
-          : word.charAt(0).toUpperCase() + word.slice(1)
-      )
-      .join(" ");
-
-  const normalizeClass = (value: string) =>
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/&/g, "")
-      .replace(/[^a-z0-9\s]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-
-  /* =====================================
-     OFFSET FIX
-  ====================================== */
-
-  const getOffset = () => {
-
-    const header = document.querySelector(
-      ".header.header-v2"
-    ) as HTMLElement | null;
-
-    const nav = document.querySelector(
-      ".pdp-subheadernav"
-    ) as HTMLElement | null;
-
-    return (
-      (header?.offsetHeight || 0) +
-      (nav?.offsetHeight || 0)
-    );
-  };
-
-  /* =====================================
-     NAV ITEMS
-  ====================================== */
-
-  const navItems = document.querySelectorAll<HTMLElement>(
-    ".subheadernav-item"
-  );
-
-  const selectedText = document.querySelector(
-    ".subheadernav-selected"
-  ) as HTMLElement | null;
+    const heroTitle =
+        hero.querySelector(".pdp-hero__title")?.textContent.trim() || "NA";
 
 
-  const updateDropdownSelection = (target: string) => {
-
-    const formattedTitle = formatTitle(target);
-
-    if (selectedText) {
-      selectedText.textContent = formattedTitle;
-    }
-
-    const mobileItems = document.querySelectorAll<HTMLElement>(
-      ".subheadernav-mobile-dropdown .subheadernav-item"
+    // Primary CTA (when PDF is not enabled) + Secondary CTA
+    const ctas = hero.querySelectorAll(
+        ".pdp-hero__download-btn:not(.pdf-download), .pdp-hero__secondary-cta"
     );
 
-    mobileItems.forEach((item) => {
 
-      item.classList.toggle(
-        "active",
-        item.dataset.target === target
-      );
+    ctas.forEach(cta => {
 
-    });
-  };
+        cta.addEventListener("click", function () {
 
+            let clickDestination = "";
 
-  navItems.forEach((item) => {
+            const href = this.getAttribute("href");
 
-    const rawTarget = item.dataset.target;
-
-    if (rawTarget) {
-      item.textContent = formatTitle(rawTarget);
-    }
-
-
-    item.addEventListener("click", () => {
-
-      const target = item.dataset.target;
-
-      if (!target) return;
+            if (href && href !== "#") {
+                try {
+                    clickDestination = new URL(
+                        href,
+                        window.location.origin
+                    ).href;
+                } catch (e) {
+                    clickDestination = href;
+                }
+            }
 
 
-      const normalizedTarget =
-        normalizeClass(target);
+            let clickType = "other";
+
+            if (clickDestination) {
+                try {
+                    const url = new URL(clickDestination);
+
+                    if (url.hostname !== window.location.hostname) {
+                        clickType = "exit";
+                    }
+
+                } catch (e) {
+                    clickType = "other";
+                }
+            }
 
 
-      const section = document.querySelector(
-        `.${normalizedTarget}`
-      ) as HTMLElement | null;
+            adobeDataLayer.push({
+                event: adobeDataLayerEvents.component.linkClick,
+                linkDetails: {
+                    clickName: this.textContent.trim().toLowerCase(),
+                    clickDestination: clickDestination,
+                    clickLocation: "body",
+                    clickType: clickType,
+                    clickContext: heroTitle.toLowerCase(),
+                    componentContext: "product hero"
+                }
+            });
 
-
-      if (section) {
-
-        const offset = getOffset();
-
-
-        const sectionTop =
-          section.getBoundingClientRect().top +
-          window.pageYOffset -
-          offset -
-          20;
-
-
-        window.scrollTo({
-          top: sectionTop,
-          behavior: "smooth"
         });
 
-
-        navItems.forEach(n =>
-          n.classList.remove("active")
-        );
-
-
-        item.classList.add("active");
-
-
-        updateDropdownSelection(target);
-
-
-        dropdown?.classList.remove("open");
-      }
-
-    });
-
-  });
-
-
-  /* =====================================
-     FIXED SUBHEADER
-  ====================================== */
-
-  const nav = document.querySelector(
-    ".pdp-subheadernav"
-  ) as HTMLElement | null;
-
-
-  if (nav) {
-
-    const navTop = nav.offsetTop;
-
-    const navHeight = nav.offsetHeight;
-
-    const placeholder = document.createElement("div");
-
-
-    const header = document.querySelector(
-      ".cmp-header-v2-wrapper"
-    ) as HTMLElement | null;
-
-
-    let lastScrollTop = window.scrollY;
-
-
-    const onScroll = () => {
-
-      const currentScrollTop = window.scrollY;
-
-
-      if (currentScrollTop >= navTop) {
-
-
-        if (!nav.classList.contains("fixed-nav")) {
-
-
-          placeholder.style.height =
-            `${navHeight}px`;
-
-
-          placeholder.style.width = "100%";
-
-
-          nav.parentNode?.insertBefore(
-            placeholder,
-            nav
-          );
-
-
-          nav.classList.add("fixed-nav");
-
-        }
-
-
-        const headerHeight =
-          header?.offsetHeight || 0;
-
-
-        nav.style.top =
-          currentScrollTop < lastScrollTop
-            ? `${headerHeight}px`
-            : "0px";
-
-
-      } else {
-
-
-        nav.classList.remove("fixed-nav");
-
-        nav.style.top = "";
-
-        placeholder.remove();
-
-      }
-
-
-      lastScrollTop = currentScrollTop;
-
-    };
-
-
-    window.addEventListener("scroll", onScroll);
-
-    window.addEventListener("resize", onScroll);
-
-
-    onScroll();
-
-  }
-
-
-  /* =====================================
-     SCROLL SPY
-  ====================================== */
-
-
-  const sectionMap: {
-    section: HTMLElement;
-    id: string;
-  }[] = [];
-
-
-  navItems.forEach((item) => {
-
-
-    const raw = item.dataset.target;
-
-    if (!raw) return;
-
-
-    const normalized =
-      normalizeClass(raw);
-
-
-    const sections =
-      document.querySelectorAll(
-        `.${normalized}`
-      );
-
-
-    sections.forEach((section) => {
-
-
-      sectionMap.push({
-
-        section: section as HTMLElement,
-
-        id: raw
-
-      });
-
-
     });
 
 
-  });
+    // PDF Download CTA
+    const downloadBtn =
+        hero.querySelector(".pdp-hero__download-btn.pdf-download");
 
 
+    if (downloadBtn) {
 
-  const onScrollSpy = () => {
+        downloadBtn.addEventListener("click", function () {
 
+            adobeDataLayer.push({
+                event: adobeDataLayerEvents.component.linkClick,
+                linkDetails: {
+                    clickName: this.textContent.trim().toLowerCase(),
+                    clickDestination: "",
+                    clickLocation: "body",
+                    clickType: "download",
+                    clickContext: heroTitle.toLowerCase(),
+                    componentContext: "product hero"
+                }
+            });
 
-    const lastSection =
-      sectionMap[
-        sectionMap.length - 1
-      ]?.section;
-
-
-
-    if (
-
-      lastSection &&
-
-      window.scrollY >
-
-        lastSection.offsetTop +
-
-        lastSection.offsetHeight
-
-    ) {
-
-
-      navItems.forEach(item =>
-
-        item.classList.remove("active")
-
-      );
-
-
-      return;
+        }, true);
 
     }
-
-
-
-    let active: string | null = null;
-
-    let minDistance = Infinity;
-
-
-
-    const viewportCenter =
-
-      window.innerHeight / 2 +
-
-      getOffset() / 2;
-
-
-
-    sectionMap.forEach(
-
-      ({ section, id }) => {
-
-
-        const rect =
-
-          section.getBoundingClientRect();
-
-
-
-        const sectionCenter =
-
-          rect.top + rect.height / 2;
-
-
-
-        const distance = Math.abs(
-
-          sectionCenter - viewportCenter
-
-        );
-
-
-
-        if (distance < minDistance) {
-
-
-          minDistance = distance;
-
-          active = id;
-
-        }
-
-
-      }
-
-    );
-
-
-
-    if (!active) return;
-
-
-
-    navItems.forEach((item) => {
-
-
-      item.classList.toggle(
-
-        "active",
-
-        item.dataset.target === active
-
-      );
-
-
-    });
-
-
-
-    updateDropdownSelection(active);
-
-
-  };
-
-
-
-  const firstItem = navItems[0];
-
-
-
-  if (firstItem?.dataset.target) {
-
-
-    updateDropdownSelection(
-
-      firstItem.dataset.target
-
-    );
-
-
-  }
-
-
-
-  window.addEventListener(
-
-    "scroll",
-
-    onScrollSpy
-
-  );
-
-
-
-  onScrollSpy();
-
 
 });
