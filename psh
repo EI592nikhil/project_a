@@ -1,0 +1,95 @@
+function initPDPHero(): void {
+    const heroBlocks = document.querySelectorAll<HTMLElement>('.pdp-hero');
+
+    if (!heroBlocks.length) return;
+
+    heroBlocks.forEach((hero) => {
+        const downloadBtn = hero.querySelector<HTMLAnchorElement>('.pdp-hero__download-btn.pdf-download');
+        const videoWrapper = hero.querySelector<HTMLElement>('[data-pdp-hero-video-modal="true"]');
+
+        bindDownload(downloadBtn);
+        bindHeroVideoModal(videoWrapper);
+    });
+}
+
+function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
+    if (!downloadBtn || downloadBtn.dataset.bound === 'true') return;
+
+    downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const hero = downloadBtn.closest('.pdp-hero');
+        const heroTitle = hero?.querySelector('.pdp-hero__title')?.textContent?.trim() || "NA";
+        const adobeDataLayer = (window as any)['adobeDataLayer'];
+
+        if (adobeDataLayer) {
+            adobeDataLayer.push({
+                event: "linkClick",
+                linkDetails: {
+                    clickName: downloadBtn.textContent?.trim().toLowerCase() || "NA",
+                    clickDestination: "",
+                    clickLocation: "body",
+                    clickType: "download",
+                    clickContext: heroTitle.toLowerCase(),
+                    componentContext: "product-solution hero"
+                }
+            });
+        }
+
+        window.print();
+    });
+
+    downloadBtn.dataset.bound = 'true';
+}
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+            // ==========================================
+            // PRODUCT HERO - CTA CLICK ANALYTICS
+            // ==========================================
+
+            const productHeroComponents = document.querySelectorAll(".pdp-hero");
+            productHeroComponents.forEach(hero => {
+                const heroTitle = hero.querySelector(".pdp-hero__title")?.textContent.trim() || "NA";
+
+                // Primary CTA (when PDF is not enabled) + Secondary CTA
+                const ctas = hero.querySelectorAll(
+                    ".pdp-hero__download-btn:not(.pdf-download), .pdp-hero__secondary-cta"
+                );
+
+                ctas.forEach(cta => {
+                    cta.addEventListener("click", function () {
+                        let clickDestination = "";
+                        const href = this.getAttribute("href");
+                        if (href && href !== "#") {
+                            try {
+                                clickDestination = new URL(
+                                    href,
+                                    window.location.origin
+                                ).href;
+                            } catch (e) {
+                                clickDestination = href;
+                            }
+                        }
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: this.textContent.trim().toLowerCase(),
+                                clickDestination: clickDestination,
+                                clickLocation: "body",
+                                clickType:  linkClickType.toLowerCase(),
+                                clickContext: heroTitle.toLowerCase(),
+                                componentContext: "product hero"
+                            }
+                        });
+
+                    });
+
+                });
+            });
+
+
+
+
