@@ -1,20 +1,41 @@
-e.addEventListener("click",(function(e){
-    e.preventDefault(),
-    adobeDataLayer.push({
-        event:adobeDataLayerEvents.component.linkClick,
-        linkDetails:{
-            clickName:this.textContent.trim().toLowerCase(),
-            clickDestination:"",
-            clickLocation:"body",
-            clickType:"download",
-            clickContext:"product hero",
-            componentContext:"product hero"
-        }
-    }),
-    setTimeout((function(){
-        window.print()
-    }),200)
-}))
+!function() {
+    var e = {
+        481: function() {
+            new (function() {
+                function e() {
+                    this.button = document.querySelectorAll(".cmp-button"),
+                    this.printButton = document.querySelectorAll(".print-button"),
+                    (this.button || this.printButton) && this.init()
+                }
+                return e.prototype.init = function() {
+                    this.events()
+                }
+                ,
+                e.prototype.events = function() {
+                    this.printButton.length && this.printButton.forEach((function(e) {
+                        e.addEventListener("click", (function(t) {
+                            t.preventDefault(),
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: e.textContent.trim().toLowerCase(),
+                                    clickDestination: "",
+                                    clickLocation: "body",
+                                    clickType: "download",
+                                    clickContext: "product hero",
+                                    componentContext: "product hero"
+                                }
+                            }),
+                            setTimeout((function() {
+                                window.print()
+                            }), 200)
+                        }))
+                    }))
+                }
+                ,
+                e
+            }())
+        },
 \\\\\\///////////////////////////////////
 !function() {
     var e = {
