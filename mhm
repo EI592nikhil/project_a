@@ -1,4 +1,12 @@
-declare const adobeDataLayer:any;
+
+declare global {
+    interface Window {
+        adobeDataLayer: any;
+        adobeDataLayerEvents: any;
+    }
+}
+
+export {};
 
 function initPDPHero(): void {
     const heroBlocks = document.querySelectorAll<HTMLElement>('.pdp-hero');
