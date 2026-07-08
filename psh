@@ -24,9 +24,9 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
             hero?.querySelector('.pdp-hero__title')
                 ?.textContent?.trim() || "NA";
 
-        downloadBtn.dispatchEvent(
+
+        document.dispatchEvent(
             new CustomEvent("productHeroDownload", {
-                bubbles: true,
                 detail: {
                     clickName:
                         downloadBtn.textContent?.trim().toLowerCase() || "NA",
@@ -36,6 +36,7 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
                 }
             })
         );
+
 
         window.print();
     });
