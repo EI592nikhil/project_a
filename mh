@@ -1,707 +1,1069 @@
-<sly data-sly-use.model="com.centurylink.aem.core.models.SuperscriptModel"
-    data-sly-use.templates="core/wcm/components/commons/v1/templates.html"
-    data-sly-use.clientlib="/libs/granite/sightly/templates/clientlib.html" />
+(function () {
+    "use strict";
 
-<sly data-sly-call="${clientlib.all @ categories='ewcmams.components.superscript'}" />
-
-<div data-sly-test="${!wcmmode.disabled || model.hasItems}" id="${model.id}"
-    class="cmp-superscript${!wcmmode.disabled ? ' cmp-superscript--editor' : ''}"
-    data-cmp-data-layer="${model.dataLayerJson}">
-
-    <!-- Author-mode preview panel -->
-    <sly data-sly-test="${!wcmmode.disabled}">
-        <div class="cmp-superscript__editor-panel">
-            <span class="cmp-superscript__editor-label">Tooltip Superscript</span>
-            <sly data-sly-test="${model.hasItems}">
-                <ul class="cmp-superscript__editor-list">
-                    <sly data-sly-list.item="${model.items}">
-                        <li class="cmp-superscript__editor-entry">
-                            <span class="cmp-superscript__badge">[${item.refNumber}]</span>
-                            <span class="cmp-superscript__editor-title">${item.title}</span>
-                            <span class="cmp-superscript__editor-type">${item.displayType}</span>
-                        </li>
-                    </sly>
-                </ul>
-            </sly>
-            <p data-sly-test="${!model.hasItems}" class="cmp-superscript__editor-empty">No superscript entries
-                configured.</p>
-        </div>
-    </sly>
-
-    <div class="cmp-superscript__overlay" aria-hidden="true"></div>
-
-    <sly data-sly-list.item="${model.items}">
-
-        <sly data-sly-test="${item.displayType == 'modal'}">
-            <div class="cmp-superscript__modal" data-ref="${item.refNumber}" aria-hidden="true" role="dialog"
-                aria-modal="true" aria-labelledby="superscript-title-${item.refNumber @ context='attribute'}">
-                <div class="cmp-superscript__modal-inner">
-                    <div class="cmp-superscript__modal-header">
-                        <span class="cmp-superscript__badge">${item.refNumber}:</span>
-                        <div id="superscript-title-${item.refNumber @ context='attribute'}"
-                            class="cmp-superscript__modal-title">${item.title}</div>
-                        <button class="cmp-superscript__close" type="button" aria-label="Close dialog">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                fill="none">
-                                <path
-                                    d="M8 9.70342L2.03802 15.6654C1.81496 15.8885 1.53105 16 1.18631 16C0.841571 16 0.557667 15.8885 0.3346 15.6654C0.111533 15.4423 0 15.1584 0 14.8137C0 14.4689 0.111533 14.185 0.3346 13.962L6.29658 8L0.3346 2.03802C0.111533 1.81496 0 1.53105 0 1.18631C0 0.841571 0.111533 0.557667 0.3346 0.3346C0.557667 0.111533 0.841571 0 1.18631 0C1.53105 0 1.81496 0.111533 2.03802 0.3346L8 6.29658L13.962 0.3346C14.185 0.111533 14.4689 0 14.8137 0C15.1584 0 15.4423 0.111533 15.6654 0.3346C15.8885 0.557667 16 0.841571 16 1.18631C16 1.53105 15.8885 1.81496 15.6654 2.03802L9.70342 8L15.6654 13.962C15.8885 14.185 16 14.4689 16 14.8137C16 15.1584 15.8885 15.4423 15.6654 15.6654C15.4423 15.8885 15.1584 16 14.8137 16C14.4689 16 14.185 15.8885 13.962 15.6654L8 9.70342Z"
-                                    fill="#686C73" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="cmp-superscript__modal-body">${item.body @ context='html'}</div>
-                    <sly data-sly-test="${item.ctaText && item.ctaUrl}">
-                        <a class="cmp-superscript__cta" href="${item.ctaUrl @ extension='html'}">${item.ctaText}</a>
-                    </sly>
-                </div>
-            </div>
-        </sly>
-
-        <sly data-sly-test="${item.displayType == 'footnote'}">
-            <div class="cmp-superscript__footnote" data-ref="${item.refNumber}" aria-hidden="true" role="complementary">
-                <span class="cmp-superscript__badge">[${item.refNumber}]</span>
-                <div class="cmp-superscript__footnote-content">
-                    <strong class="cmp-superscript__footnote-title">${item.title}</strong>
-                    <div class="cmp-superscript__footnote-body">${item.body @ context='html'}</div>
-                    <sly data-sly-test="${item.ctaText && item.ctaUrl}">
-                        <a class="cmp-superscript__cta" href="${item.ctaUrl @ extension='html'}">${item.ctaText}</a>
-                    </sly>
-                </div>
-                <button class="cmp-superscript__close" type="button" aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path
-                            d="M8 9.70342L2.03802 15.6654C1.81496 15.8885 1.53105 16 1.18631 16C0.841571 16 0.557667 15.8885 0.3346 15.6654C0.111533 15.4423 0 15.1584 0 14.8137C0 14.4689 0.111533 14.185 0.3346 13.962L6.29658 8L0.3346 2.03802C0.111533 1.81496 0 1.53105 0 1.18631C0 0.841571 0.111533 0.557667 0.3346 0.3346C0.557667 0.111533 0.841571 0 1.18631 0C1.53105 0 1.81496 0.111533 2.03802 0.3346L8 6.29658L13.962 0.3346C14.185 0.111533 14.4689 0 14.8137 0C15.1584 0 15.4423 0.111533 15.6654 0.3346C15.8885 0.557667 16 0.841571 16 1.18631C16 1.53105 15.8885 1.81496 15.6654 2.03802L9.70342 8L15.6654 13.962C15.8885 14.185 16 14.4689 16 14.8137C16 15.1584 15.8885 15.4423 15.6654 15.6654C15.4423 15.8885 15.1584 16 14.8137 16C14.4689 16 14.185 15.8885 13.962 15.6654L8 9.70342Z"
-                            fill="#686C73" />
-                    </svg>
-
-                </button>
-            </div>
-        </sly>
-
-    </sly>
-
-</div>
-
-<sly data-sly-call="${templates.placeholder @ isEmpty=!model.hasItems, classAppend='cmp-superscript'}"></sly>
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-$bp-sm: 768px;
-$bp-lg: 1200px;
-
-@mixin mq-min($min) {
-    @media (min-width: $min) {
-        @content;
-    }
-}
-
-.cmp-superscript {
-    display: contents;
-
-    &--editor {
-        display: block;
-    }
-
-    &--body-lock {
-        overflow: hidden;
-    }
-
-    &__editor-panel {
-        border: 1px dashed var(--color-neutral-50);
-        border-radius: 6px;
-        padding: 12px 16px;
-        background: var(--color-neutral-200);
-        font-family: var(--Font-Family-Open);
-    }
-
-    &__editor-label {
-        display: block;
-        font-size: var(--Font-Size-Mobile-XS);
-        font-weight: var(--Font-Weight-Bold);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--color-neutral-500);
-        margin-bottom: 10px;
-    }
-
-    &__editor-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    &__editor-entry {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: var(--Font-Size-Caption);
-    }
-
-    &__editor-title {
-        flex: 1;
-        color: var(--color-neutral-black);
-        font-weight: 600;
-    }
-
-    &__editor-type {
-        font-size: var(--Font-Size-Mobile-XS);
-        color: var(--color-neutral-white);
-        background: var(--color-neutral-500);
-        border-radius: 3px;
-        padding: 1px 6px;
-        text-transform: capitalize;
-    }
-
-    &__editor-empty {
-        margin: 0;
-        font-size: var(--Font-Size-Caption);
-        color: var(--color-neutral-350);
-        font-style: italic;
-    }
-
-    &__trigger {
-        cursor: pointer;
-        color: var(--color-brand-teal-800) !important;
-        font: inherit !important;
-        vertical-align: middle;
-        z-index: 2 !important;
-
-        &:focus-visible {
-            outline: 2px solid var(--color-brand-teal-800);
-            outline-offset: 2px;
-            border-radius: 2px;
+    function isLumenHost(href) {
+        // Treat relative URLs as internal; absolute URLs are checked by hostname.
+        if (!href || href.startsWith("/")) {
+            return true;
         }
-
-        .specialSymbol {
-            vertical-align: middle;
-        }
-
-        .subbed {
-            vertical-align: sub;
+        try {
+            var url = new URL(href, window.location.origin);
+            var host = url.hostname.toLowerCase();
+            return host === "lumen.com" || host.endsWith(".lumen.com");
+        } catch (e) {
+            // If URL parsing fails, fall back to treating as external.
+            return false;
         }
     }
 
-    &__overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        display: none;
+    if (window.adobeDataLayer) {
+        // Links
+        const links = document.querySelectorAll('a');
+        for (let i = 0; i < links.length; i++) {
 
-        &.is-active {
-            display: block;
-        }
-    }
+            links[i].addEventListener('click', function (event) {
+                let linkGrandParent = this.closest('.cmp-teaser__content');
+                let parent = this.parentElement;
+                let linkName = this.textContent.trim();
+                let ariaLabel = this.getAttribute('aria-label');
+                if (ariaLabel == 'Link to Homepage') {
+                    linkName = 'Lumen Logo';
+                }
+                let linkClickType = "exit";
+                if (this.getAttribute('href') != null) {
+                    let href = this.getAttribute('href');
+                    if (href.startsWith("/content/lumen") || isLumenHost(href)) {
+                        linkClickType = "other";
+                    }
+                }
+                let linkType = 'Link';
+                let linkHref = this.getAttribute('href');
+                let linkLocation = 'main container';
+                let downloadType = 'AEM asset';
+                let parentID = this.closest('[id]');
+                let parentIDAtt = parentID.getAttribute('id').split('-')[0];
+                let grandParentID = parentID.parentElement.closest('[id]');
+                let grandParentIDAtt = grandParentID.getAttribute('id').split('-')[0];
+                let teaserTitle;
+                let industrySelectorContainer = this.closest('.industry-selector-container');
+                let stackedContentTab = this.closest('.lumen-tabs__content');
+                let industrySelectorItem = this.closest('.industry-selector-item');
+                let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
+                const mediaHighlight = this.closest('.media_highlight');
+                const solutionHighlight = this.closest('.solution-highlight');
+                const subHeader = this.closest(".subheader-wrapper");
+                const breadcrumbLink = this.closest(".breadcrumb");
+                const featuredCard = this.closest(".cmp-featured-resources-card");
+                const subHeaderCTA = this.closest(".subheadernav-links");
+                const conversionBanner = this.closest(".cmp-conversion-banner");
+                const featuredResourcesTable = this.closest(".featuredresourcesTable__productCta");
 
-    // Modal
-    &__modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        transform: translate(0, 0);
-        width: 100%;
-        height: 100%;
-        max-height: 100%;
-        background: var(--color-neutral-white);
-        z-index: 1000;
+                // --- REGION DROPDOWN FIX ---
+                const isRegionDropdown =
+                    this.classList.contains('cmp-onelinknav__lang-link') &&
+                    this.closest('.cmp-onelinknav__popover');
 
-        @include mq-min($bp-sm) {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-            border-radius: 8px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 548px;
-            height: auto;
-            max-height: 690px;
-        }
+                if (isRegionDropdown) {
+                    // Ensure clickName is the visible country text
+                    linkName = this.textContent.trim();
 
-        @include mq-min($bp-lg) {
-            width: 670px;
-            height: auto;
-            max-height: 90vh;
-        }
+                    // Per acceptance criteria
+                    linkClickType = "other";
+                    linkHref = ""; // clickDestination must be empty string
+                }
 
-        &.is-open {
-            display: block;
-        }
+                if (linkGrandParent) {
+                    teaserTitle = linkGrandParent.querySelector('.cmp-teaser__pretitle') || linkGrandParent.querySelector('.cmp-teaser__title');
+                }
 
-        .cmp-superscript__badge {
-            font-size: 20px;
-            font-style: normal;
-            color: inherit;
-            text-decoration: none;
-            font-weight: var(--Font-Weight-Medium);
-            line-height: var(--Line-Height-133);
-            font-family: var(--Font-Family-Gotham);
+                if (stackedContentTab) {
+                    teaserTitle = stackedContentTab.querySelector('.lumen-tabs__title');
+                }
 
-            @include mq-min($bp-sm) {
-                font-size: 24px;
-            }
-        }
-    }
+                if (industrySelectorContainer) {
+                    teaserTitle = industrySelectorContainer.querySelector('#selectedOption');
+                }
 
-    &__modal-inner {
-        padding: 20px 20px 0 20px;
-        height: 100%;
+                if (linkName === 'Larry' && linkGrandParent) {
+                    const titleEl = linkGrandParent.querySelector('.cmp-teaser__title')
+                    if (titleEl) {
+                        linkName = titleEl.textContent.trim();
+                    }
+                }
 
-        @include mq-min($bp-sm) {
-            padding: 24px 24px 0 24px;
-        }
+                if (linkHref || isRegionDropdown) {
 
-        @include mq-min($bp-lg) {
-            padding: 32px 32px 0 32px;
-        }
-
-        .cmp-superscript__cta {
-            color: var(--color-brand-teal-800);
-            text-decoration: underline;
-            margin-bottom: 20px;
-        }
-    }
-
-    &__modal-header {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 16px;
-    }
-
-    &__modal-title {
-        color: var(--color-neutral-950);
-        font-size: 20px;
-        font-family: var(--Font-Family-Gotham);
-        font-weight: var(--Font-Weight-Medium);
-        margin: 0;
-        flex: 1;
-        line-height: var(--Line-Height-133);
-
-        @include mq-min($bp-sm) {
-            font-size: 24px;
-        }
-    }
-
-    &__modal-body {
-        font-size: 0.875rem;
-        line-height: 1.65;
-        color: var(--color-neutral-600);
-        height: 85vh;
-        overflow-y: auto;
-        padding-right: 20px;
-        font-size: 14px;
-        font-family: var(--Font-Family-Open);
-        font-weight: 450;
-        line-height: var(--Line-Height-175);
-
-        &::-webkit-scrollbar-thumb {
-            background-color: var(--color-neutral-450);
-            border: 1px solid var(--color-neutral-150);
-            border-radius: 40px;
-            width: 2px;
-        }
-
-        &::-webkit-scrollbar-track {
-            background-color: var(--color-neutral-150);
-        }
-
-        @include mq-min($bp-sm) {
-            height: auto;
-            max-height: 578px;
-            padding-right: 24px;
-        }
-
-        @include mq-min($bp-lg) {
-            height: auto;
-            max-height: calc(90vh - 150px);
-        }
-
-        p {
-            margin: 0 0 12px;
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        p,
-        span,
-        a {
-            font: inherit;
-        }
-    }
-
-    // Footnote
-    &__footnote {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        background: var(--color-neutral-white);
-        border-radius: 8px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
-        width: 90%;
-        max-width: 380px;
-        z-index: 1000;
-        padding: 20px;
-        display: none;
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 12px;
-
-        &.is-open {
-            display: flex;
-        }
-
-        @include mq-min($bp-sm) {
-            gap: 20px;
-            max-width: 728px;
-        }
-
-        @include mq-min($bp-lg) {
-            gap: 20px;
-            max-width: 670px;
-        }
-    }
-
-    &__footnote-content {
-        flex: 1;
-        min-width: 0;
-    }
-
-    &__footnote-title {
-        display: block;
-        font-size: var(--Font-Size-Mobile-LG);
-        font-weight: var(--Font-Weight-Bold);
-        line-height: 29.88px;
-        font-family: var(--Font-Family-Open);
-        margin-bottom: 8px;
-        color: var(--color-neutral-950);
-
-    }
-
-    &__footnote-body {
-        font-size: var(--Font-Size-Caption);
-        line-height: var(--Line-Height-150);
-
-        p {
-            margin: 0 0 8px;
-            font-family: var(--Font-Family-Open);
-            font-weight: 450;
-            font-size: 14px;
-            line-height: 24.5px;
-            color: var(--color-neutral-600);
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        a {
-            color: var(--color-brand-teal-800);
-            text-decoration: underline;
-        }
-    }
-
-    // Shared
-    &__badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--color-brand-teal-800);
-        font-family: var(--Font-Family-Open);
-        font-size: 16px;
-        line-height: 26.56px;
-        font-weight: var(--Font-Weight-Book);
-        padding: 3px 0;
-        flex-shrink: 0;
-        letter-spacing: 0.01em;
-        text-decoration: underline;
-        text-decoration-style: solid;
-        text-decoration-thickness: 0.78%;
-        text-underline-position: from-font;
-    }
-
-    &__close {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.125rem;
-        line-height: 1;
-        padding: 4px;
-        flex-shrink: 0;
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        &:focus-visible {
-            outline: 2px solid var(--color-brand-teal-800);
-            border-radius: 2px;
-        }
-    }
-
-    &__cta {
-        display: inline-block;
-        margin-top: 8px;
-        color: var(--color-brand-teal-800) !important;
-        font: normal 450 var(--Font-Size-Mobile-XS)/var(--Line-Height-175) var(--Font-Family-Open) !important;
-        text-decoration: underline !important;
-        text-decoration-style: solid !important;
-        text-decoration-thickness: 6% !important;
-        text-underline-offset: 8% !important;
-        text-underline-position: from-font !important;
-
-        @include mq-min($bp-sm) {
-            font-size: var(--Font-Size-Tablet-XS) !important;
-            margin-top: 4px;
-        }
-
-    }
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    .cmp-superscript__trigger {
-        vertical-align: sub;
-
-        .subbed {
-            vertical-align: sub;
-        }
-    }
-}
-======================================================+++++++++++++++++++++++++++++++++++
-
-function convertRawSupTags(root = document.body) {
-    const regex = /<sup>(.*?)<\/sup>/gi;
-
-    // Only target elements that actually contain raw <sup> in their text
-    // TreeWalker is faster than querySelectorAll for text node traversal
-    const walker = document.createTreeWalker(
-        root,
-        NodeFilter.SHOW_TEXT,
-        {
-            acceptNode: node =>
-                node.nodeValue?.includes('<sup>')
-                    ? NodeFilter.FILTER_ACCEPT
-                    : NodeFilter.FILTER_REJECT
-        }
-    );
-
-    const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
-
-    // Batch all DOM writes after reads — avoid layout thrashing
-    textNodes.forEach(textNode => {
-        const raw = textNode.nodeValue;
-        const fragment = document.createDocumentFragment();
-        let lastIndex = 0;
-        let match;
-
-        regex.lastIndex = 0; // reset since regex is reused
-        while ((match = regex.exec(raw)) !== null) {
-            // Text before <sup>
-            if (match.index > lastIndex) {
-                fragment.appendChild(document.createTextNode(raw.slice(lastIndex, match.index)));
-            }
-
-            // Safe sup element — textContent prevents XSS
-            const sup = document.createElement('sup');
-            sup.textContent = match[1];
-            fragment.appendChild(sup);
-
-            lastIndex = regex.lastIndex;
-        }
-
-        // Remaining text after last </sup>
-        if (lastIndex < raw.length) {
-            fragment.appendChild(document.createTextNode(raw.slice(lastIndex)));
-        }
-
-        textNode.parentNode.replaceChild(fragment, textNode);
-    });
-}
-
-function initSuperscript(): void {
-    'use strict';
-
-    const NS = 'cmp-superscript';
-
-    const SEL = {
-        component: '.' + NS,
-        modal: '.' + NS + '__modal',
-        footnote: '.' + NS + '__footnote',
-        overlay: '.' + NS + '__overlay',
-        close: '.' + NS + '__close',
-        trigger: '.' + NS + '__trigger'
-    };
-
-    interface DataLayerEvent {
-        event: string;
-        eventInfo: {
-            path: string;
-            ref: string;
-        };
-    }
-
-    class SuperscriptComponent {
-        el: Element;
-        overlay: Element | null;
-
-        constructor(el: Element) {
-            this.el = el;
-            this.overlay = el.querySelector(SEL.overlay);
-            this._scanTriggers();
-            this._bindEvents();
-        }
-
-        private _scanTriggers(): void {
-            document.querySelectorAll('sup').forEach((sup) => {
-                const ref = sup.textContent?.trim() || '';
-                if (ref) {
-                    if (ref.includes('*') || ref.includes('†') || ref.includes('‡')) {
-                        sup.textContent = '';
-                        sup.appendChild(document.createTextNode('['));
-                        const symbol = document.createElement('span');
-                        symbol.classList.add('specialSymbol');
-                        if (ref.includes('*') || ref.includes('†')) {
-                            symbol.classList.add('subbed');
+                    // Link Type
+                    if (this.closest('.teaser')) {
+                        if (this.closest('.teaser').classList.contains('lmn-light-teal-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-secondary-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-deep-orange-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-goldenrod-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-dark-teal-1')) {
+                            linkType = 'Button';
                         }
-                        symbol.textContent = ref;
-                        sup.appendChild(symbol);
-                        sup.appendChild(document.createTextNode(']'));
-                    } else {
-                        sup.textContent = '[' + ref + ']';
                     }
-                    sup.setAttribute('data-ref', ref);
-                    sup.setAttribute('role', 'button');
-                    sup.setAttribute('tabindex', '0');
-                    sup.setAttribute('aria-label', 'See reference ' + ref);
-                    sup.classList.add(NS + '__trigger');
+
+                    if (parent.classList.contains('button') || parent.classList.contains('cmp-button') || parent.classList.contains('industry-selector-cta-containers')) {
+                        linkType = 'Button';
+                    }
+
+                    // Link location
+                    if (this.getAttribute('am-region')) {
+                        linkLocation = this.getAttribute('am-region');
+                    } else if (parent.getAttribute('am-region')) {
+                        linkLocation = parent.getAttribute('am-region');
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') !== 'Link to Homepage') {
+                        linkLocation = 'navigation bar';
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') == 'Link to Homepage') {
+                        linkLocation = 'header';
+                    } else if (this.closest('.cmp-experiencefragment--legal-footer') || this.closest('.cmp-experiencefragment--enterprise-portfolio-footer')) {
+                        linkLocation = 'footer';
+                    } else if (parentIDAtt && grandParentIDAtt && teaserTitle) {
+                        linkLocation = teaserTitle.textContent.trim();
+                    } else if (parentIDAtt && grandParentIDAtt) {
+                        linkLocation = 'main container | ' + grandParentIDAtt + ' | ' + parentIDAtt;
+                    }
+
+                    if (industrySelectorContainer && industrySelectorTitle?.textContent) {
+                        linkLocation = industrySelectorTitle.textContent.trim();
+                    }
+
+                    // Add name for footer links
+                    if (linkHref.includes('twitter') || linkHref.includes('x.com')) {
+                        linkName = 'Twitter/X Platform';
+                    } else if (linkHref.includes('linkedin')) {
+                        linkName = 'LinkedIn';
+                    } else if (linkHref.includes('facebook')) {
+                        linkName = 'Facebook';
+                    } else if (linkHref.includes('youtube')) {
+                        linkName = 'YouTube';
+                    }
+
+                    // Download links
+                    if (linkHref.match("assets.lumen.com")) {
+
+                        // Determine filename
+                        const fileNameArray = linkHref.split('/');
+                        const fileNameArrayComp = fileNameArray.length - 1;
+                        for (let i = 0; i < fileNameArray.length; i++) {
+
+                            if (i == fileNameArrayComp) {
+                                let fileNameTitle = fileNameArray[i].replaceAll('-', ' ').split('?')[0].split(' ');
+
+                                for (let i = 0; i < fileNameTitle.length; i++) {
+                                    fileNameTitle[i] = fileNameTitle[i][0].toUpperCase() + fileNameTitle[i].substring(1);
+                                }
+
+                                fileNameTitle = fileNameTitle.toString().replaceAll(',', ' ');
+                                downloadDataLayer(fileNameTitle);
+                            }
+                        }
+
+                        // Determine download type
+                        if (linkHref.includes('.pdf')) {
+                            downloadType = 'pdf';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.mp3')) {
+                            downloadType = 'mp3';
+                        } else if (linkHref.includes('.exe')) {
+                            downloadType = 'exe';
+                        } else if (linkHref.includes('.zip')) {
+                            downloadType = 'zip';
+                        } else if (linkHref.includes('.wav')) {
+                            downloadType = 'wav';
+                        } else if (linkHref.includes('.mov')) {
+                            downloadType = 'mov';
+                        } else if (linkHref.includes('.mpg')) {
+                            downloadType = 'mpg';
+                        } else if (linkHref.includes('.avi')) {
+                            downloadType = 'avi';
+                        } else if (linkHref.includes('.wmv')) {
+                            downloadType = 'wmv';
+                        } else if (linkHref.includes('.docx')) {
+                            downloadType = 'docx';
+                        } else if (linkHref.includes('.doc')) {
+                            downloadType = 'doc';
+                        } else if (linkHref.includes('.xlsx')) {
+                            downloadType = 'xlsx';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.pptx')) {
+                            downloadType = 'pptx';
+                        } else if (linkHref.includes('.ppt')) {
+                            downloadType = 'ppt';
+                        }
+
+                        function downloadDataLayer(title) {
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.fileDownload,
+                                linkDetails: {
+                                    clickName: linkName,
+                                    clickType: 'download',
+                                    clickDestination: linkHref,
+                                    clickLocation: linkLocation,
+                                    fileDownload: {
+                                        filename: title,
+                                        type: downloadType,
+                                    }
+                                }
+                            });
+                        }
+
+                        // Normal links
+                    } else {
+
+                        let componentContextValue;
+                        let clickContextValue;
+                        // Build full destination URL
+                        let fullDestination = "NA";
+                        if (linkHref) {
+                            try {
+                                fullDestination = new URL(linkHref, window.location.origin).href;
+                            } catch (e) {
+                                fullDestination = linkHref;
+                            }
+                        }
+                        // -----------------------------
+                        // Media Highlight
+                        // -----------------------------
+                        if (mediaHighlight) {
+                            const mediaTitle = mediaHighlight.querySelector(".title")?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: mediaTitle.toLowerCase(),
+                                    componentContext: "media-highlight"
+                                }
+                            });
+
+                            return;
+                        }
+                        // -----------------------------
+                        // Conversion Banner
+                        // -----------------------------
+                        else if (conversionBanner) {
+                            const conversionBannerTitle = conversionBanner.querySelector(".cmp-conversion-banner__title")?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: conversionBannerTitle.toLowerCase(),
+                                    componentContext: "conversion banner"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Solution Highlight
+                        // -----------------------------
+                        else if (solutionHighlight) {
+                            const solutionContext = solutionHighlight.querySelector(".solution-highlight__label")
+                                ?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: solutionContext.toLowerCase(),
+                                    componentContext: "solution-highlight"
+                                }
+                            });
+
+                            return;
+                        }
+                        // ---------------------------------------------
+                        // Subheader Breadcrumb + CTA
+                        // ---------------------------------------------
+                        else if (subHeader && (breadcrumbLink || subHeaderCTA)) {
+
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "header",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: "subheader",
+                                    componentContext: "subheader-navigation"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Featured Card
+                        // -----------------------------
+
+                        else if (featuredCard) {
+
+                            const featuredCardLayer = featuredCard.getAttribute("data-cmp-data-layer");
+                            let featuredCardInfo = {};
+
+                            if (featuredCardLayer) {
+                                try {
+                                    const parsed = JSON.parse(featuredCardLayer);
+                                    const key = Object.keys(parsed)[0];
+                                    featuredCardInfo = parsed[key] || {};
+                                } catch (e) {
+                                    console.error("Featured Card data layer parse error", e);
+                                }
+                            }
+
+                            const productTitle =
+                                featuredCardInfo.productTitle ||
+                                featuredCard.querySelector(".cmp-featured-resources-card__title")
+                                    ?.textContent.trim() ||
+                                "";
+
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: productTitle.toLowerCase(),
+                                    componentContext: featuredCardInfo.componentName || "featured-card"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Featured Resources Table
+                        // -----------------------------
+                        else if (featuredResourcesTable) {
+                            const productHeader = this.closest("th, td");
+
+                            const productTitle =
+                                productHeader
+                                    ?.querySelector(".featuredresourcesTable__productTitle")
+                                    ?.textContent.trim() || "";
+
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: productTitle.toLowerCase(),
+                                    componentContext: "featured resources - table"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        else {
+                            // Existing Default
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickElementType: linkType.toLowerCase(),
+                                    clickDestination: (linkHref || "").toLowerCase(),
+                                    clickLocation: linkLocation.toLowerCase(),
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: clickContextValue,
+                                    componentContext: componentContextValue
+                                }
+                            });
+                        }
+                    }
                 }
             });
         }
 
-        private _bindEvents(): void {
-            const self = this;
+        // ==========================================
+        // LOOKUP FORM – SEARCH + CTA EVENTS
+        // ==========================================
 
-            document.addEventListener('click', (e) => {
-                const target = e.target as Element;
-                const trigger = target.closest(SEL.trigger);
-                if (trigger) {
-                    self._open(trigger.getAttribute('data-ref') || '');
-                }
-            });
+        const lookupForms = document.querySelectorAll(".lookup-form");
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    const target = e.target as Element;
-                    const trigger = target.closest(SEL.trigger);
-                    if (trigger) {
-                        e.preventDefault();
-                        self._open(trigger.getAttribute('data-ref') || '');
-                    }
-                }
-                if (e.key === 'Escape') {
-                    self._closeAll();
-                }
-            });
+        lookupForms.forEach(form => {
 
-            this.el.addEventListener('click', (e) => {
-                const target = e.target as Element;
-                if (target.closest(SEL.close)) {
-                    self._closeAll();
-                }
-            });
+            const searchBtn = form.querySelector(".lookup-form__search-label");
+            const titleEl = form.querySelector(".lookup-form__title h2");
+            const componentTitle = titleEl?.textContent.trim() || "NA";
 
-            if (this.overlay) {
-                this.overlay.addEventListener('click', () => {
-                    self._closeAll();
+            // -----------------------------
+            // SEARCH BUTTON CLICK
+            // -----------------------------
+            if (searchBtn) {
+                searchBtn.addEventListener("click", () => {
+
+                    const clickName = searchBtn.textContent.trim().toLowerCase();
+                    const clickDestination = "NA"; // Search triggers JS, not navigation
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName,
+                            clickDestination,
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: componentTitle.toLowerCase(),
+                            componentContext: "lookup form"
+                        }
+                    });
                 });
             }
-        }
 
-        private _open(ref: string): void {
-            const modal = this.el.querySelector(SEL.modal + '[data-ref="' + ref + '"]');
-            const footnote = this.el.querySelector(SEL.footnote + '[data-ref="' + ref + '"]');
-            const target = modal || footnote;
+            // -----------------------------
+            // CTA BUTTONS (Primary, Contact, Secondary)
+            // -----------------------------
+            const ctas = form.querySelectorAll(
+                ".lookup-form__primary-cta, .lookup-form__contact-cta, .lookup-form__secondary-cta"
+            );
 
-            if (!target) {
+            ctas.forEach(cta => {
+                cta.addEventListener("click", () => {
+
+                    const clickName = cta.textContent.trim().toLowerCase();
+
+                    // Build full destination URL
+                    let rawHref = cta.getAttribute("href") || cta.getAttribute("data-link") || cta.getAttribute("data-href");
+                    let clickDestination = "NA";
+
+                    if (rawHref) {
+                        try {
+                            clickDestination = new URL(rawHref, window.location.origin).href;
+                        } catch (e) {
+                            clickDestination = rawHref;
+                        }
+                    }
+
+                    // Determine search result context (success or error message)
+                    const successMsg = form.querySelector(".lookup-form__success");
+                    const errorMsg = form.querySelector(".lookup-form__error");
+
+                    let clickContext = componentTitle.toLowerCase();
+
+                    if (successMsg && successMsg.style.display !== "none") {
+                        clickContext = successMsg.textContent.trim().toLowerCase();
+                    } else if (errorMsg && errorMsg.style.display !== "none") {
+                        clickContext = errorMsg.textContent.trim().toLowerCase();
+                    }
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName,
+                            clickDestination,
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext,
+                            componentContext: "lookup form"
+                        }
+                    });
+                });
+            });
+
+        });
+
+
+        // ==========================================
+        // FEATURED RESOURCES – INFORMATION TOGGLE
+        // ==========================================
+        const resourcesInfoComponents = document.querySelectorAll(".featured-resources-information");
+
+        resourcesInfoComponents.forEach(component => {
+            const toggle = component.querySelector(".cmp-featured-resources-info__toggle");
+
+            if (!toggle) return;
+
+            toggle.addEventListener("click", () => {
+
+                const titleEl = component.querySelector(".cmp-featured-resources-info__title");
+                const title = titleEl?.textContent.trim() || "NA";
+
+                // Determine expand/collapse state
+                const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+                let clickState = isExpanded ? "collapse" : "expand";
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: title.toLowerCase(),
+                        clickDestination: "NA",
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: title.toLowerCase(),
+                        componentContext: "featured resources - information",
+                        clickState: clickState
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // CONVERSION BANNER – PRIMARY CTA BUTTON
+        // ==========================================
+        const conversionBanners = document.querySelectorAll(".conversion-banner");
+
+        conversionBanners.forEach(banner => {
+            const primaryCTA = banner.querySelector(".cmp-conversion-banner__cta--primary");
+
+            if (!primaryCTA) return;
+
+            primaryCTA.addEventListener("click", () => {
+
+                const titleEl = banner.querySelector(".cmp-conversion-banner__title");
+                const bannerTitle = titleEl?.textContent.trim() || "NA";
+
+                const clickName = primaryCTA.textContent.trim().toLowerCase();
+
+                // Primary CTA buttons often navigate via JS → no href
+                const clickDestination = "NA";
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: clickName,
+                        clickDestination: clickDestination,
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: bannerTitle.toLowerCase(),
+                        componentContext: "conversion banner"
+                    }
+                });
+            });
+        });
+
+         // ==========================================
+        // FEATURED RESOURCES CARD – BUTTON CTA
+        // ==========================================
+        const featuredResourceCards = document.querySelectorAll(".cmp-featured-resources-card");
+ 
+        featuredResourceCards.forEach(card => {
+ 
+            const buttonCta = card.querySelector(".featurecard-modal-popup");
+ 
+            if (!buttonCta) return;
+ 
+            buttonCta.addEventListener("click", () => {
+ 
+                const titleEl = card.querySelector(".cmp-featured-resources-card__title");
+                const productTitle = titleEl?.textContent.trim() || "NA";
+ 
+                const clickName = buttonCta.textContent.trim().toLowerCase();
+ 
+                // Modal-triggering buttons navigate via JS → no real href
+                const rawHref = buttonCta.getAttribute("data-href") || "";
+                let clickDestination = "NA";
+ 
+                if (rawHref) {
+                    try {
+                        clickDestination = new URL(rawHref, window.location.origin).href;
+                    } catch (e) {
+                        clickDestination = rawHref;
+                    }
+                }
+ 
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: clickName,
+                        clickDestination: clickDestination.toLowerCase(),
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: productTitle.toLowerCase(),
+                        componentContext: "featured-card"
+                    }
+                });
+            });
+        });
+
+        const featuredResourcesTableAccordionComponents = document.querySelectorAll(".featuredresourcesTable");
+
+        featuredResourcesTableAccordionComponents.forEach((component) => {
+
+            const accordionToggle = component.querySelector(".featuredresourcesTable__accordionToggle");
+
+            if (!accordionToggle) {
                 return;
             }
 
-            this._closeAll();
+            accordionToggle.addEventListener("click", () => {
 
-            target.setAttribute('aria-hidden', 'false');
-            target.classList.add('is-open');
-            if (this.overlay) {
-                this.overlay.setAttribute('aria-hidden', 'false');
-                this.overlay.classList.add('is-active');
-            }
-            document.body.classList.add(NS + '--body-lock');
+                const title =
+                    component.querySelector(".featuredresourcesTable__title")
+                        ?.textContent.trim() || "NA";
 
-            const closeBtn = target.querySelector(SEL.close);
-            if (closeBtn) {
-                (closeBtn as HTMLElement).focus();
-            }
+                const isExpanded =
+                    accordionToggle.getAttribute("aria-expanded") === "true";
 
-            this._pushDataLayerEvent(ref);
-        }
+                const clickState = isExpanded ? "collapse" : "expand";
 
-        private _closeAll(): void {
-            const self = this;
-
-            [SEL.modal, SEL.footnote].forEach((sel) => {
-                self.el.querySelectorAll(sel + '.is-open').forEach((panel) => {
-                    panel.setAttribute('aria-hidden', 'true');
-                    panel.classList.remove('is-open');
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: title.toLowerCase(),
+                        clickDestination: "NA",
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: title.toLowerCase(),
+                        componentContext: "featured resources - table",
+                        clickState
+                    }
                 });
+
             });
 
-            if (this.overlay) {
-                this.overlay.setAttribute('aria-hidden', 'true');
-                this.overlay.classList.remove('is-active');
-            }
-            document.body.classList.remove(NS + '--body-lock');
-        }
+        });
 
-        private _pushDataLayerEvent(ref: string): void {
-            const adobeDataLayer = (window as unknown as { adobeDataLayer?: DataLayerEvent[] }).adobeDataLayer;
-            if (adobeDataLayer) {
+        // ==========================================
+        // FEATURED RESOURCES TABLE
+        // ==========================================
+        const resourcesTableComponents = document.querySelectorAll(".featuredresourcesTable");
+ 
+        resourcesTableComponents.forEach(component => {
+ 
+            const componentContextValue = "featured resources - table";
+ 
+            function pushStandardLinkClick(linkName, linkHref, clickContextValue) {
+ 
+                let clickType = "other";
+                let clickDestination = "NA";
+ 
+                if (linkHref) {
+                    clickType = (linkHref.startsWith("/content/lumen") || isLumenHost(linkHref)) ? "other" : "exit";
+                    try {
+                        clickDestination = new URL(linkHref, window.location.origin).href;
+                    } catch (e) {
+                        clickDestination = linkHref;
+                    }
+                }
+ 
                 adobeDataLayer.push({
-                    event: 'cmp:click',
-                    eventInfo: {
-                        path: 'component.' + this.el.id,
-                        ref: ref
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: linkName.toLowerCase(),
+                        clickDestination: clickDestination.toLowerCase(),
+                        clickLocation: "body",
+                        clickType: clickType,
+                        clickContext: clickContextValue.toLowerCase(),
+                        componentContext: componentContextValue
                     }
                 });
             }
-        }
-    }
+ 
+            component.addEventListener("click", function (event) {
+ 
+                const titleEl = component.querySelector(".featuredresourcesTable__title");
+                const componentTitle = titleEl?.textContent.trim() || "NA";
+                const toggleWrapper = event.target.closest(".featuredresourcesTable__toggleWrapper");
+                if (toggleWrapper) {
+ 
+                    const toggleEl = toggleWrapper.querySelector(".featuredresourcesTable__toggle");
+                    const toggleLabelEl = toggleWrapper.querySelector(".featuredresourcesTable__keyDiffText");
+                    const toggleLabel = toggleLabelEl?.textContent.trim() || "NA";
+ 
+                    const isOn = toggleEl?.getAttribute("data-state") === "true";
+                    const clickState = isOn ? "off" : "on";
+ 
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: toggleLabel.toLowerCase(),
+                            clickDestination: "NA",
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: componentTitle.toLowerCase(),
+                            componentContext: componentContextValue,
+                            clickState: clickState
+                        }
+                    });
+                    return;
+                }
+ 
+                const columnsToggle = event.target.closest(".featuredresourcesTable__ctaText");
+                if (columnsToggle) {
+                    pushStandardLinkClick(columnsToggle.textContent.trim(), null, componentTitle);
+                    return;
+                }
+            });
+ 
+         
+        });
+ 
 
-    function onReady(): void {
-        document.querySelectorAll(SEL.component).forEach((el) => {
-            new SuperscriptComponent(el);
+        // ==============================
+        // SUBHEADER
+        // ==============================
+        const subheaderContainer = document.querySelector(".pdp-subheadernav");
+        if (subheaderContainer) {
+            subheaderContainer.addEventListener("click", function (event) {
+                const item = event.target.closest(".subheadernav-item");
+                if (!item) return;
+
+                const linkName = item.textContent.trim();
+                const dataTarget = item.getAttribute("data-target") || "";
+                const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
+                const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${formattedTarget}` : "NA";
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: linkName.toLowerCase(),
+                        clickDestination: destination,
+                        clickLocation: "header",
+                        clickType: "other",
+                        clickContext: "subheader",
+                        componentContext: "subheader-navigation"
+                    }
+                });
+            });
+
+            // MOBILE dropdown support
+            const mobileDropdown = subheaderContainer.querySelector(".subheadernav-mobile-dropdown");
+            if (mobileDropdown) {
+                mobileDropdown.addEventListener("click", function (event) {
+
+                    const item = event.target.closest(".subheadernav-item");
+                    const dataTarget = item.getAttribute("data-target") || "";
+                    const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
+                    const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
+                    if (!item) return;
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: item.textContent.trim().toLowerCase(),
+                            clickDestination: destination.toLowerCase(),
+                            clickLocation: "header",
+                            clickType: "other",
+                            clickContext: "subheader",
+                            componentContext: "subheader-navigation"
+                        }
+                    });
+                });
+            }
+        }
+
+
+            // ==========================================
+            // PRODUCT HERO - CTA CLICK ANALYTICS
+            // ==========================================
+
+            const productHeroComponents = document.querySelectorAll(".pdp-hero");
+            productHeroComponents.forEach(hero => {
+                const heroTitle = hero.querySelector(".pdp-hero__title")?.textContent.trim() || "NA";
+
+                // Primary CTA (when PDF is not enabled) + Secondary CTA
+                const ctas = hero.querySelectorAll(
+                    ".pdp-hero__download-btn:not(.pdf-download), .pdp-hero__secondary-cta"
+                );
+
+
+                ctas.forEach(cta => {
+                    cta.addEventListener("click", function () {
+                        let clickDestination = "";
+                        const href = this.getAttribute("href");
+                        if (href && href !== "#") {
+                            try {
+                                clickDestination = new URL(
+                                    href,
+                                    window.location.origin
+                                ).href;
+                            } catch (e) {
+                                clickDestination = href;
+                            }
+                        }
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: this.textContent.trim().toLowerCase(),
+                                clickDestination: clickDestination,
+                                clickLocation: "body",
+                                clickType: clickType,
+                                clickContext: heroTitle.toLowerCase(),
+                                componentContext: "product hero"
+                            }
+                        });
+
+                    });
+
+                });
+
+        // Sign In Button
+        const signInBtn = document.querySelector('button.signInButton');
+        if (signInBtn) {
+            const signInBtnOverride = signInBtn.getAttribute('data-linkOverride');
+            signInBtn.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents?.component.linkClick,
+                    linkDetails: {
+                        clickName: 'sign in',
+                        clickElementType: 'button',
+                        clickDestination: (signInBtnOverride ? signInBtnOverride : "sign in authentication"),
+                        clickLocation: 'header',
+                        clickType: 'other'
+                    }
+                });
+            });
+        }
+
+        function pushAdobeDataLayerForDropdown(optionName) {
+            const industryEybrowText = document.querySelector('.industry-selector-eybrow-text');
+            optionName = optionName ? optionName.trim() : optionName;
+            adobeDataLayer.push({
+                event: adobeDataLayerEvents.component.linkClick,
+                linkDetails: {
+                    clickDestination: '',
+                    clickLocation: industryEybrowText.textContent.toLocaleLowerCase(),
+                    clickName: 'industry dropdown|' + optionName.toLowerCase(),
+                    clickElementType: 'button',
+                    clickType: 'other'
+                }
+            });
+        }
+
+        // Industry Selector Dropdown Analytics
+        const dropdownHeader = document.getElementById('dropdownHeader');
+        const dropdownList = document.getElementById('dropdownList');
+        if (dropdownHeader && dropdownList) {
+            dropdownHeader.addEventListener('click', function (event) {
+                const isOpen = dropdownHeader.classList.contains('open');
+                pushAdobeDataLayerForDropdown(isOpen ? 'collapse' : 'expand');
+            });
+
+            dropdownList.addEventListener('click', function (event) {
+                pushAdobeDataLayerForDropdown(event.target.textContent);
+            });
+        }
+
+        // FAQ Component Analytics
+        const faqButtons = document.querySelectorAll('.cmp-faq-agentic__cta');
+        if (faqButtons.length) {
+            faqButtons.forEach((btn) => {
+                btn.addEventListener('click', function () {
+                    const component = btn.closest('.cmp-faq-agentic');
+                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: (btn.textContent || '').trim().toLowerCase(),
+                            clickDestination: 'na',
+                            clickLocation: 'body',
+                            clickType: 'other',
+                            clickContext: titleText.toLowerCase(),
+                            componentContext: "faqs",
+                        }
+                    });
+                });
+            });
+        }
+
+        const faqOptions = document.querySelectorAll('.cmp-faq-agentic__right .cmp-accordion__header .cmp-accordion__button');
+        if (faqOptions.length) {
+            faqOptions.forEach((optionBtn) => {
+                optionBtn.addEventListener('click', function () {
+                    const component = this.closest('.cmp-faq-agentic');
+                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
+                    const wasExpanded = this.getAttribute('aria-expanded') === 'true';
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: (this.textContent || '').trim().toLowerCase(),
+                            clickDestination: 'na',
+                            clickLocation: 'body',
+                            clickType: 'other',
+                            clickContext: titleText.toLowerCase(),
+                            componentContext: "faqs",
+                            clickState: wasExpanded ? "collapse" : "expand",
+                        }
+                    });
+                }, true);
+            });
+        }
+
+        // Chat Transcript
+        const chatSaveTranscript = document.querySelector('#downloadBtn');
+        if (chatSaveTranscript) {
+            chatSaveTranscript.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.fileDownload,
+                    linkDetails: {
+                        clickName: 'save transcript',
+                        clickType: 'download',
+                        clickDestination: 'transcript.txt',
+                        clickLocation: 'lumen chat dialog box',
+                        fileDownload: {
+                            filename: 'transcript of chat session',
+                            type: 'txt'
+                        }
+                    }
+                });
+            });
+        }
+
+        // Forms
+        function trackForms() {
+            try {
+                MktoForms2.whenReady(function (form) {
+                    const fields = document.querySelectorAll('.mktoField');
+                    const pageTitle = document.querySelector('title') ? document.querySelector('title').textContent : 'Page Title Unavailable';
+                    const formID = form.getId() ? 'mktoForm_' + form.getId().toString() : 'Form ID Unavailable';
+                    let counter = 1;
+
+                    // Form Start
+                    for (let i = 0; i < fields.length; i++) {
+                        if (fields[i]?.type !== 'hidden') {
+                            fields[i].addEventListener('focus', function (event) {
+                                if (counter == 1) { // Fire only once per page load
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formStart,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID
+                                        }
+                                    });
+                                    counter++;
+                                }
+                            });
+                        }
+                    }
+
+                    // Form Error
+                    form.onValidate(function (nativeValid) {
+                        if (!nativeValid) {
+                            setTimeout(function () { // Wait half a second so that the mktoErrorMsg html will be added first
+                                let mktoError = document.querySelector('.mktoErrorMsg');
+                                if (mktoError) {
+                                    let mktoErrorMsg = mktoError.textContent;
+                                    let mktoErrorField = mktoError.getAttribute('id');
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formError,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID,
+                                            formError: mktoErrorField + ': ' + mktoErrorMsg
+                                        }
+                                    });
+                                }
+                            }, 500);
+                        }
+                    });
+
+                    // Form Submit
+                    form.onSuccess(function (valsObj, destStr) {
+                        const email = valsObj?.Email || valsObj?.email || valsObj?.userEmail || '';
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.formSubmit,
+                            details: {
+                                formName: pageTitle + ': ' + formID,
+                                formID: formID,
+                                emailID: email
+                            }
+                        });
+                    });
+                });
+            }
+            catch (e) {
+                console.log('Error in trackForms: ', e);
+            }
+        }
+
+        if (typeof MktoForms2 !== 'undefined') {
+            trackForms();
+        } else {
+            window.addEventListener("mkto-script-loaded", (e) => {
+                trackForms();
+            }, false,
+            );
+        }
+
+        // Chat
+        const chatLink = document.querySelector("a[href='#chat']");
+        let chatClickName = 'Chat';
+        let chatClickType = 'Button';
+        let chatClickDestination = 'launchChat';
+        let newUser = 'new';
+
+        if (chatLink) {
+            chatLink.addEventListener('click', function (event) {
+                chatClickName = chatLink.textContent.trim();
+                chatClickType = 'Link';
+                chatClickDestination = '#chat';
+            });
+        }
+
+        // Chat Initiated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationStarted", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatInitiated,
+                    linkDetails: {
+                        clickName: chatClickName,
+                        clickType: chatClickType,
+                        clickDestination: chatClickDestination,
+                        clickLocation: 'main container'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
+                    }
+                });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation started.", e);
+            }
+        });
+
+        // Chat Terminated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationClosed", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatTerminated,
+                    linkDetails: {
+                        clickName: 'end chat',
+                        clickType: 'user',
+                        clickLocation: 'chat'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
+                    }
+                });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation closed.", e);
+            }
         });
     }
-
-    if (document.readyState !== 'loading') {
-        onReady();
-    } else {
-        document.addEventListener('DOMContentLoaded', onReady);
-    }
-
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const isSuperScriptOnPage = document.querySelectorAll<HTMLElement>(".cmp-superscript");
-    if (isSuperScriptOnPage.length > 0) {
-        convertRawSupTags()
-        initSuperscript();
-    }
-});
+}());
