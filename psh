@@ -44,6 +44,29 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
 }
 
 
+// ==========================================
+// PRODUCT HERO - DOWNLOAD BUTTON ANALYTICS
+// ==========================================
+
+document.addEventListener("productHeroDownload", function (event) {
+
+    const data = event.detail || {};
+
+    adobeDataLayer.push({
+        event: adobeDataLayerEvents.component.linkClick,
+
+        linkDetails: {
+            clickName: data.clickName,
+            clickDestination: "",
+            clickLocation: "body",
+            clickType: "download",
+            clickContext: data.clickContext,
+            componentContext: "product hero"
+        }
+    });
+
+});
+
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
