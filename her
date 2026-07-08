@@ -1,3 +1,32 @@
+let e="NA";
+if(c)
+    try{
+        e=new URL(c,window.location.origin).href
+    }catch(t){
+        e=c
+    }
+
+const P=this.closest(".pdp-hero");
+if(P&&this.matches(".pdp-hero__download-btn.pdf-download")){
+    const t=P.querySelector(".pdp-hero__title")?.textContent.trim()||"";
+    return void adobeDataLayer.push({
+        event:adobeDataLayerEvents.component.linkClick,
+        linkDetails:{
+            clickName:o.toLowerCase(),
+            clickElementType:s.toLowerCase(),
+            clickDestination:"",
+            clickLocation:"body",
+            clickType:"download",
+            clickContext:t.toLowerCase(),
+            componentContext:"product hero"
+        }
+    })
+}
+
+if(g){
+    ...
+}
+\\\\\\\\\\\\\\\\\\\\\\\\\\///////////////////////////////////////
 const n=e.querySelector(".pdp-hero__download-btn.pdf-download");
 n&&n.addEventListener("click",(function(e){
     e.stopImmediatePropagation(),
