@@ -1,3 +1,21 @@
+e.addEventListener("click",(function(e){
+    e.preventDefault(),
+    adobeDataLayer.push({
+        event:adobeDataLayerEvents.component.linkClick,
+        linkDetails:{
+            clickName:this.textContent.trim().toLowerCase(),
+            clickDestination:"",
+            clickLocation:"body",
+            clickType:"download",
+            clickContext:"product hero",
+            componentContext:"product hero"
+        }
+    }),
+    setTimeout((function(){
+        window.print()
+    }),200)
+}))
+\\\\\\///////////////////////////////////
 !function() {
     var e = {
         481: function() {
