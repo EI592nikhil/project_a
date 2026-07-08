@@ -1,3 +1,28 @@
+
+function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
+    if (!downloadBtn || downloadBtn.dataset.bound === 'true') return;
+    downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const hero = downloadBtn.closest('.pdp-hero');
+        const heroTitle = hero?.querySelector('.pdp-hero__title')?.textContent?.trim() || "NA";
+
+        adobeDataLayer.push({
+            event: adobeDataLayerEvents.component.linkClick,
+            linkDetails: {
+                clickName:downloadBtn.textContent?.trim().toLowerCase() || "NA",
+                clickDestination: "",
+                clickLocation: "body",
+                clickType: "download",
+                clickContext:heroTitle.toLowerCase(),
+                componentContext:"product-solution hero"
+            }
+        });
+
+        window.print();
+    });
+
+    downloadBtn.dataset.bound = 'true';
+}
 // ==========================================
 // PRODUCT HERO - CTA CLICK ANALYTICS
 // ==========================================
