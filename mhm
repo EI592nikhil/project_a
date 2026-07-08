@@ -1,3 +1,18 @@
+declare const adobeDataLayer:any;
+
+function initPDPHero(): void {
+    const heroBlocks = document.querySelectorAll<HTMLElement>('.pdp-hero');
+
+    if (!heroBlocks.length) return;
+
+    heroBlocks.forEach((hero) => {
+        const downloadBtn = hero.querySelector<HTMLAnchorElement>('.pdp-hero__download-btn.pdf-download');
+        const videoWrapper = hero.querySelector<HTMLElement>('[data-pdp-hero-video-modal="true"]');
+
+        bindDownload(downloadBtn);
+        bindHeroVideoModal(videoWrapper);
+    });
+}
 
 function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
     if (!downloadBtn || downloadBtn.dataset.bound === 'true') return;
@@ -7,7 +22,7 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
         const heroTitle = hero?.querySelector('.pdp-hero__title')?.textContent?.trim() || "NA";
 
         adobeDataLayer.push({
-            event: adobeDataLayerEvents.component.linkClick,
+            event:"linkClick",
             linkDetails: {
                 clickName:downloadBtn.textContent?.trim().toLowerCase() || "NA",
                 clickDestination: "",
@@ -23,6 +38,7 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
 
     downloadBtn.dataset.bound = 'true';
 }
+
 // ==========================================
 // PRODUCT HERO - CTA CLICK ANALYTICS
 // ==========================================
