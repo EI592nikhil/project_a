@@ -19,22 +19,23 @@ function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
         e.preventDefault();
 
         const hero = downloadBtn.closest('.pdp-hero');
-        const heroTitle = hero?.querySelector('.pdp-hero__title')?.textContent?.trim() || "NA";
-        const adobeDataLayer = (window as any)['adobeDataLayer'];
 
-        if (adobeDataLayer) {
-            adobeDataLayer.push({
-                event: "linkClick",
-                linkDetails: {
-                    clickName: downloadBtn.textContent?.trim().toLowerCase() || "NA",
-                    clickDestination: "",
-                    clickLocation: "body",
-                    clickType: "download",
-                    clickContext: heroTitle.toLowerCase(),
-                    componentContext: "product-solution hero"
+        const heroTitle =
+            hero?.querySelector('.pdp-hero__title')
+                ?.textContent?.trim() || "NA";
+
+        downloadBtn.dispatchEvent(
+            new CustomEvent("productHeroDownload", {
+                bubbles: true,
+                detail: {
+                    clickName:
+                        downloadBtn.textContent?.trim().toLowerCase() || "NA",
+
+                    clickContext:
+                        heroTitle.toLowerCase()
                 }
-            });
-        }
+            })
+        );
 
         window.print();
     });
