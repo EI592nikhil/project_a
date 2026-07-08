@@ -1,3 +1,29 @@
+function initPDPHero(): void {
+    const heroBlocks = document.querySelectorAll<HTMLElement>('.pdp-hero');
+
+    if (!heroBlocks.length) return;
+
+    heroBlocks.forEach((hero) => {
+        const downloadBtn = hero.querySelector<HTMLAnchorElement>('.pdp-hero__download-btn.pdf-download');
+        const videoWrapper = hero.querySelector<HTMLElement>('[data-pdp-hero-video-modal="true"]');
+
+        bindDownload(downloadBtn);
+        bindHeroVideoModal(videoWrapper);
+    });
+}
+
+function bindDownload(downloadBtn: HTMLAnchorElement | null): void {
+    if (!downloadBtn || downloadBtn.dataset.bound === 'true') return;
+
+    downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.print();
+    });
+
+    downloadBtn.dataset.bound = 'true';
+}
+
+
 // ==========================================
 // PRODUCT HERO - CTA CLICK ANALYTICS
 // ==========================================
