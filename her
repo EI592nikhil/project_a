@@ -1,3 +1,19 @@
+const n=e.querySelector(".pdp-hero__download-btn.pdf-download");
+n&&n.addEventListener("click",(function(e){
+    e.stopImmediatePropagation(),
+    adobeDataLayer.push({
+        event:adobeDataLayerEvents.component.linkClick,
+        linkDetails:{
+            clickName:this.textContent.trim().toLowerCase(),
+            clickDestination:"",
+            clickLocation:"body",
+            clickType:"download",
+            clickContext:t.toLowerCase(),
+            componentContext:"product hero"
+        }
+    })
+}),!0)
++++++++++++++++++++++++++++++++++++++++++++++++||||||||||||||||||||||||
 function initPDPHero(): void {
     const heroBlocks = document.querySelectorAll<HTMLElement>('.pdp-hero');
 
