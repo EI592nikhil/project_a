@@ -1,29 +1,45 @@
 // -----------------------------
-// Product Hero
-// -----------------------------
-if (productHero) {
-
-    const heroTitle =
-        productHero.querySelector(".pdp-hero__title")?.textContent.trim() || "";
-
-    const isDownload =
-        this.classList.contains("pdf-download");
-
-    adobeDataLayer.push({
-        event: adobeDataLayerEvents.component.linkClick,
-        linkDetails: {
-            clickName: linkName.toLowerCase(),
-            clickElementType: "button",
-            clickDestination: isDownload ? "" : fullDestination,
-            clickLocation: "body",
-            clickType: isDownload ? "download" : linkClickType.toLowerCase(),
-            clickContext: heroTitle.toLowerCase(),
-            componentContext: "product hero"
-        }
-    });
-
-    return;
-}
+                    // Product Solution Hero
+                    // Checked BEFORE the assets.lumen.com download branch so hero CTAs
+                    // -----------------------------
+                    if (productHero) {
+                        let heroTitle = "";
+                        const heroLayer = productHero.getAttribute("data-cmp-data-layer");
+ 
+                        if (heroLayer) {
+                            try {
+                                const parsed = JSON.parse(heroLayer);
+                                const key = Object.keys(parsed)[0];
+                                heroTitle = parsed[key]?.title || "";
+                            } catch (e) {
+                                console.error("Product Hero data layer parse error", e);
+                            }
+                        }
+ 
+                        // Fallback to the DOM only if the JSON lookup came back empty
+                        if (!heroTitle) {
+                            heroTitle = productHero.querySelector(".pdp-hero__title")?.textContent.trim() || "";
+                        }
+ 
+                        const isDownload = this.classList.contains("pdf-download");
+ 
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: linkName.toLowerCase(),
+                                clickElementType: "button",
+                                clickDestination: isDownload ? "" : fullDestination,
+                                clickLocation: "body",
+                                clickType: isDownload ? "download" : linkClickType.toLowerCase(),
+                                clickContext: heroTitle.toLowerCase(),
+                                componentContext: "product-solution hero"
+                            }
+                        });
+ 
+                        return;
+                    }
+ 
+ 
 \\\\\\\\\\\\\\\\\\\\\\\\\\///////////////////////////////////////
 const n=e.querySelector(".pdp-hero__download-btn.pdf-download");
 n&&n.addEventListener("click",(function(e){
