@@ -12,3 +12,38 @@
         }
     }
 }
+
+
+++++++++++++++++++++++++++++++++++++++++++
+
+.statistictile.article-cards-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--surface-neutral-strong-light);
+    width: 100%;
+    max-width: 100%;
+    padding: 48px 20px;
+        
+    .instanceplaceholder.gridColoumn6 & {
+            padding: 0 !important;
+        }
+
+    @media (min-width: 768px) {
+        max-width: 100%;
+        padding: 64px 20px;
+        align-items: flex-start;
+
+        .instanceplaceholder.gridColoumn6 & {
+            padding: 0 !important;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        max-width: 1440px;
+        align-items: center;
+        padding: 72px 40px;
+        .instanceplaceholder.gridColoumn6 & {
+            padding: 0 !important;
+        }
+    }
