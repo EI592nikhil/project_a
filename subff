@@ -1,393 +1,236 @@
-$arrow-svg-cds: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMi42MjUiIHkxPSIxMy42NTk1IiB4Mj0iMjEuNTMwMyIgeTI9IjEzLjY1OTUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjRjk1RTRBIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkI4NDI5Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xMi45NTI5IDQuNDE5MTZDMTMuMjU4MSA0LjEyMTgxIDEzLjc0NTYgNC4xMjUwMSAxNC4wNDcgNC40MjYzM0wyMC45Nzk2IDExLjM1OUMyMS4yODM4IDExLjY2MzEgMjEuMjgzOCAxMi4xNTYyIDIwLjk3OTYgMTIuNDYwNEwxNC4wNTA0IDE5LjM4OTZDMTMuNzQ2NSAxOS42OTM1IDEzLjI1MzggMTkuNjkzOCAxMi45NDk2IDE5LjM5MDJMMTIuNDQ4OSAxOC44OTA1QzEyLjE0NDEgMTguNTg2NCAxMi4xNDM5IDE4LjA5MjcgMTIuNDQ4NSAxNy43ODgzTDE3LjIwNjYgMTMuMDM0N0gzLjQwMzc5QzIuOTczNjcgMTMuMDM0NyAyLjYyNSAxMi42ODYgMi42MjUgMTIuMjU1OVYxMS41NjM1QzIuNjI1IDExLjEzMzQgMi45NzM2NyAxMC43ODQ3IDMuNDAzNzkgMTAuNzg0N0gxNy4yMDk0TDEyLjQ1MDEgNi4wMDg0MkMxMi4xNDQxIDUuNzAxMyAxMi4xNDc4IDUuMjAzMzkgMTIuNDU4NCA0LjkwMDg2TDEyLjk1MjkgNC40MTkxNloiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=";
+function convertRawSupTags(root = document.body) {
+    const regex = /<sup>(.*?)<\/sup>/gi;
 
-.statistictile {
-    max-width: 100%;
+    // Only target elements that actually contain raw <sup> in their text
+    // TreeWalker is faster than querySelectorAll for text node traversal
+    const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: node =>
+                node.nodeValue?.includes('<sup>')
+                    ? NodeFilter.FILTER_ACCEPT
+                    : NodeFilter.FILTER_REJECT
+        }
+    );
+
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    // Batch all DOM writes after reads — avoid layout thrashing
+    textNodes.forEach(textNode => {
+        const raw = textNode.nodeValue;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+
+        regex.lastIndex = 0; // reset since regex is reused
+        while ((match = regex.exec(raw)) !== null) {
+            // Text before <sup>
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(raw.slice(lastIndex, match.index)));
+            }
+
+            // Safe sup element — textContent prevents XSS
+            const sup = document.createElement('sup');
+            sup.textContent = match[1];
+
+            if (['®', '™', '©'].includes(match[1])) {
+                sup.classList.add('trademark-sup');
+            }
+            
+            fragment.appendChild(sup);
+            lastIndex = regex.lastIndex;
+        }
+
+        // Remaining text after last </sup>
+        if (lastIndex < raw.length) {
+            fragment.appendChild(document.createTextNode(raw.slice(lastIndex)));
+        }
+
+        textNode.parentNode.replaceChild(fragment, textNode);
+    });
 }
 
-.statistictile.article-cards-stats {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface-neutral-strong-light);
-    width: 100%;
-    max-width: 100%;
-    padding: 48px 20px;
+function initSuperscript(): void {
+    'use strict';
 
-    .instanceplaceholder.gridColoumn6 & {
-            padding: 0 !important;
+    const NS = 'cmp-superscript';
+
+    const SEL = {
+        component: '.' + NS,
+        modal: '.' + NS + '__modal',
+        footnote: '.' + NS + '__footnote',
+        overlay: '.' + NS + '__overlay',
+        close: '.' + NS + '__close',
+        trigger: '.' + NS + '__trigger'
+    };
+
+    interface DataLayerEvent {
+        event: string;
+        eventInfo: {
+            path: string;
+            ref: string;
+        };
+    }
+
+    class SuperscriptComponent {
+        el: Element;
+        overlay: Element | null;
+
+        constructor(el: Element) {
+            this.el = el;
+            this.overlay = el.querySelector(SEL.overlay);
+            this._scanTriggers();
+            this._bindEvents();
         }
 
-    @media (min-width: 768px) {
-        max-width: 100%;
-        padding: 64px 20px;
+        private _scanTriggers(): void {
+            document.querySelectorAll('sup').forEach((sup) => {
+                const ref = sup.textContent?.trim() || '';
+                if (['®', '™', '©'].includes(ref)) {
+                    sup.classList.add('trademark-sup');
+                    return;
+                }
+                if (ref) {
+                    if (ref.includes('*') || ref.includes('†') || ref.includes('‡')) {
+                        sup.textContent = '';
+                        sup.appendChild(document.createTextNode('['));
+                        const symbol = document.createElement('span');
+                        symbol.classList.add('specialSymbol');
+                        if (ref.includes('*') || ref.includes('†')) {
+                            symbol.classList.add('subbed');
+                        }
+                        symbol.textContent = ref;
+                        sup.appendChild(symbol);
+                        sup.appendChild(document.createTextNode(']'));
+                    } else {
+                        sup.textContent = '[' + ref + ']';
+                    }
+                    sup.setAttribute('data-ref', ref);
+                    sup.setAttribute('role', 'button');
+                    sup.setAttribute('tabindex', '0');
+                    sup.setAttribute('aria-label', 'See reference ' + ref);
+                    sup.classList.add(NS + '__trigger');
+                }
+            });
+        }
 
-        .instanceplaceholder.gridColoumn6 & {
-            padding: 0 !important;
+        private _bindEvents(): void {
+            const self = this;
+
+            document.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                const trigger = target.closest(SEL.trigger);
+                if (trigger) {
+                    self._open(trigger.getAttribute('data-ref') || '');
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const target = e.target as Element;
+                    const trigger = target.closest(SEL.trigger);
+                    if (trigger) {
+                        e.preventDefault();
+                        self._open(trigger.getAttribute('data-ref') || '');
+                    }
+                }
+                if (e.key === 'Escape') {
+                    self._closeAll();
+                }
+            });
+
+            this.el.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                if (target.closest(SEL.close)) {
+                    self._closeAll();
+                }
+            });
+
+            if (this.overlay) {
+                this.overlay.addEventListener('click', () => {
+                    self._closeAll();
+                });
+            }
+        }
+
+        private _open(ref: string): void {
+            const modal = this.el.querySelector(SEL.modal + '[data-ref="' + ref + '"]');
+            const footnote = this.el.querySelector(SEL.footnote + '[data-ref="' + ref + '"]');
+            const target = modal || footnote;
+
+            if (!target) {
+                return;
+            }
+
+            this._closeAll();
+
+            target.setAttribute('aria-hidden', 'false');
+            target.classList.add('is-open');
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'false');
+                this.overlay.classList.add('is-active');
+            }
+            document.body.classList.add(NS + '--body-lock');
+
+            const closeBtn = target.querySelector(SEL.close);
+            if (closeBtn) {
+                (closeBtn as HTMLElement).focus();
+            }
+
+            this._pushDataLayerEvent(ref);
+        }
+
+        private _closeAll(): void {
+            const self = this;
+
+            [SEL.modal, SEL.footnote].forEach((sel) => {
+                self.el.querySelectorAll(sel + '.is-open').forEach((panel) => {
+                    panel.setAttribute('aria-hidden', 'true');
+                    panel.classList.remove('is-open');
+                });
+            });
+
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'true');
+                this.overlay.classList.remove('is-active');
+            }
+            document.body.classList.remove(NS + '--body-lock');
+        }
+
+        private _pushDataLayerEvent(ref: string): void {
+            const adobeDataLayer = (window as unknown as { adobeDataLayer?: DataLayerEvent[] }).adobeDataLayer;
+            if (adobeDataLayer) {
+                adobeDataLayer.push({
+                    event: 'cmp:click',
+                    eventInfo: {
+                        path: 'component.' + this.el.id,
+                        ref: ref
+                    }
+                });
+            }
         }
     }
 
-    @media (min-width: 1200px) {
-        max-width: 100%;
-        padding: 72px 40px;
-
-        .instanceplaceholder.gridColoumn6 & {
-            padding: 0 !important;
-        }
+    function onReady(): void {
+        document.querySelectorAll(SEL.component).forEach((el) => {
+            new SuperscriptComponent(el);
+        });
     }
-    @media (min-width: 1200px) {
-  .cards.wrapper .statistictile__card:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    width: calc((100% - var(--spacing-lg)) / 2) !important;
-    justify-self: start;
-  }
+
+    if (document.readyState !== 'loading') {
+        onReady();
+    } else {
+        document.addEventListener('DOMContentLoaded', onReady);
+    }
+
 }
 
-    // =========================
-    // GRID LAYOUT
-    // =========================
-    .cards.wrapper {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: var(--spacing-4xl) var(--spacing-lg);
-
-        // Tablet
-        @media (min-width: 768px) {
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-5xl) var(--spacing-lg);
-        }
-
-        // Desktop (IMPORTANT: keep 2 cols)
-        @media (min-width: 1200px) {
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-5xl) var(--spacing-lg);
-        }
+document.addEventListener("DOMContentLoaded", () => {
+    const isSuperScriptOnPage = document.querySelectorAll<HTMLElement>(".cmp-superscript");
+    if (isSuperScriptOnPage.length > 0) {
+        convertRawSupTags()
+        initSuperscript();
     }
-
-    // =========================
-    // CARD LAYOUT FIX
-    // =========================
-    .statistictile__card {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start; 
-        gap: var(--spacing-md);      
-        height: 100%;                
-    }
-
-    // =========================
-    // STAT
-    // =========================
-    .statistictile__stat {
-        color: var(--text-headline-light);
-        font-family: var(--Font-Family-Gotham) !important;
-        font-size: var(--Font-Size-Mobile-H2);
-        font-weight: var(--Font-Weight-Book);
-        line-height: var(--Line-Height-112);
-        letter-spacing: -1.6px;
-        border-bottom: 1px solid var(--color-neutral-200);
-        padding-bottom: var(--spacing-xl);
-        margin: 0;
-
-        @media (min-width: 768px) {
-            font-size: var(--Font-Size-Tablet-H2);
-        }
-
-        @media (min-width: 1024px) {
-            font-size: var(--Font-Size-H2);
-        }
-    }
-
-    // =========================
-    // TITLE (FIXED VISIBILITY)
-    // =========================
-    .statistictile__title {
-        display: block;              
-        visibility: visible;         
-        padding-top: var(--spacing-sm);
-        margin: 0;
-
-        color: var(--text-headline-light);
-        font-family: var(--Font-Family-Gotham) !important;
-        font-size: var(--Font-Size-Mobile-H6);
-        font-weight: var(--Font-Weight-Medium);
-        line-height: var(--Line-Height-133);
-
-        @media (min-width: 768px) {
-            font-size: var(--Font-Size-Tablet-H6);
-        }
-
-        @media (min-width: 1024px) {
-            font-size: var(--Font-Size-H6);
-        }
-    }
-
-    // =========================
-    // TEXT (REMOVE FLEX STRETCH)
-    // =========================
- 
-    .statistictile__text {
-    flex: unset;
-
-    p {
-        margin: 0;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: var(--Text-Subtle);
-        font-family: var(--Font-Family-Open) !important;
-        font-size: var(--Font-Size-Desktop-LG);
-        font-weight: var(--Font-Weight-Regular);
-        line-height: var(--Line-Height-166);
-
-        align-self: stretch;
-    }
-}
-
-    // =========================
-    // CTA FIX (NO AUTO PUSH)
-    // =========================
-    .statistictile__cta-container {
-        margin-top:auto; 
-    }
-
- .statistictile__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    text-decoration: none;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: var(--text-strong-light);
-    font-family: var(--Font-Family-Gotham) !important;
-    font-size: var(--Font-Size-Small);
-    font-weight: var(--Font-Weight-Medium);
-    line-height: var(--Line-Height-125);
-
-    &::after {
-        content: "";
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0; 
-        display: inline-block;
-        background-image: url(unquote($arrow-svg-cds)); 
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-
-        transition: transform 0.2s ease; 
-    }
-
-    &:hover {
-        opacity: 0.85;
-        text-decoration: underline;
-    }
-
-        &:hover::after {
-            transform: translateX(3px);
-        }
-
-        &.cmp-teaser__action-link:focus-visible {
-            outline: 2px solid var(--color-brand-blue-700) !important;
-        }
-    }
-}
-
-// ================================================================
-// COMPACT VARIANT 
-// ================================================================
-.statistictile--compact {
-
-    // =========================
-    // OUTER CONTAINER (FIXED)
-    // =========================
-    display: flex;
-    flex-direction: column;
-    background: var(--surface-neutral-strong-light);
-    width: 100%;
-    max-width: 360px;
-    padding: var(--spacing-2xl) var(--spacing-lg);
-    align-items: flex-start;
-
-    @media only screen and (min-width: 768px) {
-        max-width: 768px;
-        padding: var(--spacing-3xl) var(--spacing-lg);
-    }
-
-    @media only screen and (min-width: 1200px) {
-        max-width: 1440px;
-        align-items: center;
-        padding: var(--spacing-4xl);
-    }
-}
-    // =========================
-    // INNER CARD CONTAINER
-    // =========================
-    .statistictile__compact-container {
-        width: 100%;
-        border: 1px solid var(--color-neutral-200);
-        border-radius: var(--radius-60);
-        padding: var(--spacing-xl) var(--spacing-2xl);
-
-        @media only screen and (min-width: 768px) {
-            padding: var(--spacing-3xl);
-        }
-        @media only screen and (min-width: 1200px) {
-            padding: var(--spacing-5xl);
-        }
-
-    }
-
-    // =========================
-    // TITLE (H5 BOOK)
-    // =========================
-    .statistictile__component-title {
-        align-self: stretch;
-        color: var(--text-headline-light);
-        font-feature-settings: 'case' on;
-        font-family: var(--Font-Family-Title, Gotham) !important;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 133%;
-
-        // MOBILE
-        font-size: var(--Font-Size-Mobile-H5) !important;
-        margin: 0 0 var(--spacing-2xl) 0 !important;
-
-        // TABLET
-        @media only screen and (min-width: 768px) {
-            font-size: var(--Font-Size-Tablet-H5) !important;
-            margin-bottom: var(--spacing-4xl) !important;
-        }
-
-        // DESKTOP
-        @media only screen and (min-width: 1200px) {
-            font-size: var(--Font-Size-H5) !important;
-             margin-bottom: var(--spacing-4xl) !important;
-        }
-    }
-
-    // =========================
-    // GRID WRAPPER
-    // =========================
-    .statistictile__compact-grid {
-        display: flex;
-        flex-direction: column;
-    }
-
-    // =========================
-    // ROW (WITH DIVIDER)
-    // =========================
-    .statistictile__compact-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--spacing-lg);
-        padding: var(--spacing-xl) 0;
-        align-items: stretch;
-
-        // MOBILE STACK
-        @media only screen and (max-width: 767px) {
-            grid-template-columns: 1fr;
-            gap: var(--spacing-md);
-            padding:0px;
-        }
-
-        // REMOVE LAST BORDER
-        &:last-child {
-            border-bottom: none;
-        }
-    }
-
-    // =========================
-    // CELL
-    // =========================
-    .statistictile__compact-cell {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2xl);
-    height: 100%;
-    justify-content: space-between;
-
-    @media only screen and (min-width: 768px) {
-        gap: var(--spacing-4xl);
-    }
-
-    // =========================
-    // STAT VALUE (H5 MEDIUM)
-    // =========================
-    .statistictile__stat {
-        flex: 1 0 0;
-        color: var(--text-headline-light);
-        font-feature-settings: 'case' on;
-        font-family: var(--Font-Family-Title, Gotham) !important;
-        font-style: normal;
-        font-weight: 500;
-        line-height: 133%;
-        border-bottom: 1px solid var(--color-neutral-200);
-        display: flex;
-        align-items: flex-end;
-        gap:var(--spacing-xs);
-        padding-bottom: var(--spacing-md);
-        align-self: stretch;
-
-        // MOBILE
-        font-size: var(--Font-Size-Mobile-H5);
-
-        // TABLET
-        @media only screen and (min-width: 768px) {
-            font-size: var(--Font-Size-Tablet-H5);
-        }
-
-        // DESKTOP
-        @media only screen and (min-width: 1200px) {
-            font-size: var(--Font-Size-H5);
-        }
-    }
-
-    // =========================
-    // LABEL
-    // =========================
-    .statistictile__compact-label {
-        p {
-            margin: 0;
-            color: var(--Text-Subtle);
-            font-family: var(--Font-Family-Open) !important;
-            font-size: var(--Font-Size-Body);
-            font-weight: var(--Font-Weight-Regular);
-            line-height: var(--Line-Height-166);
-        }
-    }
-}
-
-/* =====================================
-   STATISTIC TITLE - COL 6 & 8
-===================================== */
-
-.instanceplaceholder.gridColoumn6 .statistictile--compact,
-.instanceplaceholder.gridColoumn8 .statistictile--compact {
-  padding: var(--spacing-4xl) 0;
-}
-
-/* Desktop */
-.instanceplaceholder.gridColoumn6 .statistictitle__component-title,
-.instanceplaceholder.gridColoumn8 .statistictitle__component-title {
-  font-size: 36px;
-}
-
-/* Tablet */
-@media (max-width: 1024px) {
-  .instanceplaceholder.gridColoumn6 .statistictitle__component-title,
-  .instanceplaceholder.gridColoumn8 .statistictitle__component-title {
-    font-size: 32px;
-  }
-}
-
-/* Mobile */
-@media (max-width: 767px) {
-  .instanceplaceholder.gridColoumn6 .statistictitle__component-title,
-  .instanceplaceholder.gridColoumn8 .statistictitle__component-title {
-    font-size: 24px;
-  }
-}
+});
