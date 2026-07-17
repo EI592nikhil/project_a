@@ -1,797 +1,235 @@
-(function () {
-    "use strict";
+function convertRawSupTags(root = document.body) {
+    const regex = /<sup>(.*?)<\/sup>/gi;
 
-    function isLumenHost(href) {
-        // Treat relative URLs as internal; absolute URLs are checked by hostname.
-        if (!href || href.startsWith("/")) {
-            return true;
+    // Only target elements that actually contain raw <sup> in their text
+    // TreeWalker is faster than querySelectorAll for text node traversal
+    const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: node =>
+                node.nodeValue?.includes('<sup>')
+                    ? NodeFilter.FILTER_ACCEPT
+                    : NodeFilter.FILTER_REJECT
         }
-        try {
-            var url = new URL(href, window.location.origin);
-            var host = url.hostname.toLowerCase();
-            return host === "lumen.com" || host.endsWith(".lumen.com");
-        } catch (e) {
-            // If URL parsing fails, fall back to treating as external.
-            return false;
+    );
+
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    // Batch all DOM writes after reads — avoid layout thrashing
+    textNodes.forEach(textNode => {
+        const raw = textNode.nodeValue;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+
+        regex.lastIndex = 0; // reset since regex is reused
+        while ((match = regex.exec(raw)) !== null) {
+            // Text before <sup>
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(raw.slice(lastIndex, match.index)));
+            }
+            
+            // Safe sup element — textContent prevents XSS
+            const sup = document.createElement('sup');
+            const supText = match[1].trim();
+            sup.textContent = supText;
+            if (['®', '™', '©'].includes(supText)) {
+                sup.classList.add('trademark-sup');
+            }
+            fragment.appendChild(sup);
+            lastIndex = regex.lastIndex;
+            }
+
+        // Remaining text after last </sup>
+        if (lastIndex < raw.length) {
+            fragment.appendChild(document.createTextNode(raw.slice(lastIndex)));
         }
+
+        textNode.parentNode.replaceChild(fragment, textNode);
+    });
+}
+
+function initSuperscript(): void {
+    'use strict';
+
+    const NS = 'cmp-superscript';
+
+    const SEL = {
+        component: '.' + NS,
+        modal: '.' + NS + '__modal',
+        footnote: '.' + NS + '__footnote',
+        overlay: '.' + NS + '__overlay',
+        close: '.' + NS + '__close',
+        trigger: '.' + NS + '__trigger'
+    };
+
+    interface DataLayerEvent {
+        event: string;
+        eventInfo: {
+            path: string;
+            ref: string;
+        };
     }
 
-    if (window.adobeDataLayer) {
-        // Links
-        const links = document.querySelectorAll('a');
-        for (let i = 0; i < links.length; i++) {
+    class SuperscriptComponent {
+        el: Element;
+        overlay: Element | null;
 
-            links[i].addEventListener('click', function (event) {
-                let linkGrandParent = this.closest('.cmp-teaser__content');
-                let parent = this.parentElement;
-                let linkName = this.textContent.trim();
-                let ariaLabel = this.getAttribute('aria-label');
-                if (ariaLabel == 'Link to Homepage') {
-                    linkName = 'Lumen Logo';
+        constructor(el: Element) {
+            this.el = el;
+            this.overlay = el.querySelector(SEL.overlay);
+            this._scanTriggers();
+            this._bindEvents();
+        }
+
+        private _scanTriggers(): void {
+            document.querySelectorAll('sup').forEach((sup) => {
+                const ref = sup.textContent?.trim() || '';
+                if (['®', '™', '©'].includes(ref)) {
+                    sup.classList.add('trademark-sup');
+                    return;
                 }
-                let linkClickType = "exit";
-                if (this.getAttribute('href') != null) {
-                    let href = this.getAttribute('href');
-                    if (href.startsWith("/content/lumen") || isLumenHost(href)) {
-                        linkClickType = "other";
-                    }
-                }
-                let linkType = 'Link';
-                let linkHref = this.getAttribute('href');
-                let linkLocation = 'main container';
-                let downloadType = 'AEM asset';
-                let parentID = this.closest('[id]');
-                let parentIDAtt = parentID.getAttribute('id').split('-')[0];
-                let grandParentID = parentID.parentElement.closest('[id]');
-                let grandParentIDAtt = grandParentID.getAttribute('id').split('-')[0];
-                let teaserTitle;
-                let industrySelectorContainer = this.closest('.industry-selector-container');
-                let stackedContentTab = this.closest('.lumen-tabs__content');
-                let industrySelectorItem = this.closest('.industry-selector-item');
-                let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
-                const mediaHighlight = this.closest('.media_highlight');
-                const solutionHighlight = this.closest('.solution-highlight');
-                const subHeader = this.closest(".subheader-wrapper");
-                const breadcrumbLink = this.closest(".breadcrumb");
-                const featuredCard = this.closest(".cmp-featured-resources-card");
-                const subHeaderCTA = this.closest(".subheadernav-links");
-                const conversionBanner = this.closest(".cmp-conversion-banner");
-
-                // --- REGION DROPDOWN FIX ---
-                const isRegionDropdown =
-                    this.classList.contains('cmp-onelinknav__lang-link') &&
-                    this.closest('.cmp-onelinknav__popover');
-
-                if (isRegionDropdown) {
-                    // Ensure clickName is the visible country text
-                    linkName = this.textContent.trim();
-
-                    // Per acceptance criteria
-                    linkClickType = "other";
-                    linkHref = ""; // clickDestination must be empty string
-                }
-
-                if (linkGrandParent) {
-                    teaserTitle = linkGrandParent.querySelector('.cmp-teaser__pretitle') || linkGrandParent.querySelector('.cmp-teaser__title');
-                }
-
-                if (stackedContentTab) {
-                    teaserTitle = stackedContentTab.querySelector('.lumen-tabs__title');
-                }
-
-                if (industrySelectorContainer) {
-                    teaserTitle = industrySelectorContainer.querySelector('#selectedOption');
-                }
-
-                if (linkName === 'Larry' && linkGrandParent) {
-                    const titleEl = linkGrandParent.querySelector('.cmp-teaser__title')
-                    if (titleEl) {
-                        linkName = titleEl.textContent.trim();
-                    }
-                }
-
-                if (linkHref || isRegionDropdown) {
-
-                    // Link Type
-                    if (this.closest('.teaser')) {
-                        if (this.closest('.teaser').classList.contains('lmn-light-teal-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-secondary-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-deep-orange-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-goldenrod-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-dark-teal-1')) {
-                            linkType = 'Button';
+                if (ref) {
+                    if (ref.includes('*') || ref.includes('†') || ref.includes('‡')) {
+                        sup.textContent = '';
+                        sup.appendChild(document.createTextNode('['));
+                        const symbol = document.createElement('span');
+                        symbol.classList.add('specialSymbol');
+                        if (ref.includes('*') || ref.includes('†')) {
+                            symbol.classList.add('subbed');
                         }
-                    }
-
-                    if (parent.classList.contains('button') || parent.classList.contains('cmp-button') || parent.classList.contains('industry-selector-cta-containers')) {
-                        linkType = 'Button';
-                    }
-
-                    // Link location
-                    if (this.getAttribute('am-region')) {
-                        linkLocation = this.getAttribute('am-region');
-                    } else if (parent.getAttribute('am-region')) {
-                        linkLocation = parent.getAttribute('am-region');
-                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') !== 'Link to Homepage') {
-                        linkLocation = 'navigation bar';
-                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') == 'Link to Homepage') {
-                        linkLocation = 'header';
-                    } else if (this.closest('.cmp-experiencefragment--legal-footer') || this.closest('.cmp-experiencefragment--enterprise-portfolio-footer')) {
-                        linkLocation = 'footer';
-                    } else if (parentIDAtt && grandParentIDAtt && teaserTitle) {
-                        linkLocation = teaserTitle.textContent.trim();
-                    } else if (parentIDAtt && grandParentIDAtt) {
-                        linkLocation = 'main container | ' + grandParentIDAtt + ' | ' + parentIDAtt;
-                    }
-
-                    if (industrySelectorContainer && industrySelectorTitle?.textContent) {
-                        linkLocation = industrySelectorTitle.textContent.trim();
-                    }
-
-                    // Add name for footer links
-                    if (linkHref.includes('twitter') || linkHref.includes('x.com')) {
-                        linkName = 'Twitter/X Platform';
-                    } else if (linkHref.includes('linkedin')) {
-                        linkName = 'LinkedIn';
-                    } else if (linkHref.includes('facebook')) {
-                        linkName = 'Facebook';
-                    } else if (linkHref.includes('youtube')) {
-                        linkName = 'YouTube';
-                    }
-
-                    // Download links
-                    if (linkHref.match("assets.lumen.com")) {
-
-                        // Determine filename
-                        const fileNameArray = linkHref.split('/');
-                        const fileNameArrayComp = fileNameArray.length - 1;
-                        for (let i = 0; i < fileNameArray.length; i++) {
-
-                            if (i == fileNameArrayComp) {
-                                let fileNameTitle = fileNameArray[i].replaceAll('-', ' ').split('?')[0].split(' ');
-
-                                for (let i = 0; i < fileNameTitle.length; i++) {
-                                    fileNameTitle[i] = fileNameTitle[i][0].toUpperCase() + fileNameTitle[i].substring(1);
-                                }
-
-                                fileNameTitle = fileNameTitle.toString().replaceAll(',', ' ');
-                                downloadDataLayer(fileNameTitle);
-                            }
-                        }
-
-                        // Determine download type
-                        if (linkHref.includes('.pdf')) {
-                            downloadType = 'pdf';
-                        } else if (linkHref.includes('.xls')) {
-                            downloadType = 'xls';
-                        } else if (linkHref.includes('.mp3')) {
-                            downloadType = 'mp3';
-                        } else if (linkHref.includes('.exe')) {
-                            downloadType = 'exe';
-                        } else if (linkHref.includes('.zip')) {
-                            downloadType = 'zip';
-                        } else if (linkHref.includes('.wav')) {
-                            downloadType = 'wav';
-                        } else if (linkHref.includes('.mov')) {
-                            downloadType = 'mov';
-                        } else if (linkHref.includes('.mpg')) {
-                            downloadType = 'mpg';
-                        } else if (linkHref.includes('.avi')) {
-                            downloadType = 'avi';
-                        } else if (linkHref.includes('.wmv')) {
-                            downloadType = 'wmv';
-                        } else if (linkHref.includes('.docx')) {
-                            downloadType = 'docx';
-                        } else if (linkHref.includes('.doc')) {
-                            downloadType = 'doc';
-                        } else if (linkHref.includes('.xlsx')) {
-                            downloadType = 'xlsx';
-                        } else if (linkHref.includes('.xls')) {
-                            downloadType = 'xls';
-                        } else if (linkHref.includes('.pptx')) {
-                            downloadType = 'pptx';
-                        } else if (linkHref.includes('.ppt')) {
-                            downloadType = 'ppt';
-                        }
-
-                        function downloadDataLayer(title) {
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.fileDownload,
-                                linkDetails: {
-                                    clickName: linkName,
-                                    clickType: 'download',
-                                    clickDestination: linkHref,
-                                    clickLocation: linkLocation,
-                                    fileDownload: {
-                                        filename: title,
-                                        type: downloadType,
-                                    }
-                                }
-                            });
-                        }
-
-                        // Normal links
+                        symbol.textContent = ref;
+                        sup.appendChild(symbol);
+                        sup.appendChild(document.createTextNode(']'));
                     } else {
-
-                        let componentContextValue;
-                        let clickContextValue;
-                        // Build full destination URL
-                        let fullDestination = "NA";
-                        if (linkHref) {
-                            try {
-                                fullDestination = new URL(linkHref, window.location.origin).href;
-                            } catch (e) {
-                                fullDestination = linkHref;
-                            }
-                        }
-                        // -----------------------------
-                        // Media Highlight
-                        // -----------------------------
-                        if (mediaHighlight) {
-                            const mediaTitle = mediaHighlight.querySelector(".title")?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: mediaTitle.toLowerCase(),
-                                    componentContext: "media-highlight"
-                                }
-                            });
-
-                            return;
-                        }
-                        // -----------------------------
-                        // Conversion Banner
-                        // -----------------------------
-                        else if (conversionBanner) {
-                            const conversionBannerTitle = conversionBanner.querySelector(".cmp-conversion-banner__title")?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: conversionBannerTitle.toLowerCase(),
-                                    componentContext: "conversion banner"
-                                }
-                            });
-
-                            return;
-                        }
-
-                        // -----------------------------
-                        // Solution Highlight
-                        // -----------------------------
-                        else if (solutionHighlight) {
-                            const solutionContext = solutionHighlight.querySelector(".solution-highlight__label")
-                                ?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: solutionContext.toLowerCase(),
-                                    componentContext: "solution-highlight"
-                                }
-                            });
-
-                            return;
-                        }
-                        // ---------------------------------------------
-                        // Subheader Breadcrumb + CTA
-                        // ---------------------------------------------
-                        else if (subHeader && (breadcrumbLink || subHeaderCTA)) {
-
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "header",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: "subheader",
-                                    componentContext: "subheader-navigation"
-                                }
-                            });
-
-                            return;
-                        }
-
-                         // -----------------------------
-                        // Featured Card
-                        // -----------------------------
-
-                        else if (featuredCard) {
-
-                            const featuredCardLayer = featuredCard.getAttribute("data-cmp-data-layer");
-                            let featuredCardInfo = {};
-
-                            if (featuredCardLayer) {
-                                try {
-                                    const parsed = JSON.parse(featuredCardLayer);
-                                    const key = Object.keys(parsed)[0];
-                                    featuredCardInfo = parsed[key] || {};
-                                } catch (e) {
-                                    console.error("Featured Card data layer parse error", e);
-                                }
-                            }
-
-                            const productTitle =
-                                featuredCardInfo.productTitle ||
-                                featuredCard.querySelector(".cmp-featured-resources-card__title")
-                                    ?.textContent.trim() ||
-                                "";
-
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: productTitle.toLowerCase(),
-                                    componentContext: featuredCardInfo.componentName || "featured-card"
-                                }
-                            });
-
-                            return;
-                        }
-
-                        else {
-                            // Existing Default  
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickElementType: linkType.toLowerCase(),
-                                    clickDestination: (linkHref || "").toLowerCase(),
-                                    clickLocation: linkLocation.toLowerCase(),
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: clickContextValue,
-                                    componentContext: componentContextValue
-                                }
-                            });
-                        }
+                        sup.textContent = '[' + ref + ']';
                     }
+                    sup.setAttribute('data-ref', ref);
+                    sup.setAttribute('role', 'button');
+                    sup.setAttribute('tabindex', '0');
+                    sup.setAttribute('aria-label', 'See reference ' + ref);
+                    sup.classList.add(NS + '__trigger');
                 }
             });
         }
 
-        // ==========================================
-        // LOOKUP FORM – SEARCH + CTA EVENTS
-        // ==========================================
+        private _bindEvents(): void {
+            const self = this;
 
-        const lookupForms = document.querySelectorAll(".lookup-form");
-
-        lookupForms.forEach(form => {
-
-            const searchBtn = form.querySelector(".lookup-form__search-label");
-            const titleEl = form.querySelector(".lookup-form__title h2");
-            const componentTitle = titleEl?.textContent.trim() || "NA";
-
-            // -----------------------------
-            // SEARCH BUTTON CLICK
-            // -----------------------------
-            if (searchBtn) {
-                searchBtn.addEventListener("click", () => {
-
-                    const clickName = searchBtn.textContent.trim().toLowerCase();
-                    const clickDestination = "NA"; // Search triggers JS, not navigation
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName,
-                            clickDestination,
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: componentTitle.toLowerCase(),
-                            componentContext: "lookup form"
-                        }
-                    });
-                });
-            }
-
-            // -----------------------------
-            // CTA BUTTONS (Primary, Contact, Secondary)
-            // -----------------------------
-            const ctas = form.querySelectorAll(
-                ".lookup-form__primary-cta, .lookup-form__contact-cta, .lookup-form__secondary-cta"
-            );
-
-            ctas.forEach(cta => {
-                cta.addEventListener("click", () => {
-
-                    const clickName = cta.textContent.trim().toLowerCase();
-
-                    // Build full destination URL
-                    let rawHref = cta.getAttribute("href") || cta.getAttribute("data-link") || cta.getAttribute("data-href");
-                    let clickDestination = "NA";
-
-                    if (rawHref) {
-                        try {
-                            clickDestination = new URL(rawHref, window.location.origin).href;
-                        } catch (e) {
-                            clickDestination = rawHref;
-                        }
-                    }
-
-                    // Determine search result context (success or error message)
-                    const successMsg = form.querySelector(".lookup-form__success");
-                    const errorMsg = form.querySelector(".lookup-form__error");
-
-                    let clickContext = componentTitle.toLowerCase();
-
-                    if (successMsg && successMsg.style.display !== "none") {
-                        clickContext = successMsg.textContent.trim().toLowerCase();
-                    } else if (errorMsg && errorMsg.style.display !== "none") {
-                        clickContext = errorMsg.textContent.trim().toLowerCase();
-                    }
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName,
-                            clickDestination,
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext,
-                            componentContext: "lookup form"
-                        }
-                    });
-                });
-            });
-
-        });
-
-
-        // ==========================================
-        // FEATURED RESOURCES – INFORMATION TOGGLE
-        // ==========================================
-        const resourcesInfoComponents = document.querySelectorAll(".featured-resources-information");
-
-        resourcesInfoComponents.forEach(component => {
-            const toggle = component.querySelector(".cmp-featured-resources-info__toggle");
-
-            if (!toggle) return;
-
-            toggle.addEventListener("click", () => {
-
-                const titleEl = component.querySelector(".cmp-featured-resources-info__title");
-                const title = titleEl?.textContent.trim() || "NA";
-
-                // Determine expand/collapse state
-                const isExpanded = toggle.getAttribute("aria-expanded") === "true";
-                const clickState = isExpanded ? "collapse" : "expand";
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: title.toLowerCase(),
-                        clickDestination: "NA",
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: title.toLowerCase(),
-                        componentContext: "featured resources - information",
-                        clickState: clickState
-                    }
-                });
-            });
-        });
-
-        // ==========================================
-        // CONVERSION BANNER – PRIMARY CTA BUTTON
-        // ==========================================
-        const conversionBanners = document.querySelectorAll(".conversion-banner");
-
-        conversionBanners.forEach(banner => {
-            const primaryCTA = banner.querySelector(".cmp-conversion-banner__cta--primary");
-
-            if (!primaryCTA) return;
-
-            primaryCTA.addEventListener("click", () => {
-
-                const titleEl = banner.querySelector(".cmp-conversion-banner__title");
-                const bannerTitle = titleEl?.textContent.trim() || "NA";
-
-                const clickName = primaryCTA.textContent.trim().toLowerCase();
-
-                // Primary CTA buttons often navigate via JS → no href
-                const clickDestination = "NA";
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: clickName,
-                        clickDestination: clickDestination,
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: bannerTitle.toLowerCase(),
-                        componentContext: "conversion banner"
-                    }
-                });
-            });
-        });
-
-        // ==============================
-        // SUBHEADER
-        // ==============================
-        const subheaderContainer = document.querySelector(".pdp-subheadernav");
-        if (subheaderContainer) {
-            subheaderContainer.addEventListener("click", function (event) {
-                const item = event.target.closest(".subheadernav-item");
-                if (!item) return;
-
-                const linkName = item.textContent.trim();
-                const dataTarget = item.getAttribute("data-target") || "";
-                const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
-                const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${formattedTarget}` : "NA";
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: linkName.toLowerCase(),
-                        clickDestination: destination,
-                        clickLocation: "header",
-                        clickType: "other",
-                        clickContext: "subheader",
-                        componentContext: "subheader-navigation"
-                    }
-                });
-            });
-
-            // MOBILE dropdown support
-            const mobileDropdown = subheaderContainer.querySelector(".subheadernav-mobile-dropdown");
-            if (mobileDropdown) {
-                mobileDropdown.addEventListener("click", function (event) {
-
-                    const item = event.target.closest(".subheadernav-item");
-                    const dataTarget = item.getAttribute("data-target") || "";
-                    const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
-                    const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
-                    if (!item) return;
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: item.textContent.trim().toLowerCase(),
-                            clickDestination: destination.toLowerCase(),
-                            clickLocation: "header",
-                            clickType: "other",
-                            clickContext: "subheader",
-                            componentContext: "subheader-navigation"
-                        }
-                    });
-                });
-            }
-        }
-
-
-
-        // Sign In Button
-
-        const signInBtn = document.querySelector('button.signInButton');
-        if (signInBtn) {
-            const signInBtnOverride = signInBtn.getAttribute('data-linkOverride');
-            signInBtn.addEventListener('click', function (event) {
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents?.component.linkClick,
-                    linkDetails: {
-                        clickName: 'sign in',
-                        clickElementType: 'button',
-                        clickDestination: (signInBtnOverride ? signInBtnOverride : "sign in authentication"),
-                        clickLocation: 'header',
-                        clickType: 'other'
-                    }
-                });
-            });
-        }
-
-        function pushAdobeDataLayerForDropdown(optionName) {
-            const industryEybrowText = document.querySelector('.industry-selector-eybrow-text');
-            optionName = optionName ? optionName.trim() : optionName;
-            adobeDataLayer.push({
-                event: adobeDataLayerEvents.component.linkClick,
-                linkDetails: {
-                    clickDestination: '',
-                    clickLocation: industryEybrowText.textContent.toLocaleLowerCase(),
-                    clickName: 'industry dropdown|' + optionName.toLowerCase(),
-                    clickElementType: 'button',
-                    clickType: 'other'
+            document.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                const trigger = target.closest(SEL.trigger);
+                if (trigger) {
+                    self._open(trigger.getAttribute('data-ref') || '');
                 }
             });
-        }
 
-        // Industry Selector Dropdown Analytics
-        const dropdownHeader = document.getElementById('dropdownHeader');
-        const dropdownList = document.getElementById('dropdownList');
-        if (dropdownHeader && dropdownList) {
-            dropdownHeader.addEventListener('click', function (event) {
-                const isOpen = dropdownHeader.classList.contains('open');
-                pushAdobeDataLayerForDropdown(isOpen ? 'collapse' : 'expand');
-            });
-
-            dropdownList.addEventListener('click', function (event) {
-                pushAdobeDataLayerForDropdown(event.target.textContent);
-            });
-        }
-
-        // Chat Transcript
-        const chatSaveTranscript = document.querySelector('#downloadBtn');
-        if (chatSaveTranscript) {
-            chatSaveTranscript.addEventListener('click', function (event) {
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.fileDownload,
-                    linkDetails: {
-                        clickName: 'save transcript',
-                        clickType: 'download',
-                        clickDestination: 'transcript.txt',
-                        clickLocation: 'lumen chat dialog box',
-                        fileDownload: {
-                            filename: 'transcript of chat session',
-                            type: 'txt'
-                        }
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const target = e.target as Element;
+                    const trigger = target.closest(SEL.trigger);
+                    if (trigger) {
+                        e.preventDefault();
+                        self._open(trigger.getAttribute('data-ref') || '');
                     }
-                });
-            });
-        }
-
-        // Forms
-        function trackForms() {
-            try {
-                MktoForms2.whenReady(function (form) {
-                    const fields = document.querySelectorAll('.mktoField');
-                    const pageTitle = document.querySelector('title') ? document.querySelector('title').textContent : 'Page Title Unavailable';
-                    const formID = form.getId() ? 'mktoForm_' + form.getId().toString() : 'Form ID Unavailable';
-                    let counter = 1;
-
-                    // Form Start
-                    for (let i = 0; i < fields.length; i++) {
-                        if (fields[i]?.type !== 'hidden') {
-                            fields[i].addEventListener('focus', function (event) {
-                                if (counter == 1) { // Fire only once per page load
-                                    adobeDataLayer.push({
-                                        event: adobeDataLayerEvents.component.formStart,
-                                        details: {
-                                            formName: pageTitle + ': ' + formID,
-                                            formID: formID
-                                        }
-                                    });
-                                    counter++;
-                                }
-                            });
-                        }
-                    }
-
-                    // Form Error
-                    form.onValidate(function (nativeValid) {
-                        if (!nativeValid) {
-                            setTimeout(function () { // Wait half a second so that the mktoErrorMsg html will be added first
-                                let mktoError = document.querySelector('.mktoErrorMsg');
-                                if (mktoError) {
-                                    let mktoErrorMsg = mktoError.textContent;
-                                    let mktoErrorField = mktoError.getAttribute('id');
-                                    adobeDataLayer.push({
-                                        event: adobeDataLayerEvents.component.formError,
-                                        details: {
-                                            formName: pageTitle + ': ' + formID,
-                                            formID: formID,
-                                            formError: mktoErrorField + ': ' + mktoErrorMsg
-                                        }
-                                    });
-                                }
-                            }, 500);
-                        }
-                    });
-
-                    // Form Submit
-                    form.onSuccess(function (valsObj, destStr) {
-                        const email = valsObj?.Email || valsObj?.email || valsObj?.userEmail || '';
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.formSubmit,
-                            details: {
-                                formName: pageTitle + ': ' + formID,
-                                formID: formID,
-                                emailID: email
-                            }
-                        });
-                    });
-                });
-            }
-            catch (e) {
-                console.log('Error in trackForms: ', e);
-            }
-        }
-
-        if (typeof MktoForms2 !== 'undefined') {
-            trackForms();
-        } else {
-            window.addEventListener("mkto-script-loaded", (e) => {
-                trackForms();
-            }, false,
-            );
-        }
-
-        // Chat
-        const chatLink = document.querySelector("a[href='#chat']");
-        let chatClickName = 'Chat';
-        let chatClickType = 'Button';
-        let chatClickDestination = 'launchChat';
-        let newUser = 'new';
-
-        if (chatLink) {
-            chatLink.addEventListener('click', function (event) {
-                chatClickName = chatLink.textContent.trim();
-                chatClickType = 'Link';
-                chatClickDestination = '#chat';
-            });
-        }
-
-        // Chat Initiated event for Salesforce Embedded Messaging
-        window.addEventListener("onEmbeddedMessagingConversationStarted", function (event) {
-            try {
-                window.adobeDataLayer = window.adobeDataLayer || [];
-                let conversationId = event?.detail?.conversationId || "";
-
-                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
-                    newUser = 'Registered member';
                 }
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.chatInitiated,
-                    linkDetails: {
-                        clickName: chatClickName,
-                        clickType: chatClickType,
-                        clickDestination: chatClickDestination,
-                        clickLocation: 'main container'
-                    },
-                    chat: {
-                        sessionID: conversationId
-                    },
-                    user: {
-                        type: newUser
-                    }
-                });
-            } catch (e) {
-                console.log("[AEP Utils] - Error handling chat conversation started.", e);
-            }
-        });
-
-        // Chat Terminated event for Salesforce Embedded Messaging
-        window.addEventListener("onEmbeddedMessagingConversationClosed", function (event) {
-            try {
-                window.adobeDataLayer = window.adobeDataLayer || [];
-                let conversationId = event?.detail?.conversationId || "";
-
-                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
-                    newUser = 'Registered member';
+                if (e.key === 'Escape') {
+                    self._closeAll();
                 }
+            });
 
+            this.el.addEventListener('click', (e) => {
+                const target = e.target as Element;
+                if (target.closest(SEL.close)) {
+                    self._closeAll();
+                }
+            });
+
+            if (this.overlay) {
+                this.overlay.addEventListener('click', () => {
+                    self._closeAll();
+                });
+            }
+        }
+
+        private _open(ref: string): void {
+            const modal = this.el.querySelector(SEL.modal + '[data-ref="' + ref + '"]');
+            const footnote = this.el.querySelector(SEL.footnote + '[data-ref="' + ref + '"]');
+            const target = modal || footnote;
+
+            if (!target) {
+                return;
+            }
+
+            this._closeAll();
+
+            target.setAttribute('aria-hidden', 'false');
+            target.classList.add('is-open');
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'false');
+                this.overlay.classList.add('is-active');
+            }
+            document.body.classList.add(NS + '--body-lock');
+
+            const closeBtn = target.querySelector(SEL.close);
+            if (closeBtn) {
+                (closeBtn as HTMLElement).focus();
+            }
+
+            this._pushDataLayerEvent(ref);
+        }
+
+        private _closeAll(): void {
+            const self = this;
+
+            [SEL.modal, SEL.footnote].forEach((sel) => {
+                self.el.querySelectorAll(sel + '.is-open').forEach((panel) => {
+                    panel.setAttribute('aria-hidden', 'true');
+                    panel.classList.remove('is-open');
+                });
+            });
+
+            if (this.overlay) {
+                this.overlay.setAttribute('aria-hidden', 'true');
+                this.overlay.classList.remove('is-active');
+            }
+            document.body.classList.remove(NS + '--body-lock');
+        }
+
+        private _pushDataLayerEvent(ref: string): void {
+            const adobeDataLayer = (window as unknown as { adobeDataLayer?: DataLayerEvent[] }).adobeDataLayer;
+            if (adobeDataLayer) {
                 adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.chatTerminated,
-                    linkDetails: {
-                        clickName: 'end chat',
-                        clickType: 'user',
-                        clickLocation: 'chat'
-                    },
-                    chat: {
-                        sessionID: conversationId
-                    },
-                    user: {
-                        type: newUser
+                    event: 'cmp:click',
+                    eventInfo: {
+                        path: 'component.' + this.el.id,
+                        ref: ref
                     }
                 });
-            } catch (e) {
-                console.log("[AEP Utils] - Error handling chat conversation closed.", e);
             }
+        }
+    }
+
+    function onReady(): void {
+        document.querySelectorAll(SEL.component).forEach((el) => {
+            new SuperscriptComponent(el);
         });
     }
-}());
+
+    if (document.readyState !== 'loading') {
+        onReady();
+    } else {
+        document.addEventListener('DOMContentLoaded', onReady);
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const isSuperScriptOnPage = document.querySelectorAll<HTMLElement>(".cmp-superscript");
+    if (isSuperScriptOnPage.length > 0) {
+        convertRawSupTags()
+        initSuperscript();
+    }
+});
