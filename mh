@@ -1,3 +1,6 @@
+width: calc((100% - var(--spacing-lg)) / 2) !important;
+
++++++++{{{{{{{{{++++++++++++++
 /* Override only inside Instance Placeholder 6-column */
 .instanceplaceholder.gridColoumn6 {
     .statistictile.article-cards-stats {
