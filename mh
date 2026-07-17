@@ -13,6 +13,15 @@
     }
 }
 
++++++++++++++++++++++++++++++++++++++++++++
+
+// Trademark superscript symbols (®, ™, ©)
+.trademark-sup {
+    font-size: 12px !important;
+    line-height: 0 !important;
+    margin-left: -2px !important;
+}
+
 
 ++++++++++++++++++++++++++++++++++++++++++
 
