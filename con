@@ -1,14 +1,11 @@
-   .instanceplaceholder.gridColoumn6 &,
-            .instanceplaceholder.gridColoumn8 & {
-            .cmp-container {
-            padding: var(--spacing-48) !important;
-        }
-    }	
-	
-	
-    .instanceplaceholder.gridColoumn6 &,
-        .instanceplaceholder.gridColoumn8 & {   
+
+// Instance placeholder overrides
+.instanceplaceholder.gridColoumn6 .textcontainer,
+.instanceplaceholder.gridColoumn8 .textcontainer {
+
     > .cmp-container {
+        padding: var(--spacing-48) !important;
+
         > .title {
             h1,
             h2,
@@ -19,14 +16,9 @@
                 font-size: 48px !important;
             }
         }
-    }
-    }
 
-    .instanceplaceholder.gridColoumn6 &,
-        .instanceplaceholder.gridColoumn8 & {
-    > .cmp-container {
         > .text {
-			display: flex;
+            display: flex;
             flex-direction: column;
             gap: var(--spacing-16);
             margin: 0px !important;
@@ -34,5 +26,5 @@
                 margin: 0 !important;
             }
         }
-     }
     }
+}
