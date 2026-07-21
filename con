@@ -1,30 +1,15 @@
+.instanceplaceholder.gridColoumn6 &,
+  .instanceplaceholder.gridColoumn8 & {
+    max-width: fit-content !important;
+    padding: 20px 32px;
 
-// Instance placeholder overrides
-.instanceplaceholder.gridColoumn6 .textcontainer,
-.instanceplaceholder.gridColoumn8 .textcontainer {
-
-    > .cmp-container {
-        padding: var(--spacing-48) !important;
-
-        > .title {
-            h1,
-            h2,
-            h3,
-            h4,
-            h5,
-            h6 {
-                font-size: 48px !important;
-            }
-        }
-
-        > .text {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-16);
-            margin: 0px !important;
-            ul {
-                margin: 0 !important;
-            }
-        }
+    @media only screen and (min-width: 768px) {
+      padding: 20px 36px;
+      max-width: fit-content !important;
     }
-}
+
+    @media only screen and (min-width: 1280px) {
+      padding: 40px 270px;
+      max-width: fit-content !important;
+    }
+  }
