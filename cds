@@ -1,3 +1,23 @@
-As part of the MER-1116 ticket, I implemented some width-related changes. Could you please verify on the DEV URL whether the issue you mentioned is now resolved? If not, please let us know.
+@media only screen and (max-width: 480px) {
 
-Note: The Statistics title has a limited display width. If the title contains more characters than the available space allows, it will wrap to the next line. This is expected behavior.
+    .instanceplaceholder.gridColoumn6 .textcontainer,
+    .instanceplaceholder.gridColoumn8 .textcontainer {
+
+        > .cmp-container {
+
+            > .title {
+
+                h1,
+                h2,
+                h3,
+                h4,
+                h5,
+                h6 {
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                }
+
+            }
+        }
+    }
+}
