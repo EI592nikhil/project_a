@@ -1,102 +1,341 @@
-Media high -
-<div data-sly-test="${wcmmode.edit}"
-   class="cq-placeholder"
-   data-emptytext="Edit ${component.title}"></div>
-<sly data-sly-use.mediaModel="com.centurylink.aem.core.models.MediaHighlightModel"
-   data-sly-test="${mediaModel}">
-   <div class ="media_highlight ${properties.cqStyleClasses} ${mediaModel.subheaderClass}" id='${mediaModel.id}' data-cmp-data-layer='${mediaModel.data}'>
-      <!-- Section One -->
-      <div class="section-one">
-         <h1 class="title"
-            data-sly-test="${mediaModel.mediaTitle}">
-            ${mediaModel.mediaTitle}
-         </h1>
-         <div class="description"
-            data-sly-test="${mediaModel.mediaDescription}">
-            ${mediaModel.mediaDescription @context='html'}
-      </div>
-         <div data-sly-test="${mediaModel.ctas}"
-            data-sly-list.cta="${mediaModel.ctas}">
-            <a href="${cta.link}"
-               target="${cta.linkTarget}"
-               class="cta-button"
-               data-sly-test="${cta.link && cta.text}">
-            ${cta.text}
-            </a>
-         </div>
-      </div>
-      <!-- Section Two -->
-      <div class="section-two"
-         data-sly-test="${mediaModel.mediaType}">
-         <div class="media-wrapper">
-             <sly data-sly-test.image="${mediaModel.mediaType == 'media-image'}">
-                 <div class="media-highlight-image"
-                      data-sly-resource="${'image' @ resourceType='ewcmams/components/imageV3'}">
-                 </div>
-             </sly>
-             <sly data-sly-test.video="${mediaModel.mediaType == 'media-video'}">
-                 <div class="media-highlight-video dynamicmedia"
-                      data-sly-resource="${'dm' @ resourceType='dam/components/scene7/dynamicmedia'}">
-                 </div>
-             </sly>
-         </div>
-      </div>
-   </div>
-</sly>
+Analytics Requirements
 
+Item
 
+Field Name
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+Trigger / Behavior
 
-<div data-sly-test="${wcmmode.edit}" class="cq-placeholder" data-emptytext="Edit ${component.title}"></div>
+Link Name
 
-<div data-sly-use.model="com.centurylink.aem.core.models.SolutionHighlightModel"
-     data-sly-attribute.data-cmp-data-layer="${model.isDataLayerEnabled ? model.data : null}">
+Link Destination
 
-  <div class="solution-highlight ${model.subheaderClass}">
-    <div class="solution-highlight__inner">
+Link Region
 
-      <!-- LEFT: Intro copy -->
-      <div class="solution-highlight__intro">
-        <h4 class="solution-highlight__title">${model.title}</h4>
-        <div class="solution-highlight__description">${model.description @ context='html'}</div>
-      </div>
+Link Type
 
-      <!-- RIGHT: Featured solutions -->
-      <div class="solution-highlight__solutions">
-        <p class="solution-highlight__label">${model.text ? model.text : 'Featured solutions'}</p>
+Link Context
 
-        <div class="solution-highlight__list" data-sly-list.solution="${model.solutionList}">
-          <div class="solution-highlight__card">
-            <h4 class="solution-highlight__card-title">${solution.title}</h4>
-            <div class="solution-highlight__card-desc">${solution.description @ context='html'}</div>
-            <a class="solution-highlight__card-link"
-               href="${solution.linkUrl}"
-               target="${solution.linkTarget ? '_blank' : '_self'}">
-              ${solution.linkText}<span class="arrow" aria-hidden="true"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M10.5905 3.88084C10.9577 3.52314 11.5442 3.52698 11.9067 3.88946L17.2348 9.21758C17.6254 9.60811 17.6254 10.2413 17.2348 10.6318L11.9168 15.9498C11.5486 16.3181 10.9516 16.3184 10.583 15.9505C10.2137 15.582 10.2135 14.9837 10.5826 14.615L14.3388 10.8622H3.125C2.60723 10.8622 2.1875 10.4425 2.1875 9.92469C2.1875 9.40692 2.60723 8.98719 3.125 8.98719H14.3412L10.5806 5.21321C10.2125 4.84375 10.2169 4.24477 10.5905 3.88084Z" fill="url(#paint0_linear_11328_3687)"/>
-  <defs>
-    <linearGradient id="paint0_linear_11328_3687" x1="2.1875" y1="11.3829" x2="17.9419" y2="11.3829" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FA6E5C"/>
-      <stop offset="1" stop-color="#FB862D"/>
-    </linearGradient>
-  </defs>
-</svg></span>
-            </a>
-          </div>
-        </div>
+Link Component
 
-        <!-- Bottom CTA button -->
-        <div class="solution-highlight__more">
-          <a class="solution-highlight__more-btn"
-             href="${model.solutionLinkUrl}"
-             target="${model.solutionLinkTarget ? '_blank' : '_self'}">
-            ${model.solutionLinkText}
-          </a>
-        </div>
+json Payload
 
-      </div>
-    </div>
-  </div>
+Notes
 
-</div>
+1
+
+Download
+
+on click
+
+<button text>
+
+<destination_url>
+
+body
+
+<autopopulated>
+
+<title>
+
+<component name>
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+ 
+
+2
+
+Share
+
+on click
+
+<button text>
+
+<destination_url>
+
+body
+
+<autopopulated>
+
+<title>
+
+<component name>
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+ 
+
+3
+
+Anchor Link Click
+
+on click
+
+<link text>
+
+<destination_url>
+
+body
+
+<autopopulated>
+
+<title>
+
+<component name>
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <link text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+Per Figma, these links will be clickable.
+
+Implementation
+
+ 
+
+Acceptance Criteria
+
+When a user clicks download in the CDP Hero component, an event object is pushed into window.adobeDataLayer with the following payload:
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+When the above event object is pushed into the ACDL, an Adobe Web SDK link tracking call shall fire with the following minimum mappings in the XDM event object:
+
+Key
+
+(All under xdm.web.webInteraction)
+
+Value
+
+Value Type
+
+linkClicks.value
+
+1
+
+Number
+
+URL
+
+<Map to event.detail.linkDetails.clickDestination>
+
+String
+
+name
+
+<Map to event.detail.linkDetails.clickName>
+
+String
+
+region
+
+<Map to event.detail.linkDetails.clickLocation>
+
+String
+
+type
+
+<Map to event.detail.linkDetails.clickType>
+
+String
+
+_centurylink.clickContent
+
+<Map to event.detail.linkDetails.clickContext>
+
+String
+
+_centurylink.componentContent
+
+<Map to event.detail.linkDetails.compponentContext>
+
+String
+
+When a user clicks share in the CDP hero component, an event object is pushed into window.adobeDataLayer with the following payload:
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <button text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+When the above event object is pushed into the ACDL, an Adobe Web SDK link tracking call shall fire with the following minimum mappings in the XDM event object:
+
+Key
+
+(All under xdm.web.webInteraction)
+
+Value
+
+Value Type
+
+linkClicks.value
+
+1
+
+Number
+
+URL
+
+<Map to event.detail.linkDetails.clickDestination>
+
+String
+
+name
+
+<Map to event.detail.linkDetails.clickName>
+
+String
+
+region
+
+<Map to event.detail.linkDetails.clickLocation>
+
+String
+
+type
+
+<Map to event.detail.linkDetails.clickType>
+
+String
+
+_centurylink.clickContent
+
+<Map to event.detail.linkDetails.clickContext>
+
+String
+
+_centurylink.componentContent
+
+<Map to event.detail.linkDetails.compponentContext>
+
+String
+
+When a user clicks on any anchor link in the CDP hero component, an event object is pushed into window.adobeDataLayer with the following payload:
+
+{
+event: Link Click,
+linkDetails: {
+clickName: <link text>,
+clickDestination: <destination_url>,
+clickLocation: body,
+clickType: <autopopulated>,
+clickContext: <title>,
+componentContext: <content detail hero>
+}
+}
+
+When the above event object is pushed into the ACDL, an Adobe Web SDK link tracking call shall fire with the following minimum mappings in the XDM event object: 
+
+Key
+
+(All under xdm.web.webInteraction)
+
+Value
+
+Value Type
+
+linkClicks.value
+
+1
+
+Number
+
+URL
+
+<Map to event.detail.linkDetails.clickDestination>
+
+String
+
+name
+
+<Map to event.detail.linkDetails.clickName>
+
+String
+
+region
+
+<Map to event.detail.linkDetails.clickLocation>
+
+String
+
+type
+
+<Map to event.detail.linkDetails.clickType>
+
+String
+
+_centurylink.clickContent
+
+<Map to event.detail.linkDetails.clickContext>
+
+String
+
+_centurylink.componentContent
+
+<Map to event.detail.linkDetails.compponentContext>
+
+String
+
+When the Adobe Web SDK event tracking payload is inspected on any of the above components that fire a Link Click event:
+
+The clickName dynamically reflects the actual rendered button or link text — not a hardcoded value. The value must be lower cased, trimmed, and not excessively long.
+
+clickDestination If there is a value for this field on the clicked element, the value must always be a full URL. If there is a hashed component in the link href/destination, please include that, e.g. https://www.lumen.com/en-us/page.html#products. If there is no value (e.g. a toggle click) this value should be empty string.
+
+clickLocation The value for this field will always be (one of) header, body or footer - this value should be “body” for all CDP hero.
+
+clickContext DIA + LCV essentials (Identify what offer / card / module that CTA belonged to and provide a friendly name for reporting).
+
+componentContext This value should match the name of the component, for this ticket it should be “content detail hero”
+
+clickType is auto-populated with the values other, download, or exit. Be sure the value is one of these three only.
+
+When the event fires for a single user interaction (one click), just one Link Click event is emitted — no duplicate events on a single click interaction.
+
+Clicks on a non-anchor element may trigger a separate tracking call with an evar11 value. This is okay, as the payload in that tracking call should not contain anything which may falsely increment standard (anchor) Link Click events in reporting
