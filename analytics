@@ -1,704 +1,1360 @@
 (function () {
+    "use strict";
 
-    'use strict';
-
-    var assetMap          = {};
-    var _lastModalKey     = null;
-    var _pendingQueue     = [];
-    var _replayInProgress = false;
-    var _origSatTrack     = null;
-    var _trackWrapVersion = 0;
-
-    function isRawDmId(str) {
-        return !!str && str.indexOf('dynamicmedia_') === 0 && str.indexOf('/') === -1;
-    }
-
-    function isPlay0Event(data) {
-        if (!data) return false;
-        return /^PLAY,0(\.0+)?$/.test((data.eventInfo || '').toString().trim());
-    }
-
-    function shallowCopy(obj) {
-        var out = {};
-        for (var k in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, k)) out[k] = obj[k];
+    function isLumenHost(href) {
+        // Treat relative URLs as internal; absolute URLs are checked by hostname.
+        if (!href || href.startsWith("/")) {
+            return true;
         }
-        return out;
-    }
-
-    buildAssetMap();
-    wrapExistingS7dmUtilsViewers();
-    patchS7ViewersConstructors();
-    installSatelliteTrap();
-
-    function buildAssetMap() {
-        document.querySelectorAll('[data-asset-path]').forEach(function (el) {
-            var id = el.getAttribute('id');
-            var ap = el.getAttribute('data-asset-path');
-            var an = el.getAttribute('data-asset-name');
-            if (id && ap) {
-                assetMap[id] = { assetPath: ap, assetName: an || ap.split('/').pop() };
-            }
-        });
-    }
-
-    function getAssetData(key) {
-        if (!key) return null;
-        if (assetMap[key]) return assetMap[key];
-        buildAssetMap();
-        if (assetMap[key]) return assetMap[key];
-
-        var el = document.getElementById(key)
-              || document.querySelector('[id="' + key + '"][data-asset-path]');
-
-        if (!el) {
-            var containers = document.querySelectorAll(
-                '[class*="infomodal"],[class*="modal"],[class*="dialog"],[class*="overlay"],[class*="popup"]'
-            );
-            for (var i = 0; i < containers.length; i++) {
-                try { el = containers[i].querySelector('#' + CSS.escape(key)); }
-                catch (e) { el = containers[i].querySelector('[id="' + key + '"]'); }
-                if (el) break;
-            }
+        try {
+            var url = new URL(href, window.location.origin);
+            var host = url.hostname.toLowerCase();
+            return host === "lumen.com" || host.endsWith(".lumen.com");
+        } catch (e) {
+            // If URL parsing fails, fall back to treating as external.
+            return false;
         }
-
-        if (!el && _lastModalKey && assetMap[_lastModalKey]) {
-            return assetMap[_lastModalKey];
-        }
-
-        if (!el) return null;
-        var path = el.getAttribute('data-asset-path');
-        var name = el.getAttribute('data-asset-name') || (path ? path.split('/').pop() : '');
-        if (!path) return null;
-        assetMap[key] = { assetPath: path, assetName: name };
-        return assetMap[key];
     }
 
-    function emitPlay0(asset, viewerKey) {
-        if (!_origSatTrack) {
-            var retries = 0;
-            var t = setInterval(function () {
-                retries++;
-                if (_origSatTrack) {
-                    clearInterval(t);
-                    doEmitPlay0(asset, viewerKey);
-                } else if (retries > 40) {
-                    clearInterval(t);
+    if (window.adobeDataLayer) {
+        // Links
+        const links = document.querySelectorAll('a');
+        for (let i = 0; i < links.length; i++) {
+
+            links[i].addEventListener('click', function (event) {
+                let linkGrandParent = this.closest('.cmp-teaser__content');
+                let parent = this.parentElement;
+                let linkName = this.textContent.trim();
+                let ariaLabel = this.getAttribute('aria-label');
+                if (ariaLabel == 'Link to Homepage') {
+                    linkName = 'Lumen Logo';
                 }
-            }, 50);
-            return;
-        }
-        doEmitPlay0(asset, viewerKey);
-    }
-
-    function doEmitPlay0(asset, viewerKey) {
-        var payload = {
-            objID     : asset.assetPath,
-            instName  : asset.assetName,
-            eventInfo : 'PLAY,0',
-            compClass : 'Container',
-            timeStamp : Date.now(),
-            _dmSynthetic: true
-        };
-        _replayInProgress = true;
-        try { _origSatTrack.call(null, 'Video Information', payload); }
-        finally { _replayInProgress = false; }
-    }
-
-    function onViewerPlay(key, viewer, pos) {
-        if (viewer._play0Fired) return;
-
-        var position = (pos === null || pos === undefined) ? 0 : Number(pos);
-        if (position > 1) return;
-
-        buildAssetMap();
-        var asset = getAssetData(key) || (_lastModalKey && assetMap[_lastModalKey]);
-
-        if (asset) {
-            viewer._play0Fired = true;
-            emitPlay0(asset, key);
-        } else {
-            var elapsed = 0;
-            var t = setInterval(function () {
-                elapsed += 50;
-                buildAssetMap();
-                var a = getAssetData(key) || (_lastModalKey && assetMap[_lastModalKey]);
-                if (a || elapsed >= 1000) {
-                    clearInterval(t);
-                    if (viewer._play0Fired) return;
-                    if (a) {
-                        viewer._play0Fired = true;
-                        emitPlay0(a, key);
+                let linkClickType = "exit";
+                if (this.getAttribute('href') != null) {
+                    let href = this.getAttribute('href');
+                    if (href.startsWith("/content/lumen") || isLumenHost(href)) {
+                        linkClickType = "other";
                     }
                 }
-            }, 50);
-        }
-    }
+                let linkType = 'Link';
+                let linkHref = this.getAttribute('href');
+                let linkLocation = 'main container';
+                let downloadType = 'AEM asset';
+                let parentID = this.closest('[id]');
+                let parentIDAtt = parentID.getAttribute('id').split('-')[0];
+                let grandParentID = parentID.parentElement.closest('[id]');
+                let grandParentIDAtt = grandParentID.getAttribute('id').split('-')[0];
+                let teaserTitle;
+                let industrySelectorContainer = this.closest('.industry-selector-container');
+                let stackedContentTab = this.closest('.lumen-tabs__content');
+                let industrySelectorItem = this.closest('.industry-selector-item');
+                let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
+                const mediaHighlight = this.closest('.media_highlight');
+                const solutionHighlight = this.closest('.solution-highlight');
+                const subHeader = this.closest(".subheader-wrapper");
+                const breadcrumbLink = this.closest(".breadcrumb");
+                const featuredCard = this.closest(".cmp-featured-resources-card");
+                const featuredResourcesSection = this.closest(".cmp-featured-resources");
+                const subHeaderCTA = this.closest(".subheadernav-links");
+                const conversionBanner = this.closest(".cmp-conversion-banner");
+                const featuredResourcesTable = this.closest(".featuredresourcesTable__productCta");
+                const productHero = this.closest(".pdp-hero");
+                const resourceCard = this.closest(".resource-card");
+                const marquee = this.closest(".marquee");
+                const cdpHero = this.closest(".cdp-hero");
 
-    function resetPlay0(key) {
-        var s7dm = window.S7dmUtils;
-        if (s7dm && s7dm[key]) s7dm[key]._play0Fired = false;
-        var containerEl = document.getElementById(key);
-        if (containerEl && containerEl._dmViewerRef) {
-            containerEl._dmViewerRef._play0Fired = false;
-        }
-    }
+                // --- REGION DROPDOWN FIX ---
+                const isRegionDropdown =
+                    this.classList.contains('cmp-onelinknav__lang-link') &&
+                    this.closest('.cmp-onelinknav__popover');
 
-    function attachPlay0Listener(key, viewer) {
-        if (!viewer || viewer._play0ListenerAttached) return;
-        viewer._play0ListenerAttached = true;
-        viewer._play0Fired = false;
+                if (isRegionDropdown) {
+                    // Ensure clickName is the visible country text
+                    linkName = this.textContent.trim();
 
-        var containerEl = document.getElementById(key);
-        if (containerEl) containerEl._dmViewerRef = viewer;
+                    // Per acceptance criteria
+                    linkClickType = "other";
+                    linkHref = ""; // clickDestination must be empty string
+                }
 
-        if (typeof viewer.setHandlers === 'function') {
-            try {
-                var handlers = shallowCopy(viewer._s7Handlers || {});
-                var prevPlay = handlers.PLAY || null;
-                handlers.PLAY = function (e) {
-                    var pos = (e && e.position !== undefined) ? e.position
-                            : (typeof e === 'number' ? e : null);
-                    onViewerPlay(key, viewer, pos);
-                    if (prevPlay) prevPlay.call(this, e);
-                };
-                viewer.setHandlers(handlers);
-            } catch (ex) {}
-        }
+                if (linkGrandParent) {
+                    teaserTitle = linkGrandParent.querySelector('.cmp-teaser__pretitle') || linkGrandParent.querySelector('.cmp-teaser__title');
+                }
 
-        if (containerEl && !containerEl._dmPlay0DomAttached) {
-            containerEl._dmPlay0DomAttached = true;
-            containerEl.addEventListener('s7event:PLAY', function (domEvt) {
-                var detail = domEvt && domEvt.detail;
-                var pos = (detail && detail.position !== undefined) ? detail.position
-                        : (typeof detail === 'number' ? detail : null);
-                onViewerPlay(key, viewer, pos);
-            });
-        }
+                if (stackedContentTab) {
+                    teaserTitle = stackedContentTab.querySelector('.lumen-tabs__title');
+                }
 
-        attachVideoElementListener(key, viewer);
-    }
+                if (industrySelectorContainer) {
+                    teaserTitle = industrySelectorContainer.querySelector('#selectedOption');
+                }
 
-    function attachVideoElementListener(key, viewer) {
-        var containerEl = document.getElementById(key);
-        if (!containerEl) return;
+                if (linkName === 'Larry' && linkGrandParent) {
+                    const titleEl = linkGrandParent.querySelector('.cmp-teaser__title')
+                    if (titleEl) {
+                        linkName = titleEl.textContent.trim();
+                    }
+                }
 
-        var existingVideo = containerEl.querySelector('video');
-        if (existingVideo) {
-            bindVideoPlaying(existingVideo, key, viewer);
-            return;
-        }
+                if (linkHref || isRegionDropdown) {
 
-        if (containerEl._dmVideoObserverAttached) return;
-        containerEl._dmVideoObserverAttached = true;
+                    // Link Type
+                    if (this.closest('.teaser')) {
+                        if (this.closest('.teaser').classList.contains('lmn-light-teal-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-secondary-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-deep-orange-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-goldenrod-1')) {
+                            linkType = 'Button';
+                        } else if (this.closest('.teaser').classList.contains('lmn-dark-teal-1')) {
+                            linkType = 'Button';
+                        }
+                    }
 
-        var obs = new MutationObserver(function (mutations) {
-            for (var i = 0; i < mutations.length; i++) {
-                var added = mutations[i].addedNodes;
-                for (var j = 0; j < added.length; j++) {
-                    var node = added[j];
-                    if (node.nodeType !== 1) continue;
-                    var vid = (node.tagName === 'VIDEO') ? node
-                            : node.querySelector && node.querySelector('video');
-                    if (vid) {
-                        obs.disconnect();
-                        bindVideoPlaying(vid, key, viewer);
+                    if (parent.classList.contains('button') || parent.classList.contains('cmp-button') || parent.classList.contains('industry-selector-cta-containers')) {
+                        linkType = 'Button';
+                    }
+
+                    // Link location
+                    if (this.getAttribute('am-region')) {
+                        linkLocation = this.getAttribute('am-region');
+                    } else if (parent.getAttribute('am-region')) {
+                        linkLocation = parent.getAttribute('am-region');
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') !== 'Link to Homepage') {
+                        linkLocation = 'navigation bar';
+                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') == 'Link to Homepage') {
+                        linkLocation = 'header';
+                    } else if (this.closest('.cmp-experiencefragment--legal-footer') || this.closest('.cmp-experiencefragment--enterprise-portfolio-footer')) {
+                        linkLocation = 'footer';
+                    } else if (parentIDAtt && grandParentIDAtt && teaserTitle) {
+                        linkLocation = teaserTitle.textContent.trim();
+                    } else if (parentIDAtt && grandParentIDAtt) {
+                        linkLocation = 'main container | ' + grandParentIDAtt + ' | ' + parentIDAtt;
+                    }
+
+                    if (industrySelectorContainer && industrySelectorTitle?.textContent) {
+                        linkLocation = industrySelectorTitle.textContent.trim();
+                    }
+
+                    // Add name for footer links
+                    if (linkHref.includes('twitter') || linkHref.includes('x.com')) {
+                        linkName = 'Twitter/X Platform';
+                    } else if (linkHref.includes('linkedin')) {
+                        linkName = 'LinkedIn';
+                    } else if (linkHref.includes('facebook')) {
+                        linkName = 'Facebook';
+                    } else if (linkHref.includes('youtube')) {
+                        linkName = 'YouTube';
+                    }
+
+                    // Build full destination URL
+                    let fullDestination = "NA";
+                    if (linkHref) {
+                        try {
+                            fullDestination = new URL(linkHref, window.location.origin).href;
+                        } catch (e) {
+                            fullDestination = linkHref;
+                        }
+                    }
+
+                   
+
+                    if (cdpHero) {
+                        let heroTitle = "";
+                        const heroLayer = cdpHero.getAttribute("data-cmp-data-layer");
+                        if (heroLayer) {
+                            try {
+                                const parsed = JSON.parse(heroLayer);
+                                const key = Object.keys(parsed)[0];
+                                heroTitle = parsed[key]?.title || "";
+                            } catch (e) {
+                                console.error("CDP Hero data layer parse error", e);
+                            }
+                        }
+
+                        if (!heroTitle) {
+                            heroTitle = cdpHero.querySelector(".cdp-hero__title")?.textContent.trim() || "";
+                        }
+
+                        const isDownload = this.classList.contains("cdp-hero__download-btn");
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: linkName.toLowerCase(),
+                                clickDestination: isDownload ? "" : fullDestination,
+                                clickLocation: "body",
+                                clickType: isDownload ? "download" : linkClickType.toLowerCase(),
+                                clickContext: heroTitle.toLowerCase(),
+                                componentContext: "content detail hero"
+                            }
+                        });
+
                         return;
                     }
-                }
-            }
-        });
-        obs.observe(containerEl, { childList: true, subtree: true });
-    }
 
-   function bindVideoPlaying(videoEl, key, viewer) {
-    if (videoEl._dmPlayingAttached) return;
-    videoEl._dmPlayingAttached = true;
+                    if(marquee){
+                        const component = marquee.querySelector('.marquee_messageWrapper');
+                        const primaryText = component?.querySelector('.marquee-primary_message')?.textContent?.trim() || '';
+                        const marqueeCtaLink = component?.querySelector(".marquee_cta")?.getAttribute("href");
+                        let fullDestination = "NA";
+                        if (marqueeCtaLink) {
+                            try {
+                                fullDestination = new URL(marqueeCtaLink, window.location.origin).href;
+                            } catch (e) {
+                                fullDestination = marqueeCtaLink;
+                            }
+                        }
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: (this.textContent || '').trim().toLowerCase(),
+                                clickDestination: fullDestination,
+                                clickLocation: 'header',
+                                clickType: 'other',
+                                clickContext: primaryText.toLowerCase(),
+                                componentContext: "marquee",
+                            }
+                        })
+                        return;
+                    }
 
-    videoEl.autoplay = false;
-    videoEl.removeAttribute('autoplay');
+                    // -----------------------------
+                    // Product Solution Hero
+                    // -----------------------------
+                    if (productHero) {
+                        let heroTitle = "";
+                        const heroLayer = productHero.getAttribute("data-cmp-data-layer");
 
-    videoEl._autoBlocked = false;
+                        if (heroLayer) {
+                            try {
+                                const parsed = JSON.parse(heroLayer);
+                                const key = Object.keys(parsed)[0];
+                                heroTitle = parsed[key]?.title || "";
+                            } catch (e) {
+                                console.error("Product Hero data layer parse error", e);
+                            }
+                        }
 
-    function handleAutoPlayBlock() {
-        if (!videoEl._autoBlocked && videoEl.currentTime < 0.5) {
-            videoEl.pause();
-            videoEl.currentTime = 0;
-            videoEl._autoBlocked = true;
-            videoEl.removeEventListener('playing', handleAutoPlayBlock);
-        }
-    }
+                        // Fallback to the DOM only if the JSON lookup came back empty
+                        if (!heroTitle) {
+                            heroTitle = productHero.querySelector(".pdp-hero__title")?.textContent.trim() || "";
+                        }
 
-    videoEl.addEventListener('playing', handleAutoPlayBlock);
+                        const isDownload = this.classList.contains("pdf-download");
 
-    function onPlaying() {
-        var pos = videoEl.currentTime || 0;
-        onViewerPlay(key, viewer, pos);
-    }
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.linkClick,
+                            linkDetails: {
+                                clickName: linkName.toLowerCase(),
+                                clickDestination: isDownload ? "" : fullDestination,
+                                clickLocation: "body",
+                                clickType: isDownload ? "download" : linkClickType.toLowerCase(),
+                                clickContext: heroTitle.toLowerCase(),
+                                componentContext: "product-solution hero"
+                            }
+                        });
 
-    videoEl.addEventListener('playing', onPlaying, { once: true });
-}
+                        return;
+                    }
 
-    function reattachVideoListener(key, viewer) {
-        var containerEl = document.getElementById(key);
-        if (!containerEl) return;
-        var videoEl = containerEl._dmVideoEl || containerEl.querySelector('video');
-        if (!videoEl) {
-            containerEl._dmVideoObserverAttached = false;
-            attachVideoElementListener(key, viewer);
-            return;
-        }
-        videoEl._dmPlayingAttached = false;
-        bindVideoPlaying(videoEl, key, viewer);
-    }
+                    // -----------------------------
+                    // Contact Us Cards
+                    // -----------------------------
+                    if (this.closest(".contact-us-component")) {
+                        return;
+                    }
 
-    function wrapViewerSetData(key, viewer) {
-        if (!viewer || !viewer.setData || viewer._setDataWrapped) return;
+                    // Download links
+                    if (linkHref.match("assets.lumen.com")) {
 
-        var orig = viewer.setData;
-        viewer.setData = function (e) {
-            if (e && isRawDmId(e.objID)) {
-                buildAssetMap();
-                var data = getAssetData(e.objID)
-                        || (_lastModalKey && assetMap[_lastModalKey])
-                        || getAssetData(key);
-                if (data) {
-                    e.objID    = data.assetPath;
-                    e.instName = data.assetName;
-                }
-            }
-            return orig.call(this, e);
-        };
-        viewer._setDataWrapped = true;
-    }
+                        // Determine filename
+                        const fileNameArray = linkHref.split('/');
+                        const fileNameArrayComp = fileNameArray.length - 1;
+                        for (let i = 0; i < fileNameArray.length; i++) {
 
-    function wrapViewerInit(key, viewer) {
-        if (!viewer || typeof viewer.init !== 'function' || viewer._initWrapped) return;
+                            if (i == fileNameArrayComp) {
+                                let fileNameTitle = fileNameArray[i].replaceAll('-', ' ').split('?')[0].split(' ');
 
-        var origInit = viewer.init;
-        viewer.init = function () {
-            wrapViewerSetData(key, this);
-            var result = origInit.apply(this, arguments);
-            wrapViewerSetData(key, this);
-            attachPlay0Listener(key, this);
-            return result;
-        };
-        viewer._initWrapped = true;
-    }
+                                for (let i = 0; i < fileNameTitle.length; i++) {
+                                    fileNameTitle[i] = fileNameTitle[i][0].toUpperCase() + fileNameTitle[i].substring(1);
+                                }
 
-    function wrapExistingS7dmUtilsViewers() {
-        var s7dm = window.S7dmUtils;
-        if (!s7dm || typeof s7dm !== 'object') return;
+                                fileNameTitle = fileNameTitle.toString().replaceAll(',', ' ');
+                                downloadDataLayer(fileNameTitle);
+                            }
+                        }
 
-        Object.keys(s7dm).forEach(function (key) {
-            var viewer = s7dm[key];
-            if (!viewer || typeof viewer !== 'object') return;
-            if (typeof viewer.setData !== 'function' && typeof viewer.init !== 'function') return;
+                        // Determine download type
+                        if (linkHref.includes('.pdf')) {
+                            downloadType = 'pdf';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.mp3')) {
+                            downloadType = 'mp3';
+                        } else if (linkHref.includes('.exe')) {
+                            downloadType = 'exe';
+                        } else if (linkHref.includes('.zip')) {
+                            downloadType = 'zip';
+                        } else if (linkHref.includes('.wav')) {
+                            downloadType = 'wav';
+                        } else if (linkHref.includes('.mov')) {
+                            downloadType = 'mov';
+                        } else if (linkHref.includes('.mpg')) {
+                            downloadType = 'mpg';
+                        } else if (linkHref.includes('.avi')) {
+                            downloadType = 'avi';
+                        } else if (linkHref.includes('.wmv')) {
+                            downloadType = 'wmv';
+                        } else if (linkHref.includes('.docx')) {
+                            downloadType = 'docx';
+                        } else if (linkHref.includes('.doc')) {
+                            downloadType = 'doc';
+                        } else if (linkHref.includes('.xlsx')) {
+                            downloadType = 'xlsx';
+                        } else if (linkHref.includes('.xls')) {
+                            downloadType = 'xls';
+                        } else if (linkHref.includes('.pptx')) {
+                            downloadType = 'pptx';
+                        } else if (linkHref.includes('.ppt')) {
+                            downloadType = 'ppt';
+                        }
 
-            buildAssetMap();
-            var el = document.getElementById(key);
-            if (el) {
-                var ap = el.getAttribute('data-asset-path');
-                var an = el.getAttribute('data-asset-name');
-                if (ap) {
-                    assetMap[key] = { assetPath: ap, assetName: an || ap.split('/').pop() };
-                }
-            }
+                        function downloadDataLayer(title) {
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.fileDownload,
+                                linkDetails: {
+                                    clickName: linkName,
+                                    clickType: 'download',
+                                    clickDestination: linkHref,
+                                    clickLocation: linkLocation,
+                                    fileDownload: {
+                                        filename: title,
+                                        type: downloadType,
+                                    }
+                                }
+                            });
+                        }
 
-            wrapViewerSetData(key, viewer);
-            wrapViewerInit(key, viewer);
-            attachPlay0Listener(key, viewer);
-        });
-    }
+                        // Normal links
+                    } else {
 
-    function patchS7ViewersConstructors() {
-        if (window.s7viewers) {
-            doWrapConstructors(window.s7viewers);
-            return;
-        }
+                        let componentContextValue;
+                        let clickContextValue;
+                        // -----------------------------
+                        // Media Highlight
+                        // -----------------------------
+                        if (mediaHighlight) {
+                            const mediaTitle = mediaHighlight.querySelector(".title")?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: mediaTitle.toLowerCase(),
+                                    componentContext: "media-highlight"
+                                }
+                            });
 
-        var _s7 = null;
-        try {
-            Object.defineProperty(window, 's7viewers', {
-                configurable: true, enumerable: true,
-                get: function () { return _s7; },
-                set: function (val) {
-                    _s7 = val;
-                    if (val) doWrapConstructors(val);
+                            return;
+                        }
+                        // -----------------------------
+                        // Conversion Banner
+                        // -----------------------------
+                        else if (conversionBanner) {
+                            const conversionBannerTitle = conversionBanner.querySelector(".cmp-conversion-banner__title")?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: conversionBannerTitle.toLowerCase(),
+                                    componentContext: "conversion banner"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Solution Highlight
+                        // -----------------------------
+                        else if (solutionHighlight) {
+                            const solutionContext = solutionHighlight.querySelector(".solution-highlight__label")
+                                ?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: solutionContext.toLowerCase(),
+                                    componentContext: "solution-highlight"
+                                }
+                            });
+
+                            return;
+                        }
+                        // ---------------------------------------------
+                        // Subheader Breadcrumb + CTA
+                        // ---------------------------------------------
+                        else if (subHeader && (breadcrumbLink || subHeaderCTA)) {
+
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "header",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: "subheader",
+                                    componentContext: "subheader-navigation"
+                                }
+                            });
+
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Featured Card
+                        // -----------------------------
+
+                        else if (featuredCard || featuredResourcesSection) {
+ 
+                            let productTitle = "";
+                            let componentContextValue = "featured-card";
+ 
+                            if (featuredCard) {
+                                const featuredCardLayer = featuredCard.getAttribute("data-cmp-data-layer");
+                                let featuredCardInfo = {};
+ 
+                                if (featuredCardLayer) {
+                                    try {
+                                        const parsed = JSON.parse(featuredCardLayer);
+                                        const key = Object.keys(parsed)[0];
+                                        featuredCardInfo = parsed[key] || {};
+                                    } catch (e) {
+                                        console.error("Featured Card data layer parse error", e);
+                                    }
+                                }
+ 
+                                productTitle =
+                                    featuredCardInfo.productTitle ||
+                                    featuredCard.querySelector(".cmp-featured-resources-card__title")
+                                        ?.textContent.trim() ||
+                                    "";
+                                componentContextValue = featuredCardInfo.componentName || "featured-card";
+                            } else {
+                                productTitle =
+                                    featuredResourcesSection.querySelector(".cmp-featured-resources__title")
+                                        ?.textContent.trim() || "";
+                                
+                            }
+ 
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: productTitle.toLowerCase(),
+                                    componentContext: componentContextValue
+                                }
+                            });
+ 
+                            return;
+                        }
+
+                        // -----------------------------
+                        // Featured Resources Table
+                        // -----------------------------
+                        else if (featuredResourcesTable) {
+                            const productHeader = this.closest("th, td");
+
+                            const productTitle =
+                                productHeader
+                                    ?.querySelector(".featuredresourcesTable__productTitle")
+                                    ?.textContent.trim() || "";
+
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: productTitle.toLowerCase(),
+                                    componentContext: "featured resources - table"
+                                }
+                            });
+
+                            return;
+                        }
+
+                         // -----------------------------
+                        // Resources Card
+                        // -----------------------------
+                        else if (resourceCard) {
+                            const resourceCardTitle = resourceCard.querySelector(".resource-card__title")?.textContent.trim() || "";
+                            const clickName = resourceCard.querySelector(".resource-card__cta")?.textContent.trim() || "";
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: clickName.toLowerCase(),
+                                    clickDestination: fullDestination.toLowerCase(),
+                                    clickLocation: "body",
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: resourceCardTitle.toLowerCase(),
+                                    componentContext: "resources card"
+                                }
+                            });
+
+                            return;
+                        }
+
+
+                        else {
+                            // Existing Default
+                            adobeDataLayer.push({
+                                event: adobeDataLayerEvents.component.linkClick,
+                                linkDetails: {
+                                    clickName: linkName.toLowerCase(),
+                                    clickElementType: linkType.toLowerCase(),
+                                    clickDestination: (linkHref || "").toLowerCase(),
+                                    clickLocation: linkLocation.toLowerCase(),
+                                    clickType: linkClickType.toLowerCase(),
+                                    clickContext: clickContextValue,
+                                    componentContext: componentContextValue
+                                }
+                            });
+                        }
+                    }
                 }
             });
-        } catch (e) {
-            var t = setInterval(function () {
-                if (window.s7viewers) { clearInterval(t); doWrapConstructors(window.s7viewers); }
-            }, 20);
         }
-    }
 
-    function doWrapConstructors(s7v) {
-        if (!s7v || s7v._dmConstructorsPatched) return;
-        s7v._dmConstructorsPatched = true;
 
-        var types = [
-            'VideoViewer', 'MixedMediaViewer', 'BasicZoomViewer',
-            'ZoomViewer', 'FlyoutViewer', 'SpinViewer', 'ZoomVerticalViewer'
-        ];
 
-        types.forEach(function (type) {
-            if (typeof s7v[type] !== 'function' || s7v[type]._dmWrappedCtor) return;
+        // ==========================================
+        // LOOKUP FORM – SEARCH + CTA EVENTS
+        // ==========================================
 
-            var Orig = s7v[type];
-            var Wrapped = function (settings) {
-                Orig.call(this, settings);
-                var containerId = settings && settings.containerId;
-                if (!containerId) return;
+        const lookupForms = document.querySelectorAll(".lookup-form");
 
-                buildAssetMap();
-                var el = document.getElementById(containerId);
-                if (el) {
-                    var ap = el.getAttribute('data-asset-path');
-                    var an = el.getAttribute('data-asset-name');
-                    if (ap) {
-                        assetMap[containerId] = { assetPath: ap, assetName: an || ap.split('/').pop() };
-                        _lastModalKey = containerId;
+        lookupForms.forEach(form => {
+
+            const searchBtn = form.querySelector(".lookup-form__search-label");
+            const titleEl = form.querySelector(".lookup-form__title h2");
+            const componentTitle = titleEl?.textContent.trim() || "NA";
+
+            // -----------------------------
+            // SEARCH BUTTON CLICK
+            // -----------------------------
+            if (searchBtn) {
+                searchBtn.addEventListener("click", () => {
+
+                    const clickName = searchBtn.textContent.trim().toLowerCase();
+                    const clickDestination = "NA"; // Search triggers JS, not navigation
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName,
+                            clickDestination,
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: componentTitle.toLowerCase(),
+                            componentContext: "lookup form"
+                        }
+                    });
+                });
+            }
+
+            // -----------------------------
+            // CTA BUTTONS (Primary, Contact, Secondary)
+            // -----------------------------
+            const ctas = form.querySelectorAll(
+                ".lookup-form__primary-cta, .lookup-form__contact-cta, .lookup-form__secondary-cta"
+            );
+
+            ctas.forEach(cta => {
+                cta.addEventListener("click", () => {
+
+                    const clickName = cta.textContent.trim().toLowerCase();
+
+                    // Build full destination URL
+                    let rawHref = cta.getAttribute("href") || cta.getAttribute("data-link") || cta.getAttribute("data-href");
+                    let clickDestination = "NA";
+
+                    if (rawHref) {
+                        try {
+                            clickDestination = new URL(rawHref, window.location.origin).href;
+                        } catch (e) {
+                            clickDestination = rawHref;
+                        }
+                    }
+
+                    // Determine search result context (success or error message)
+                    const successMsg = form.querySelector(".lookup-form__success");
+                    const errorMsg = form.querySelector(".lookup-form__error");
+
+                    let clickContext = componentTitle.toLowerCase();
+
+                    if (successMsg && successMsg.style.display !== "none") {
+                        clickContext = successMsg.textContent.trim().toLowerCase();
+                    } else if (errorMsg && errorMsg.style.display !== "none") {
+                        clickContext = errorMsg.textContent.trim().toLowerCase();
+                    }
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName,
+                            clickDestination,
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext,
+                            componentContext: "lookup form"
+                        }
+                    });
+                });
+            });
+
+        });
+
+
+        // ==========================================
+        // FEATURED RESOURCES – INFORMATION TOGGLE
+        // ==========================================
+        const resourcesInfoComponents = document.querySelectorAll(".featured-resources-information");
+
+        resourcesInfoComponents.forEach(component => {
+            const toggle = component.querySelector(".cmp-featured-resources-info__toggle");
+
+            if (!toggle) return;
+
+            toggle.addEventListener("click", () => {
+
+                const titleEl = component.querySelector(".cmp-featured-resources-info__title");
+                const title = titleEl?.textContent.trim() || "NA";
+
+                // Determine expand/collapse state
+                const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+                let clickState = isExpanded ? "collapse" : "expand";
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: title.toLowerCase(),
+                        clickDestination: "NA",
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: title.toLowerCase(),
+                        componentContext: "featured resources - information",
+                        clickState: clickState
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // CONVERSION BANNER – PRIMARY CTA BUTTON
+        // ==========================================
+        const conversionBanners = document.querySelectorAll(".conversion-banner");
+
+        conversionBanners.forEach(banner => {
+            const primaryCTA = banner.querySelector(".cmp-conversion-banner__cta--primary");
+
+            if (!primaryCTA) return;
+
+            primaryCTA.addEventListener("click", () => {
+
+                const titleEl = banner.querySelector(".cmp-conversion-banner__title");
+                const bannerTitle = titleEl?.textContent.trim() || "NA";
+
+                const clickName = primaryCTA.textContent.trim().toLowerCase();
+
+                // Primary CTA buttons often navigate via JS → no href
+                const clickDestination = "NA";
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: clickName,
+                        clickDestination: clickDestination,
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: bannerTitle.toLowerCase(),
+                        componentContext: "conversion banner"
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // CONTACT US – ACTION CTA
+        // ==========================================
+        if (!window.__contactUsCtaBound) {
+            document.addEventListener("click", function (event) {
+
+                const cta = event.target.closest(
+                    ".contact-us-component .cmp-teaser__action-link, .contact-us-component .chat-cta"
+                );
+
+                if (!cta) return;
+
+                const sectionRoot = cta.closest(".contact-us-component");
+                const sectionTitleEl = sectionRoot?.querySelector(".cmp-teaser__title");
+                const sectionTitle = sectionTitleEl?.textContent.trim() || "NA";
+
+                const clickName = cta.closest(".card")?.querySelector(".cmp-teaser__title")?.textContent?.trim()?.toLowerCase() || "na";
+                const rawHref = cta.getAttribute("href") || cta.getAttribute("data-href") || "";
+                let clickDestination = "NA";
+
+                if (rawHref) {
+                    try {
+                        clickDestination = new URL(rawHref, window.location.origin).href;
+                    } catch (e) {
+                        clickDestination = rawHref;
                     }
                 }
 
-                wrapViewerSetData(containerId, this);
-                wrapViewerInit(containerId, this);
-                attachPlay0Listener(containerId, this);
-            };
-
-            Wrapped.prototype        = Orig.prototype;
-            Wrapped._dmWrappedCtor   = true;
-            Wrapped._origConstructor = Orig;
-            Object.keys(Orig).forEach(function (k) {
-                try { Wrapped[k] = Orig[k]; } catch (e) {}
-            });
-            s7v[type] = Wrapped;
-        });
-    }
-
-    function makeTrackWrapper(origTrack) {
-        var wrapper = function (eventName, data) {
-            if (_replayInProgress) return origTrack.apply(this, arguments);
-
-            if (data && data._dmSynthetic) {
-                delete data._dmSynthetic;
-                return origTrack.apply(this, arguments);
-            }
-
-            if (isPlay0Event(data) && data && isRawDmId(data.objID)) {
-                return;
-            }
-
-            if (data && isRawDmId(data.objID)) {
-                buildAssetMap();
-                var rawId = data.objID;
-                var asset = getAssetData(rawId) || (_lastModalKey && assetMap[_lastModalKey]);
-                if (asset) {
-                    data.objID    = asset.assetPath;
-                    data.instName = asset.assetName;
-                    return origTrack.call(this, eventName, data);
+                let clickType = "other";
+                if (rawHref) {
+                    clickType = (rawHref.startsWith("/content/lumen") || isLumenHost(rawHref)) ? "other" : "exit";
                 }
-                enqueueCall(origTrack, eventName, data, rawId);
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: clickName,
+                        clickDestination: clickDestination.toLowerCase(),
+                        clickLocation: "body",
+                        clickType: clickType,
+                        clickContext: sectionTitle.toLowerCase(),
+                        componentContext: "contact us"
+                    }
+                });
+            });
+
+            window.__contactUsCtaBound = true;
+        }
+
+         // ==========================================
+        // FEATURED RESOURCES CARD – BUTTON CTA
+        // ==========================================
+        const featuredResourceCards = document.querySelectorAll(".cmp-featured-resources-card");
+ 
+        featuredResourceCards.forEach(card => {
+ 
+            const buttonCta = card.querySelector(".featurecard-modal-popup");
+ 
+            if (!buttonCta) return;
+ 
+            buttonCta.addEventListener("click", () => {
+ 
+                const titleEl = card.querySelector(".cmp-featured-resources-card__title");
+                const productTitle = titleEl?.textContent.trim() || "NA";
+ 
+                const clickName = buttonCta.textContent.trim().toLowerCase();
+ 
+                // Modal-triggering buttons navigate via JS → no real href
+                const rawHref = buttonCta.getAttribute("data-href") || "";
+                let clickDestination = "NA";
+ 
+                if (rawHref) {
+                    try {
+                        clickDestination = new URL(rawHref, window.location.origin).href;
+                    } catch (e) {
+                        clickDestination = rawHref;
+                    }
+                }
+ 
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: clickName,
+                        clickDestination: clickDestination.toLowerCase(),
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: productTitle.toLowerCase(),
+                        componentContext: "featured-card"
+                    }
+                });
+            });
+        });
+
+        const featuredResourcesTableAccordionComponents = document.querySelectorAll(".featuredresourcesTable");
+
+        featuredResourcesTableAccordionComponents.forEach((component) => {
+
+            const accordionToggle = component.querySelector(".featuredresourcesTable__accordionToggle");
+
+            if (!accordionToggle) {
                 return;
             }
 
-            return origTrack.apply(this, arguments);
-        };
-        wrapper._dmTrackWrapper = true;
-        wrapper._dmOrigTrack    = origTrack;
-        wrapper._dmWrapVersion  = _trackWrapVersion;
-        return wrapper;
-    }
+            accordionToggle.addEventListener("click", () => {
 
-    function wrapSatelliteTrack(sat) {
-        if (!sat || typeof sat.track !== 'function') return;
-        var candidateOrig = sat.track._dmOrigTrack || sat.track;
-        if (!_origSatTrack) _origSatTrack = candidateOrig;
-        if (sat.track._dmWrapVersion === _trackWrapVersion) return;
-        _trackWrapVersion++;
-        var wrapped = makeTrackWrapper(_origSatTrack);
-        wrapped._dmWrapVersion = _trackWrapVersion;
-        try {
-            sat.track = wrapped;
-        } catch (e) {
-            try {
-                Object.defineProperty(sat, 'track', {
-                    configurable: true, enumerable: true,
-                    get: function () { return wrapped; },
-                    set: function (v) {
-                        if (v && !v._dmTrackWrapper) {
-                            _origSatTrack = v;
-                            wrapped = makeTrackWrapper(v);
+                const title =
+                    component.querySelector(".featuredresourcesTable__title")
+                        ?.textContent.trim() || "NA";
+
+                const isExpanded =
+                    accordionToggle.getAttribute("aria-expanded") === "true";
+
+                const clickState = isExpanded ? "collapse" : "expand";
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: title.toLowerCase(),
+                        clickDestination: "NA",
+                        clickLocation: "body",
+                        clickType: "other",
+                        clickContext: title.toLowerCase(),
+                        componentContext: "featured resources - table",
+                        clickState
+                    }
+                });
+
+            });
+
+        });
+
+        // ==========================================
+        // FEATURED RESOURCES TABLE
+        // ==========================================
+        const resourcesTableComponents = document.querySelectorAll(".featuredresourcesTable");
+ 
+        resourcesTableComponents.forEach(component => {
+ 
+            const componentContextValue = "featured resources - table";
+ 
+            function pushStandardLinkClick(linkName, linkHref, clickContextValue) {
+ 
+                let clickType = "other";
+                let clickDestination = "NA";
+ 
+                if (linkHref) {
+                    clickType = (linkHref.startsWith("/content/lumen") || isLumenHost(linkHref)) ? "other" : "exit";
+                    try {
+                        clickDestination = new URL(linkHref, window.location.origin).href;
+                    } catch (e) {
+                        clickDestination = linkHref;
+                    }
+                }
+ 
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: linkName.toLowerCase(),
+                        clickDestination: clickDestination,
+                        clickLocation: "body",
+                        clickType: clickType,
+                        clickContext: clickContextValue.toLowerCase(),
+                        componentContext: componentContextValue
+                    }
+                });
+            }
+ 
+            component.addEventListener("click", function (event) {
+ 
+                const titleEl = component.querySelector(".featuredresourcesTable__title");
+                const componentTitle = titleEl?.textContent.trim() || "NA";
+                const toggleWrapper = event.target.closest(".featuredresourcesTable__toggleWrapper");
+                if (toggleWrapper) {
+ 
+                    const toggleEl = toggleWrapper.querySelector(".featuredresourcesTable__toggle");
+                    const toggleLabelEl = toggleWrapper.querySelector(".featuredresourcesTable__keyDiffText");
+                    const toggleLabel = toggleLabelEl?.textContent.trim() || "NA";
+ 
+                    const isOn = toggleEl?.getAttribute("data-state") === "true";
+                    const clickState = isOn ? "off" : "on";
+ 
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: toggleLabel.toLowerCase(),
+                            clickDestination: "NA",
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: componentTitle.toLowerCase(),
+                            componentContext: componentContextValue,
+                            clickState: clickState
+                        }
+                    });
+                    return;
+                }
+ 
+                const columnsToggle = event.target.closest(".featuredresourcesTable__ctaText");
+                if (columnsToggle) {
+                    pushStandardLinkClick(columnsToggle.textContent.trim(), null, componentTitle);
+                    return;
+                }
+            });
+ 
+         
+        });
+ 
+
+        // ==============================
+        // SUBHEADER
+        // ==============================
+        const subheaderContainer = document.querySelector(".pdp-subheadernav");
+        if (subheaderContainer) {
+            subheaderContainer.addEventListener("click", function (event) {
+                const item = event.target.closest(".subheadernav-item");
+                if (!item) return;
+
+                const linkName = item.textContent.trim();
+                const dataTarget = item.getAttribute("data-target") || "";
+                const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
+                const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${formattedTarget}` : "NA";
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.linkClick,
+                    linkDetails: {
+                        clickName: linkName.toLowerCase(),
+                        clickDestination: destination,
+                        clickLocation: "header",
+                        clickType: "other",
+                        clickContext: "subheader",
+                        componentContext: "subheader-navigation"
+                    }
+                });
+            });
+
+            // MOBILE dropdown support
+            const mobileDropdown = subheaderContainer.querySelector(".subheadernav-mobile-dropdown");
+            if (mobileDropdown) {
+                mobileDropdown.addEventListener("click", function (event) {
+
+                    const item = event.target.closest(".subheadernav-item");
+                    const dataTarget = item.getAttribute("data-target") || "";
+                    const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
+                    const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
+                    if (!item) return;
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: item.textContent.trim().toLowerCase(),
+                            clickDestination: destination.toLowerCase(),
+                            clickLocation: "header",
+                            clickType: "other",
+                            clickContext: "subheader",
+                            componentContext: "subheader-navigation"
+                        }
+                    });
+                });
+            }
+             }
+
+            // CDP Hero - Share Button
+            // -----------------------------
+            const shareButtons = document.querySelectorAll(".cdp-hero__share-btn");
+
+            shareButtons.forEach((btn) => {
+                btn.addEventListener("click", function () {
+
+                    const cdpHero = btn.closest(".cdp-hero");
+
+                    let heroTitle = "";
+                    const heroLayer = cdpHero?.getAttribute("data-cmp-data-layer");
+
+                    if (heroLayer) {
+                        try {
+                            const parsed = JSON.parse(heroLayer);
+                            const key = Object.keys(parsed)[0];
+                            heroTitle = parsed[key]?.title || "";
+                        } catch (e) {}
+                    }
+
+                    if (!heroTitle) {
+                        heroTitle = cdpHero?.querySelector(".cdp-hero__title")?.textContent.trim() || "";
+                    }
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: "share",
+                            clickDestination: "",
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: heroTitle.toLowerCase(),
+                            componentContext: "content detail hero"
+                        }
+                    });
+                });
+            });
+
+            // -----------------------------
+            // CDP Hero - Anchor Links
+            // -----------------------------
+            const heroAnchorButtons = document.querySelectorAll(".cdp-hero__anchor-link");
+
+            heroAnchorButtons.forEach((btn) => {
+                btn.addEventListener("click", function () {
+
+                    const cdpHero = btn.closest(".cdp-hero");
+                    let heroTitle = "";
+                    const heroLayer = cdpHero?.getAttribute("data-cmp-data-layer");
+
+                    if (heroLayer) {
+                        try {
+                            const parsed = JSON.parse(heroLayer);
+                            const key = Object.keys(parsed)[0];
+                            heroTitle = parsed[key]?.title || "";
+                        } catch (e) {}
+                    }
+
+                    if (!heroTitle) {
+                        heroTitle = cdpHero.querySelector(".cdp-hero__title")?.textContent.trim() || "";
+                    }
+
+                    const target = btn.getAttribute("data-target") || "";
+
+                    const destination = target
+                        ? `${window.location.origin}${window.location.pathname}#${target}`
+                        : "";
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: btn.textContent.trim().toLowerCase(),
+                            clickDestination: destination,
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: heroTitle.toLowerCase(),
+                            componentContext: "content detail hero"
+                        }
+                    });
+                });
+            });
+
+
+
+
+        // Sign In Button
+
+        const signInBtn = document.querySelector('button.signInButton');
+        if (signInBtn) {
+            const signInBtnOverride = signInBtn.getAttribute('data-linkOverride');
+            signInBtn.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents?.component.linkClick,
+                    linkDetails: {
+                        clickName: 'sign in',
+                        clickElementType: 'button',
+                        clickDestination: (signInBtnOverride ? signInBtnOverride : "sign in authentication"),
+                        clickLocation: 'header',
+                        clickType: 'other'
+                    }
+                });
+            });
+        }
+
+        function pushAdobeDataLayerForDropdown(optionName) {
+            const industryEybrowText = document.querySelector('.industry-selector-eybrow-text');
+            optionName = optionName ? optionName.trim() : optionName;
+            adobeDataLayer.push({
+                event: adobeDataLayerEvents.component.linkClick,
+                linkDetails: {
+                    clickDestination: '',
+                    clickLocation: industryEybrowText.textContent.toLocaleLowerCase(),
+                    clickName: 'industry dropdown|' + optionName.toLowerCase(),
+                    clickElementType: 'button',
+                    clickType: 'other'
+                }
+            });
+        }
+
+        // Industry Selector Dropdown Analytics
+        const dropdownHeader = document.getElementById('dropdownHeader');
+        const dropdownList = document.getElementById('dropdownList');
+        if (dropdownHeader && dropdownList) {
+            dropdownHeader.addEventListener('click', function (event) {
+                const isOpen = dropdownHeader.classList.contains('open');
+                pushAdobeDataLayerForDropdown(isOpen ? 'collapse' : 'expand');
+            });
+
+            dropdownList.addEventListener('click', function (event) {
+                pushAdobeDataLayerForDropdown(event.target.textContent);
+            });
+        }
+
+        // ==========================================
+        // ACCORDION (CDP / core cmp-accordion) – CHEVRON TOGGLE
+        // ==========================================
+        const cdpAccordions = document.querySelectorAll(".cmp-accordion");
+
+        cdpAccordions.forEach(accordion => {
+            if (accordion.closest(".cmp-faq-agentic")) return;
+
+            const accordionLayer = accordion.getAttribute("data-cmp-data-layer");
+            let componentName = "accordion";
+
+            if (accordionLayer) {
+                try {
+                    const parsed = JSON.parse(accordionLayer);
+                    const key = Object.keys(parsed)[0];
+                    componentName = parsed[key]?.componentName || componentName;
+                } catch (e) {
+                    console.error("Accordion data layer parse error", e);
+                }
+            }
+
+
+            const buttons = accordion.querySelectorAll(".cmp-accordion__button");
+
+            buttons.forEach(button => {
+
+                if (button.dataset.accordionAnalyticsBound === "true") return;
+
+                button.addEventListener("click", () => {
+
+                    const titleEl = button.querySelector(".cmp-accordion__title");
+                    const title = titleEl?.textContent.trim() || "NA";
+                    const isExpanded = button.getAttribute("aria-expanded") === "true";
+                    const clickState = isExpanded ? "collapse" : "expand";
+
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: title.toLowerCase(),
+                            clickDestination: "NA",
+                            clickLocation: "body",
+                            clickType: "other",
+                            clickContext: 'faq',
+                            clickState: clickState,
+                            componentContext: componentName
+                        }
+                    });
+                });
+
+                button.dataset.accordionAnalyticsBound = "true";
+            });
+        });
+
+        // FAQ Component Analytics
+        const faqButtons = document.querySelectorAll('.cmp-faq-agentic__cta');
+        if (faqButtons.length) {
+            faqButtons.forEach((btn) => {
+                btn.addEventListener('click', function () {
+                    const component = btn.closest('.cmp-faq-agentic');
+                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: (btn.textContent || '').trim().toLowerCase(),
+                            clickDestination: 'NA',
+                            clickLocation: 'body',
+                            clickType: 'other',
+                            clickContext: titleText.toLowerCase(),
+                            componentContext: "faqs",
+                        }
+                    });
+                });
+            });
+        }
+
+        const faqOptions = document.querySelectorAll('.cmp-faq-agentic__right .cmp-accordion__header .cmp-accordion__button');
+        if (faqOptions.length) {
+            faqOptions.forEach((optionBtn) => {
+                optionBtn.addEventListener('click', function () {
+                    const component = this.closest('.cmp-faq-agentic');
+                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
+                    const wasExpanded = this.getAttribute('aria-expanded') === 'true';
+                    adobeDataLayer.push({
+                        event: adobeDataLayerEvents.component.linkClick,
+                        linkDetails: {
+                            clickName: (this.textContent || '').trim().toLowerCase(),
+                            clickDestination: 'NA',
+                            clickLocation: 'body',
+                            clickType: 'other',
+                            clickContext: titleText.toLowerCase(),
+                            componentContext: "faqs",
+                            clickState: wasExpanded ? "collapse" : "expand",
+                        }
+                    });
+                }, true);
+            });
+        }
+
+        // Chat Transcript
+        const chatSaveTranscript = document.querySelector('#downloadBtn');
+        if (chatSaveTranscript) {
+            chatSaveTranscript.addEventListener('click', function (event) {
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.fileDownload,
+                    linkDetails: {
+                        clickName: 'save transcript',
+                        clickType: 'download',
+                        clickDestination: 'transcript.txt',
+                        clickLocation: 'lumen chat dialog box',
+                        fileDownload: {
+                            filename: 'transcript of chat session',
+                            type: 'txt'
                         }
                     }
                 });
-            } catch (e2) {}
-        }
-    }
-
-    function installSatelliteTrap() {
-        if (window._satellite) {
-            wrapSatelliteTrack(window._satellite);
-            patchDmViewersFn(window._satellite);
-            tryGetAndPatchDmInst(window._satellite);
-            return;
+            });
         }
 
-        var _sat = null, trapped = false;
-        try {
-            Object.defineProperty(window, '_satellite', {
-                configurable: true, enumerable: true,
-                get: function () { return _sat; },
-                set: function (val) {
-                    _sat = val;
-                    if (val && !trapped) {
-                        trapped = true;
-                        buildAssetMap();
-                        wrapSatelliteTrack(val);
-                        patchDmViewersFn(val);
-                        tryGetAndPatchDmInst(val);
+        // Forms
+        function trackForms() {
+            try {
+                MktoForms2.whenReady(function (form) {
+                    const fields = document.querySelectorAll('.mktoField');
+                    const pageTitle = document.querySelector('title') ? document.querySelector('title').textContent : 'Page Title Unavailable';
+                    const formID = form.getId() ? 'mktoForm_' + form.getId().toString() : 'Form ID Unavailable';
+                    let counter = 1;
+
+                    // Form Start
+                    for (let i = 0; i < fields.length; i++) {
+                        if (fields[i]?.type !== 'hidden') {
+                            fields[i].addEventListener('focus', function (event) {
+                                if (counter == 1) { // Fire only once per page load
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formStart,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID
+                                        }
+                                    });
+                                    counter++;
+                                }
+                            });
+                        }
                     }
-                }
-            });
-        } catch (e) {}
 
-        var fast = setInterval(function () {
-            if (trapped) { clearInterval(fast); return; }
-            if (window._satellite) {
-                clearInterval(fast); trapped = true;
-                buildAssetMap();
-                wrapSatelliteTrack(window._satellite);
-                patchDmViewersFn(window._satellite);
-                tryGetAndPatchDmInst(window._satellite);
-            }
-        }, 50);
+                    // Form Error
+                    form.onValidate(function (nativeValid) {
+                        if (!nativeValid) {
+                            setTimeout(function () { // Wait half a second so that the mktoErrorMsg html will be added first
+                                let mktoError = document.querySelector('.mktoErrorMsg');
+                                if (mktoError) {
+                                    let mktoErrorMsg = mktoError.textContent;
+                                    let mktoErrorField = mktoError.getAttribute('id');
+                                    adobeDataLayer.push({
+                                        event: adobeDataLayerEvents.component.formError,
+                                        details: {
+                                            formName: pageTitle + ': ' + formID,
+                                            formID: formID,
+                                            formError: mktoErrorField + ': ' + mktoErrorMsg
+                                        }
+                                    });
+                                }
+                            }, 500);
+                        }
+                    });
 
-        var slowCount = 0;
-        var slow = setInterval(function () {
-            if (++slowCount > 50) { clearInterval(slow); return; }
-            if (window._satellite) {
-                wrapSatelliteTrack(window._satellite);
-                patchDmViewersFn(window._satellite);
-            }
-        }, 200);
-    }
-
-    function patchDmInst(dmInst) {
-        if (!dmInst) return;
-        try {
-            var existing = dmInst.getRegisteredViewers();
-            Object.keys(existing).forEach(function (k) {
-                if (k !== 'COMMON_TRACK') {
-                    wrapViewerSetData(k, existing[k]);
-                    attachPlay0Listener(k, existing[k]);
-                }
-            });
-        } catch (e) {}
-
-        ['registerViewer', 'addViewer'].forEach(function (method) {
-            if (typeof dmInst[method] !== 'function' || dmInst[method]._dmWrapped) return;
-            var orig = dmInst[method];
-            dmInst[method] = function (key, viewer) {
-                if (key && key !== 'COMMON_TRACK') {
-                    wrapViewerSetData(key, viewer);
-                    wrapViewerInit(key, viewer);
-                    attachPlay0Listener(key, viewer);
-                }
-                return orig.apply(this, arguments);
-            };
-            dmInst[method]._dmWrapped = true;
-        });
-    }
-
-    var _lastDmViewersFnRef = null;
-
-    function patchDmViewersFn(sat) {
-        if (!sat || typeof sat._dmviewers_v001 !== 'function') return false;
-        var currentFn = sat._dmviewers_v001;
-        if (currentFn._dmProxied && currentFn === _lastDmViewersFnRef) return true;
-        var origFn = currentFn._dmProxied ? (currentFn._origFn || currentFn) : currentFn;
-        var patchedFn = function () {
-            var dmInst = origFn.apply(this, arguments);
-            if (dmInst) patchDmInst(dmInst);
-            return dmInst;
-        };
-        patchedFn._dmProxied = true;
-        patchedFn._origFn    = origFn;
-        try {
-            sat._dmviewers_v001 = patchedFn;
-            _lastDmViewersFnRef = patchedFn;
-            return true;
-        } catch (e) { return false; }
-    }
-
-    function tryGetAndPatchDmInst(sat) {
-        if (!sat || typeof sat._dmviewers_v001 !== 'function') return;
-        try { var d = sat._dmviewers_v001(); if (d) patchDmInst(d); } catch (e) {}
-    }
-
-    function enqueueCall(origTrack, eventName, data, rawId) {
-        var q = { origTrack: origTrack, eventName: eventName, data: data, rawId: rawId, fired: false };
-        _pendingQueue.push(q);
-        var elapsed = 0, maxWait = 2000, step = 50;
-        var t = setInterval(function () {
-            if (q.fired) { clearInterval(t); return; }
-            elapsed += step;
-            buildAssetMap();
-            var asset = getAssetData(rawId) || (_lastModalKey && assetMap[_lastModalKey]);
-            if (asset || elapsed >= maxWait) {
-                clearInterval(t);
-                if (q.fired) return;
-                q.fired = true;
-                _pendingQueue = _pendingQueue.filter(function (x) { return x !== q; });
-                if (asset) {
-                    data.objID    = asset.assetPath;
-                    data.instName = asset.assetName;
-                }
-                _replayInProgress = true;
-                try { origTrack.call(null, eventName, data); }
-                finally { _replayInProgress = false; }
-            }
-        }, step);
-    }
-
-    function flushPendingQueue() {
-        var remaining = [];
-        _pendingQueue.forEach(function (q) {
-            if (q.fired) return;
-            var asset = getAssetData(q.rawId) || (_lastModalKey && assetMap[_lastModalKey]);
-            if (asset) {
-                q.fired = true;
-                q.data.objID    = asset.assetPath;
-                q.data.instName = asset.assetName;
-                _replayInProgress = true;
-                try { q.origTrack.call(null, q.eventName, q.data); }
-                finally { _replayInProgress = false; }
-            } else { remaining.push(q); }
-        });
-        _pendingQueue = remaining;
-    }
-
-    function onModalOpen(modalEl) {
-        buildAssetMap();
-        var firstKey = null;
-        modalEl.querySelectorAll('[data-asset-path]').forEach(function (el) {
-            var id = el.getAttribute('id');
-            var ap = el.getAttribute('data-asset-path');
-            var an = el.getAttribute('data-asset-name');
-            if (id && ap) {
-                assetMap[id] = { assetPath: ap, assetName: an || ap.split('/').pop() };
-                if (!firstKey) firstKey = id;
-            }
-        });
-
-        if (firstKey) {
-            _lastModalKey = firstKey;
-            resetPlay0(firstKey);
-            var s7dm = window.S7dmUtils;
-            var viewer = s7dm && s7dm[firstKey];
-            if (viewer) reattachVideoListener(firstKey, viewer);
-        }
-
-        wrapExistingS7dmUtilsViewers();
-        flushPendingQueue();
-
-        var sat = window._satellite;
-        if (sat) {
-            wrapSatelliteTrack(sat);
-            patchDmViewersFn(sat);
-            tryGetAndPatchDmInst(sat);
-        }
-    }
-
-    function bindModalListeners() {
-        document.addEventListener('click', function (e) {
-            var trigger = e.target.closest
-                ? e.target.closest(
-                    '.infomodal-link-tag, .infomodal-link, [data-modal], ' +
-                    '.video-overlay, .peek-modal a, [data-toggle="modal"]'
-                  )
-                : null;
-            if (!trigger) return;
-
-            var modal   = null;
-            var modalId = trigger.getAttribute('data-modal');
-            if (modalId) {
-                modal = document.getElementById(modalId)
-                     || document.getElementById(modalId.replace('#', ''));
-            }
-            if (!modal) {
-                var wrap = trigger.closest('.infomodal');
-                if (wrap) modal = wrap.querySelector('.infomodal-modal');
-            }
-            if (!modal) return;
-
-            onModalOpen(modal);
-        }, true);
-    }
-
-    function observeModalVisibility() {
-        function attachObserver(el) {
-            if (el._dmClassObserved) return;
-            el._dmClassObserved = true;
-            new MutationObserver(function (mutations) {
-                mutations.forEach(function (m) {
-                    if (m.attributeName !== 'class') return;
-                    if (m.target.classList.contains('show')) onModalOpen(m.target);
+                    // Form Submit
+                    form.onSuccess(function (valsObj, destStr) {
+                        const email = valsObj?.Email || valsObj?.email || valsObj?.userEmail || '';
+                        adobeDataLayer.push({
+                            event: adobeDataLayerEvents.component.formSubmit,
+                            details: {
+                                formName: pageTitle + ': ' + formID,
+                                formID: formID,
+                                emailID: email
+                            }
+                        });
+                    });
                 });
-            }).observe(el, { attributes: true, attributeFilter: ['class'] });
+            }
+            catch (e) {
+                console.log('Error in trackForms: ', e);
+            }
         }
-        document.querySelectorAll('.infomodal-modal, .modal').forEach(attachObserver);
-        new MutationObserver(function (mutations) {
-            mutations.forEach(function (m) {
-                m.addedNodes.forEach(function (node) {
-                    if (node.nodeType !== 1) return;
-                    if (node.classList &&
-                        (node.classList.contains('infomodal-modal') || node.classList.contains('modal'))) {
-                        attachObserver(node);
-                    }
-                    if (node.querySelectorAll) {
-                        node.querySelectorAll('.infomodal-modal, .modal').forEach(attachObserver);
+
+        if (typeof MktoForms2 !== 'undefined') {
+            trackForms();
+        } else {
+            window.addEventListener("mkto-script-loaded", (e) => {
+                trackForms();
+            }, false,
+            );
+        }
+
+        // Chat
+        const chatLink = document.querySelector("a[href='#chat']");
+        let chatClickName = 'Chat';
+        let chatClickType = 'Button';
+        let chatClickDestination = 'launchChat';
+        let newUser = 'new';
+
+        if (chatLink) {
+            chatLink.addEventListener('click', function (event) {
+                chatClickName = chatLink.textContent.trim();
+                chatClickType = 'Link';
+                chatClickDestination = '#chat';
+            });
+        }
+
+        // Chat Initiated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationStarted", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatInitiated,
+                    linkDetails: {
+                        clickName: chatClickName,
+                        clickType: chatClickType,
+                        clickDestination: chatClickDestination,
+                        clickLocation: 'main container'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
                     }
                 });
-            });
-        }).observe(document.body, { childList: true, subtree: true });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation started.", e);
+            }
+        });
+
+        // Chat Terminated event for Salesforce Embedded Messaging
+        window.addEventListener("onEmbeddedMessagingConversationClosed", function (event) {
+            try {
+                window.adobeDataLayer = window.adobeDataLayer || [];
+                let conversationId = event?.detail?.conversationId || "";
+
+                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
+                    newUser = 'Registered member';
+                }
+
+                adobeDataLayer.push({
+                    event: adobeDataLayerEvents.component.chatTerminated,
+                    linkDetails: {
+                        clickName: 'end chat',
+                        clickType: 'user',
+                        clickLocation: 'chat'
+                    },
+                    chat: {
+                        sessionID: conversationId
+                    },
+                    user: {
+                        type: newUser
+                    }
+                });
+            } catch (e) {
+                console.log("[AEP Utils] - Error handling chat conversation closed.", e);
+            }
+        });
     }
-
-    var MAX_RETRIES = 20, RETRY_DELAY = 500, attempts = 0;
-
-    function tryWrapViewers() {
-        attempts++;
-        buildAssetMap();
-        wrapExistingS7dmUtilsViewers();
-        var sat = window._satellite;
-        if (sat) {
-            wrapSatelliteTrack(sat);
-            patchDmViewersFn(sat);
-            tryGetAndPatchDmInst(sat);
-        }
-        if (attempts < MAX_RETRIES) setTimeout(tryWrapViewers, RETRY_DELAY);
-    }
-
-    function init() {
-        buildAssetMap();
-        wrapExistingS7dmUtilsViewers();
-        var sat = window._satellite;
-        if (sat) {
-            wrapSatelliteTrack(sat);
-            patchDmViewersFn(sat);
-            tryGetAndPatchDmInst(sat);
-        }
-        bindModalListeners();
-        observeModalVisibility();
-        setTimeout(tryWrapViewers, 800);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-})();
+}());
