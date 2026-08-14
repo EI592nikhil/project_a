@@ -1,2 +1,4 @@
 Since this component is being used in both PDP and CDP, should the changes for displaying the dynamic count value be implemented only for the DD Diary template, or should they be applied across all PDP and CDP pages as well?
-As this is a new feature, please confirm the expected scope.
+As this is a new feature, please confirm the expected scope.E@5TPg6BqizhSM/
+
+Aug@8D$pZ9GaAZ
