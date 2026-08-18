@@ -1,6 +1,3 @@
-Since this component is being used in both PDP and CDP, should the changes for displaying the dynamic count value be implemented only for the DD Diary template, or should they be applied across all PDP and CDP pages as well?
-As this is a new feature, please confirm the expected scope.E@5TPg6BqizhSM/
+I checked the Data Layer values from my end and compared them with the requirements mentioned in the ticket.
 
-Aug@8D$pZ9GaAZ could you please update the Description, Requirements, and Acceptance Criteria for this ticket before I start the implementation? This will help me make sure the FE implementation matches the intended requirement. Thanks!
-
- as discussed with Gokul, I understand that we need to implement the scroll effect for this ticket. However, the exact scroll behavior and requirements are not clear yet. Could you please update the Description, Requirements, and Acceptance Criteria so I can proceed with the implementation accordingly? Thanks!
+I have attached the screenshot for reference. Please confirm if anything needs to be changed or implemented from our side.
