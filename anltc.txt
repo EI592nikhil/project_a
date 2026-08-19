@@ -1,3 +1,7 @@
-I checked the Data Layer values from my end and compared them with the requirements mentioned in the ticket.
+I checked, and it is showing 21px padding for the top/bottom and 16px padding for the left/right.
 
-I have attached the screenshot for reference. Please confirm if anything needs to be changed or implemented from our side.
+For reference, please find the attached screenshots for mobile and tablet.
+
+Test URL: abc.com
+
+For the second issue, please provide the credentials for a logged-in user so that I can log in and verify the issue from my end.
