@@ -1,7 +1,12 @@
-I checked, and it is showing 21px padding for the top/bottom and 16px padding for the left/right.
+Backend support is required for this ticket to achieve the expected functionality. 
+Once the backend part is completed, we’ll proceed with the frontend work.
 
-For reference, please find the attached screenshots for mobile and tablet.
+I’ve verified this, and when we manually author an external URL, the icon after the CTA is already updated as expected.
 
-Test URL: abc.com
+Test URL: ab.com
 
-For the second issue, please provide the credentials for a logged-in user so that I can log in and verify the issue from my end.
+Please find the attached screenshot for reference.
+
+Please check and confirm if anything else is needed from our side or if any further changes are required.
+
+
