@@ -1,5 +1,4 @@
-Backend support is required for this ticket to achieve the expected functionality. 
-Once the backend part is completed, we’ll proceed with the frontend work.
+I’ve verified and analyzed the ticket, and backend support is required to achieve the expected functionality. Once the backend part is completed, we’ll proceed with the frontend work.
 
 I’ve verified this, and when we manually author an external URL, the icon after the CTA is already updated as expected.
 
