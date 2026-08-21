@@ -1,3 +1,8 @@
-I think we can keep the current behavior as it is. After login, the additional space is expected since the username is displayed as text, so the space will naturally adjust based on the name length.
-I’ve already removed the wrapper padding to minimize the spacing. Setting a fixed width wouldn’t be ideal, as it could affect the responsiveness of the layout and make it less flexible.
-Also, as shown in the screenshot, the dropdown icon is rendered right after the username, so its position will naturally shift depending on the username length. I’d suggest keeping the current behavior to ensure the layout remains flexible and consistent.
+            <div class="subheadernav-links">
+                <a class="subheadernav-link secondary" data-sly-test="${model.showLink1}" href="${model.linkUrl}" target="${model.linkTarget}" >
+                    ${model.linkText}
+                </a>
+                <a class="subheadernav-link primary" data-sly-test="${model.showLink2}" href="${model.secondLinkUrl}" target="${model.secondLinkTarget}" >
+                    ${model.secondLinkText}
+                </a>
+			</div>
