@@ -1,11 +1,3 @@
-I’ve verified and analyzed the ticket, and backend support is required to achieve the expected functionality. Once the backend part is completed, we’ll proceed with the frontend work.
-
-I’ve verified this, and when we manually author an external URL, the icon after the CTA is already updated as expected.
-
-Test URL: ab.com
-
-Please find the attached screenshot for reference.
-
-Please check and confirm if anything else is needed from our side or if any further changes are required.
-
-
+I think we can keep the current behavior as it is. After login, the additional space is expected since the username is displayed as text, so the space will naturally adjust based on the name length.
+I’ve already removed the wrapper padding to minimize the spacing. Setting a fixed width wouldn’t be ideal, as it could affect the responsiveness of the layout and make it less flexible.
+Also, as shown in the screenshot, the dropdown icon is rendered right after the username, so its position will naturally shift depending on the username length. I’d suggest keeping the current behavior to ensure the layout remains flexible and consistent.
