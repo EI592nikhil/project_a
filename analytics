@@ -1,1360 +1,594 @@
-(function () {
-    "use strict";
+import { performSearch, saveSearchTerm } from '../searchboxSuggestions/_searchboxSuggestions';
 
-    function isLumenHost(href) {
-        // Treat relative URLs as internal; absolute URLs are checked by hostname.
-        if (!href || href.startsWith("/")) {
-            return true;
+export default class HeaderNavigation {
+  private root: HTMLElement;
+
+  constructor(root: HTMLElement) {
+    this.root = root;
+    this.init();
+  }
+
+  init() {
+    const toggle = this.root.querySelector('.header-nav__toggle') as HTMLElement | null;
+    const header = this.root.querySelector('.header-nav') as HTMLElement | null;
+    // .header-nav__chat-mobile always also carries .header-nav__search-mobile
+    // (see headerNavigation.html), and .header-nav__search-icon is just the
+    // decorative aria-hidden span nested inside it - so this one class covers
+    // both the plain-search-link and chat-button markup variants.
+    const searchTrigger = this.root.querySelector('.header-nav__search-mobile') as HTMLElement | null;
+
+    if (!toggle || !header) return;
+
+    const toggleEls = this.root.querySelectorAll('.cmp-onelinknav__toggle, .cmp-onelinknav-v2__toggle');
+
+    // Current region: prefer the locale whose data-onelink-path matches the page
+    // URL (same containment check as the footer's setCurrentRegion), then any
+    // server-marked .active item, then the first authored locale.
+    // Each onelinknav "instance" (desktop copy + mobile-panel copy) is matched
+    // independently, since they're separate DOM subtrees with their own
+    // toggle/popover/list markup.
+    toggleEls.forEach((toggleEl) => {
+      const instance = (toggleEl as HTMLElement).closest('.cmp-onelinknav, .cmp-onelinknav-v2') as HTMLElement | null;
+      if (!instance) return;
+
+      const urlMatchedItem = Array.from(
+        instance.querySelectorAll('.cmp-onelinknav__list-item, .cmp-onelinknav-v2__list-item'),
+      ).find((item) => {
+        const path = item
+          .querySelector('.cmp-onelinknav__lang-link, .cmp-onelinknav-v2__lang-link')
+          ?.getAttribute('data-onelink-path');
+        return !!path && window.location.href.indexOf(path) > -1;
+      }) as HTMLElement | undefined;
+
+      const activeItem = instance.querySelector('.cmp-onelinknav__list-item.active, .cmp-onelinknav-v2__list-item.active') as HTMLElement | null;
+      const fallbackItem = instance.querySelector('.cmp-onelinknav__list-item, .cmp-onelinknav-v2__list-item') as HTMLElement | null;
+      const selectedItem = urlMatchedItem ?? activeItem ?? fallbackItem;
+
+      if (selectedItem) {
+        selectedItem.classList.add('active');
+
+        const regionText = selectedItem.querySelector('.cmp-onelinknav__lang-link, .cmp-onelinknav-v2__lang-link')?.textContent?.trim();
+        const flagSrc = selectedItem.querySelector('img')?.getAttribute('src');
+
+        if (regionText) this.injectRegionLabel(toggleEl as HTMLElement, regionText);
+        if (flagSrc) this.injectRegionFlag(toggleEl as HTMLElement, flagSrc);
+      }
+    });
+
+    this.syncAccountBlockPosition();
+    this.syncChatUIPosition();
+    this.bindOnelinkDropdownToggle();
+    this.bindSearchTrigger(searchTrigger, header, toggle);
+    this.bindSearchIconTrigger();
+    this.setHeaderHeightVar();
+    this.bindStickyHeader();
+    this.bindSignInDropdown();
+
+    // Mark the main-nav item matching the current page as active
+    this.root.querySelectorAll('.main-nav ul li').forEach((item) => {
+      const link = item.querySelector('a') as HTMLAnchorElement | null;
+      if (link && link.pathname === window.location.pathname) {
+        item.classList.add('active');
+      }
+    });
+
+    const onelinkItems = this.root.querySelectorAll('.cmp-onelinknav__list-item, .cmp-onelinknav-v2__list-item');
+
+    onelinkItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        const instance = (item as HTMLElement).closest('.cmp-onelinknav, .cmp-onelinknav-v2') as HTMLElement | null;
+        const toggleEl = instance?.querySelector('.cmp-onelinknav__toggle, .cmp-onelinknav-v2__toggle') as HTMLElement | null;
+        if (!toggleEl) return;
+
+        instance?.querySelectorAll('.cmp-onelinknav__list-item.active, .cmp-onelinknav-v2__list-item.active')
+          .forEach((el) => el.classList.remove('active'));
+        item.classList.add('active');
+
+        const langLink = item.querySelector('.cmp-onelinknav__lang-link, .cmp-onelinknav-v2__lang-link');
+        const regionText = langLink?.textContent?.trim();
+        const flagSrc = item.querySelector('img')?.getAttribute('src');
+
+        if (regionText) this.injectRegionLabel(toggleEl, regionText);
+        if (flagSrc) this.injectRegionFlag(toggleEl, flagSrc);
+
+        const localePath = langLink?.getAttribute('data-onelink-path');
+        if (localePath) this.navigateToLocale(localePath);
+      });
+    });
+
+    // ------------------------------------------------------------
+    // Toggle listeners
+    // ------------------------------------------------------------
+    const activate = (e: Event) => {
+      e.stopPropagation();
+      const isOpen = header.classList.toggle('is-open');
+      this.root.classList.toggle('is-open', isOpen);
+      toggle.setAttribute('aria-expanded', String(isOpen));
+
+      if (!isOpen) this.closeAllOnelinkPopovers(header);
+    };
+
+    toggle.addEventListener('click', activate);
+    toggle.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate(e);
+      }
+    });
+
+    // click outside closes panel and dropdown
+    document.addEventListener('click', (e) => {
+      const target = e.target as Node;
+      const insideHeader = header.contains(target);
+      const dropdownElements = Array.from(this.root.querySelectorAll('.cmp-onelinknav__toggle, .cmp-onelinknav-v2__toggle, .cmp-onelinknav__popover, .cmp-onelinknav-v2__popover'));
+      const insideDropdown = dropdownElements.some((el) => el.contains(target));
+
+      if (!insideHeader && !insideDropdown && !toggle.contains(target)) {
+        header.classList.remove('is-open');
+        this.root.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        this.closeAllOnelinkPopovers(this.root);
+        this.closeSignInDropdown();
+
+      }
+    });
+
+    // ESC closes the mobile panel and dropdown
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        header.classList.remove('is-open');
+        this.root.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        this.closeAllOnelinkPopovers(this.root);
+        this.closeSignInDropdown();
+
+      }
+    });
+
+    // reset state when resizing past breakpoint
+    let lastIsMobile = window.matchMedia('(max-width: 1199px)').matches;
+    window.addEventListener('resize', () => {
+      const isMobile = window.matchMedia('(max-width: 1199px)').matches;
+      if (lastIsMobile && !isMobile) {
+        header.classList.remove('is-open');
+        this.root.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+      lastIsMobile = isMobile;
+      this.syncAccountBlockPosition();
+      this.syncChatUIPosition();
+    });
+  }
+
+  // Keeps the spacer height in sync with the header's real rendered height
+  private setHeaderHeightVar() {
+    const wrapper = this.root as HTMLElement; // .cmp-header-navigation
+    const header = wrapper.querySelector('.header-nav') as HTMLElement | null;
+
+    const update = () => {
+      const height = header ? header.getBoundingClientRect().height : wrapper.offsetHeight;
+      wrapper.style.setProperty('--header-nav-height', `${height}px`);
+    };
+
+    update();
+    window.addEventListener('resize', update);
+    this.root.addEventListener('transitionend', update);
+  }
+
+  // Sticky while scrolling up, hidden while scrolling down —
+  // same corrected direction logic as Nav2's stickyNavFunction.
+  private bindStickyHeader() {
+    const wrapper = this.root as HTMLElement;            // .cmp-header-navigation
+    const header = this.root.querySelector('.header-nav') as HTMLElement | null;
+    if (!header) return;
+
+    const STICKY_THRESHOLD = 10;
+    let prevScrollY = window.pageYOffset;
+
+    const onScroll = () => {
+      const currentScrollY = window.pageYOffset;
+
+      if (currentScrollY > STICKY_THRESHOLD) {
+        // past the top: header is sticky in principle
+        header.classList.add('has-sticky');
+        wrapper.classList.add('has-sticky-spacer');
+
+        // never hide while mobile menu or search panel is open
+        if (header.classList.contains('is-open') || header.classList.contains('search')) {
+          header.classList.remove('slide-up');
+        } else if (prevScrollY < currentScrollY) {
+          // scrolling down: hide it
+          header.classList.add('slide-up');
+        } else if (prevScrollY > currentScrollY) {
+          // scrolling up: reveal it
+          header.classList.remove('slide-up');
         }
-        try {
-            var url = new URL(href, window.location.origin);
-            var host = url.hostname.toLowerCase();
-            return host === "lumen.com" || host.endsWith(".lumen.com");
-        } catch (e) {
-            // If URL parsing fails, fall back to treating as external.
-            return false;
+      } else {
+        // back near the very top: fully reset to normal (non-sticky) state
+        header.classList.remove('has-sticky', 'slide-up');
+        wrapper.classList.remove('has-sticky-spacer');
+      }
+
+      prevScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', this.throttle(onScroll, 100), { passive: true });
+    onScroll();
+  }
+
+  // Simple throttle helper (mirrors Nav2's own throttle pattern)
+  private throttle(func: () => void, delay: number) {
+    let inProgress = false;
+    return () => {
+      if (inProgress) return;
+      inProgress = true;
+      setTimeout(() => {
+        func();
+        inProgress = false;
+      }, delay);
+    };
+  }
+
+  private bindSearchTrigger(searchTrigger: HTMLElement | null, header: HTMLElement, toggle: HTMLElement) {
+    if (!searchTrigger) return;
+
+    searchTrigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const w = window as Window & typeof globalThis & { ChatUI?: { open?: () => void } };
+      // ChatUI is a singleton React root that always mounts into the single
+      // #chat-ui element on the page (see syncChatUIPosition - that same
+      // element is relocated between the mobile and desktop slots rather
+      // than duplicated, since ChatUI.init() hardcodes that id). Scoped to
+      // this.root (not document) so an unrelated #chat-ui elsewhere on the
+      // page can't make this instance think chat is enabled when its own
+      // enableAgenticChat is off.
+      const container = this.root.querySelector('#chat-ui');
+
+      if (w.ChatUI?.open && container) {
+        w.ChatUI.open();
+        return;
+      }
+
+      // Normal search: reveal the inline search box (mirrors header-v2's
+      // openMobileSearch/closeMobileSearch toggling `.search` on the header)
+      // instead of letting the trigger's own href navigate away.
+      const isOpeningSearch = !header.classList.contains('search');
+      if (isOpeningSearch) {
+        header.classList.remove('is-open');
+        this.root.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        this.closeAllOnelinkPopovers(this.root);
+      }
+      header.classList.toggle('search');
+    });
+  }
+
+  // Mirrors _navigation_v2.ts's own click/keydown binding on the header-v2 search
+  // icon (rather than routing through the shared searchboxSuggestions clientlib,
+  // which also serves docsheader/footer/header-v2 and whose icon selector targets
+  // docsheader's <button> markup, not this component's <span role="button">).
+  private bindSearchIconTrigger() {
+    const searchWrapper = this.root.querySelector('.cmp-header__search.search_wrapper') as HTMLElement | null;
+    if (!searchWrapper) return;
+
+    const searchIcon = searchWrapper.querySelector('.cmp-header__search-icon') as HTMLElement | null;
+    const clearIcon = searchWrapper.querySelector('.cmp-header__search-clear-icon') as HTMLElement | null;
+    const searchInput = searchWrapper.querySelector('.input_search_field') as HTMLInputElement | null;
+    const suggestionsDropdown = searchWrapper.querySelector('.cmp-site-search-suggestionsdropdown') as HTMLElement | null;
+
+    if (searchIcon) {
+      searchIcon.addEventListener('click', (event) => {
+        event.preventDefault();
+        performSearch(searchWrapper);
+      });
+
+      searchIcon.addEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          performSearch(searchWrapper);
         }
+      });
+
+      // Mirrors _navigation_v2.ts's icon focus handler - reveals the expanded
+      // (298px) input via _headerNavigation.scss's "&.input" rule.
+      searchIcon.addEventListener('focus', () => {
+        searchWrapper.classList.add('input');
+      });
     }
 
-    if (window.adobeDataLayer) {
-        // Links
-        const links = document.querySelectorAll('a');
-        for (let i = 0; i < links.length; i++) {
-
-            links[i].addEventListener('click', function (event) {
-                let linkGrandParent = this.closest('.cmp-teaser__content');
-                let parent = this.parentElement;
-                let linkName = this.textContent.trim();
-                let ariaLabel = this.getAttribute('aria-label');
-                if (ariaLabel == 'Link to Homepage') {
-                    linkName = 'Lumen Logo';
-                }
-                let linkClickType = "exit";
-                if (this.getAttribute('href') != null) {
-                    let href = this.getAttribute('href');
-                    if (href.startsWith("/content/lumen") || isLumenHost(href)) {
-                        linkClickType = "other";
-                    }
-                }
-                let linkType = 'Link';
-                let linkHref = this.getAttribute('href');
-                let linkLocation = 'main container';
-                let downloadType = 'AEM asset';
-                let parentID = this.closest('[id]');
-                let parentIDAtt = parentID.getAttribute('id').split('-')[0];
-                let grandParentID = parentID.parentElement.closest('[id]');
-                let grandParentIDAtt = grandParentID.getAttribute('id').split('-')[0];
-                let teaserTitle;
-                let industrySelectorContainer = this.closest('.industry-selector-container');
-                let stackedContentTab = this.closest('.lumen-tabs__content');
-                let industrySelectorItem = this.closest('.industry-selector-item');
-                let industrySelectorTitle = industrySelectorItem ? industrySelectorItem.querySelector('.industry-selector-title') : null;
-                const mediaHighlight = this.closest('.media_highlight');
-                const solutionHighlight = this.closest('.solution-highlight');
-                const subHeader = this.closest(".subheader-wrapper");
-                const breadcrumbLink = this.closest(".breadcrumb");
-                const featuredCard = this.closest(".cmp-featured-resources-card");
-                const featuredResourcesSection = this.closest(".cmp-featured-resources");
-                const subHeaderCTA = this.closest(".subheadernav-links");
-                const conversionBanner = this.closest(".cmp-conversion-banner");
-                const featuredResourcesTable = this.closest(".featuredresourcesTable__productCta");
-                const productHero = this.closest(".pdp-hero");
-                const resourceCard = this.closest(".resource-card");
-                const marquee = this.closest(".marquee");
-                const cdpHero = this.closest(".cdp-hero");
-
-                // --- REGION DROPDOWN FIX ---
-                const isRegionDropdown =
-                    this.classList.contains('cmp-onelinknav__lang-link') &&
-                    this.closest('.cmp-onelinknav__popover');
-
-                if (isRegionDropdown) {
-                    // Ensure clickName is the visible country text
-                    linkName = this.textContent.trim();
-
-                    // Per acceptance criteria
-                    linkClickType = "other";
-                    linkHref = ""; // clickDestination must be empty string
-                }
-
-                if (linkGrandParent) {
-                    teaserTitle = linkGrandParent.querySelector('.cmp-teaser__pretitle') || linkGrandParent.querySelector('.cmp-teaser__title');
-                }
-
-                if (stackedContentTab) {
-                    teaserTitle = stackedContentTab.querySelector('.lumen-tabs__title');
-                }
-
-                if (industrySelectorContainer) {
-                    teaserTitle = industrySelectorContainer.querySelector('#selectedOption');
-                }
-
-                if (linkName === 'Larry' && linkGrandParent) {
-                    const titleEl = linkGrandParent.querySelector('.cmp-teaser__title')
-                    if (titleEl) {
-                        linkName = titleEl.textContent.trim();
-                    }
-                }
-
-                if (linkHref || isRegionDropdown) {
-
-                    // Link Type
-                    if (this.closest('.teaser')) {
-                        if (this.closest('.teaser').classList.contains('lmn-light-teal-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-secondary-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-deep-orange-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-goldenrod-1')) {
-                            linkType = 'Button';
-                        } else if (this.closest('.teaser').classList.contains('lmn-dark-teal-1')) {
-                            linkType = 'Button';
-                        }
-                    }
-
-                    if (parent.classList.contains('button') || parent.classList.contains('cmp-button') || parent.classList.contains('industry-selector-cta-containers')) {
-                        linkType = 'Button';
-                    }
-
-                    // Link location
-                    if (this.getAttribute('am-region')) {
-                        linkLocation = this.getAttribute('am-region');
-                    } else if (parent.getAttribute('am-region')) {
-                        linkLocation = parent.getAttribute('am-region');
-                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') !== 'Link to Homepage') {
-                        linkLocation = 'navigation bar';
-                    } else if (this.closest('#navigation') && this.getAttribute('aria-label') == 'Link to Homepage') {
-                        linkLocation = 'header';
-                    } else if (this.closest('.cmp-experiencefragment--legal-footer') || this.closest('.cmp-experiencefragment--enterprise-portfolio-footer')) {
-                        linkLocation = 'footer';
-                    } else if (parentIDAtt && grandParentIDAtt && teaserTitle) {
-                        linkLocation = teaserTitle.textContent.trim();
-                    } else if (parentIDAtt && grandParentIDAtt) {
-                        linkLocation = 'main container | ' + grandParentIDAtt + ' | ' + parentIDAtt;
-                    }
-
-                    if (industrySelectorContainer && industrySelectorTitle?.textContent) {
-                        linkLocation = industrySelectorTitle.textContent.trim();
-                    }
-
-                    // Add name for footer links
-                    if (linkHref.includes('twitter') || linkHref.includes('x.com')) {
-                        linkName = 'Twitter/X Platform';
-                    } else if (linkHref.includes('linkedin')) {
-                        linkName = 'LinkedIn';
-                    } else if (linkHref.includes('facebook')) {
-                        linkName = 'Facebook';
-                    } else if (linkHref.includes('youtube')) {
-                        linkName = 'YouTube';
-                    }
-
-                    // Build full destination URL
-                    let fullDestination = "NA";
-                    if (linkHref) {
-                        try {
-                            fullDestination = new URL(linkHref, window.location.origin).href;
-                        } catch (e) {
-                            fullDestination = linkHref;
-                        }
-                    }
-
-                   
-
-                    if (cdpHero) {
-                        let heroTitle = "";
-                        const heroLayer = cdpHero.getAttribute("data-cmp-data-layer");
-                        if (heroLayer) {
-                            try {
-                                const parsed = JSON.parse(heroLayer);
-                                const key = Object.keys(parsed)[0];
-                                heroTitle = parsed[key]?.title || "";
-                            } catch (e) {
-                                console.error("CDP Hero data layer parse error", e);
-                            }
-                        }
-
-                        if (!heroTitle) {
-                            heroTitle = cdpHero.querySelector(".cdp-hero__title")?.textContent.trim() || "";
-                        }
-
-                        const isDownload = this.classList.contains("cdp-hero__download-btn");
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.linkClick,
-                            linkDetails: {
-                                clickName: linkName.toLowerCase(),
-                                clickDestination: isDownload ? "" : fullDestination,
-                                clickLocation: "body",
-                                clickType: isDownload ? "download" : linkClickType.toLowerCase(),
-                                clickContext: heroTitle.toLowerCase(),
-                                componentContext: "content detail hero"
-                            }
-                        });
-
-                        return;
-                    }
-
-                    if(marquee){
-                        const component = marquee.querySelector('.marquee_messageWrapper');
-                        const primaryText = component?.querySelector('.marquee-primary_message')?.textContent?.trim() || '';
-                        const marqueeCtaLink = component?.querySelector(".marquee_cta")?.getAttribute("href");
-                        let fullDestination = "NA";
-                        if (marqueeCtaLink) {
-                            try {
-                                fullDestination = new URL(marqueeCtaLink, window.location.origin).href;
-                            } catch (e) {
-                                fullDestination = marqueeCtaLink;
-                            }
-                        }
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.linkClick,
-                            linkDetails: {
-                                clickName: (this.textContent || '').trim().toLowerCase(),
-                                clickDestination: fullDestination,
-                                clickLocation: 'header',
-                                clickType: 'other',
-                                clickContext: primaryText.toLowerCase(),
-                                componentContext: "marquee",
-                            }
-                        })
-                        return;
-                    }
-
-                    // -----------------------------
-                    // Product Solution Hero
-                    // -----------------------------
-                    if (productHero) {
-                        let heroTitle = "";
-                        const heroLayer = productHero.getAttribute("data-cmp-data-layer");
-
-                        if (heroLayer) {
-                            try {
-                                const parsed = JSON.parse(heroLayer);
-                                const key = Object.keys(parsed)[0];
-                                heroTitle = parsed[key]?.title || "";
-                            } catch (e) {
-                                console.error("Product Hero data layer parse error", e);
-                            }
-                        }
-
-                        // Fallback to the DOM only if the JSON lookup came back empty
-                        if (!heroTitle) {
-                            heroTitle = productHero.querySelector(".pdp-hero__title")?.textContent.trim() || "";
-                        }
-
-                        const isDownload = this.classList.contains("pdf-download");
-
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.linkClick,
-                            linkDetails: {
-                                clickName: linkName.toLowerCase(),
-                                clickDestination: isDownload ? "" : fullDestination,
-                                clickLocation: "body",
-                                clickType: isDownload ? "download" : linkClickType.toLowerCase(),
-                                clickContext: heroTitle.toLowerCase(),
-                                componentContext: "product-solution hero"
-                            }
-                        });
-
-                        return;
-                    }
-
-                    // -----------------------------
-                    // Contact Us Cards
-                    // -----------------------------
-                    if (this.closest(".contact-us-component")) {
-                        return;
-                    }
-
-                    // Download links
-                    if (linkHref.match("assets.lumen.com")) {
-
-                        // Determine filename
-                        const fileNameArray = linkHref.split('/');
-                        const fileNameArrayComp = fileNameArray.length - 1;
-                        for (let i = 0; i < fileNameArray.length; i++) {
-
-                            if (i == fileNameArrayComp) {
-                                let fileNameTitle = fileNameArray[i].replaceAll('-', ' ').split('?')[0].split(' ');
-
-                                for (let i = 0; i < fileNameTitle.length; i++) {
-                                    fileNameTitle[i] = fileNameTitle[i][0].toUpperCase() + fileNameTitle[i].substring(1);
-                                }
-
-                                fileNameTitle = fileNameTitle.toString().replaceAll(',', ' ');
-                                downloadDataLayer(fileNameTitle);
-                            }
-                        }
-
-                        // Determine download type
-                        if (linkHref.includes('.pdf')) {
-                            downloadType = 'pdf';
-                        } else if (linkHref.includes('.xls')) {
-                            downloadType = 'xls';
-                        } else if (linkHref.includes('.mp3')) {
-                            downloadType = 'mp3';
-                        } else if (linkHref.includes('.exe')) {
-                            downloadType = 'exe';
-                        } else if (linkHref.includes('.zip')) {
-                            downloadType = 'zip';
-                        } else if (linkHref.includes('.wav')) {
-                            downloadType = 'wav';
-                        } else if (linkHref.includes('.mov')) {
-                            downloadType = 'mov';
-                        } else if (linkHref.includes('.mpg')) {
-                            downloadType = 'mpg';
-                        } else if (linkHref.includes('.avi')) {
-                            downloadType = 'avi';
-                        } else if (linkHref.includes('.wmv')) {
-                            downloadType = 'wmv';
-                        } else if (linkHref.includes('.docx')) {
-                            downloadType = 'docx';
-                        } else if (linkHref.includes('.doc')) {
-                            downloadType = 'doc';
-                        } else if (linkHref.includes('.xlsx')) {
-                            downloadType = 'xlsx';
-                        } else if (linkHref.includes('.xls')) {
-                            downloadType = 'xls';
-                        } else if (linkHref.includes('.pptx')) {
-                            downloadType = 'pptx';
-                        } else if (linkHref.includes('.ppt')) {
-                            downloadType = 'ppt';
-                        }
-
-                        function downloadDataLayer(title) {
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.fileDownload,
-                                linkDetails: {
-                                    clickName: linkName,
-                                    clickType: 'download',
-                                    clickDestination: linkHref,
-                                    clickLocation: linkLocation,
-                                    fileDownload: {
-                                        filename: title,
-                                        type: downloadType,
-                                    }
-                                }
-                            });
-                        }
-
-                        // Normal links
-                    } else {
-
-                        let componentContextValue;
-                        let clickContextValue;
-                        // -----------------------------
-                        // Media Highlight
-                        // -----------------------------
-                        if (mediaHighlight) {
-                            const mediaTitle = mediaHighlight.querySelector(".title")?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: mediaTitle.toLowerCase(),
-                                    componentContext: "media-highlight"
-                                }
-                            });
-
-                            return;
-                        }
-                        // -----------------------------
-                        // Conversion Banner
-                        // -----------------------------
-                        else if (conversionBanner) {
-                            const conversionBannerTitle = conversionBanner.querySelector(".cmp-conversion-banner__title")?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: conversionBannerTitle.toLowerCase(),
-                                    componentContext: "conversion banner"
-                                }
-                            });
-
-                            return;
-                        }
-
-                        // -----------------------------
-                        // Solution Highlight
-                        // -----------------------------
-                        else if (solutionHighlight) {
-                            const solutionContext = solutionHighlight.querySelector(".solution-highlight__label")
-                                ?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: solutionContext.toLowerCase(),
-                                    componentContext: "solution-highlight"
-                                }
-                            });
-
-                            return;
-                        }
-                        // ---------------------------------------------
-                        // Subheader Breadcrumb + CTA
-                        // ---------------------------------------------
-                        else if (subHeader && (breadcrumbLink || subHeaderCTA)) {
-
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "header",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: "subheader",
-                                    componentContext: "subheader-navigation"
-                                }
-                            });
-
-                            return;
-                        }
-
-                        // -----------------------------
-                        // Featured Card
-                        // -----------------------------
-
-                        else if (featuredCard || featuredResourcesSection) {
- 
-                            let productTitle = "";
-                            let componentContextValue = "featured-card";
- 
-                            if (featuredCard) {
-                                const featuredCardLayer = featuredCard.getAttribute("data-cmp-data-layer");
-                                let featuredCardInfo = {};
- 
-                                if (featuredCardLayer) {
-                                    try {
-                                        const parsed = JSON.parse(featuredCardLayer);
-                                        const key = Object.keys(parsed)[0];
-                                        featuredCardInfo = parsed[key] || {};
-                                    } catch (e) {
-                                        console.error("Featured Card data layer parse error", e);
-                                    }
-                                }
- 
-                                productTitle =
-                                    featuredCardInfo.productTitle ||
-                                    featuredCard.querySelector(".cmp-featured-resources-card__title")
-                                        ?.textContent.trim() ||
-                                    "";
-                                componentContextValue = featuredCardInfo.componentName || "featured-card";
-                            } else {
-                                productTitle =
-                                    featuredResourcesSection.querySelector(".cmp-featured-resources__title")
-                                        ?.textContent.trim() || "";
-                                
-                            }
- 
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: productTitle.toLowerCase(),
-                                    componentContext: componentContextValue
-                                }
-                            });
- 
-                            return;
-                        }
-
-                        // -----------------------------
-                        // Featured Resources Table
-                        // -----------------------------
-                        else if (featuredResourcesTable) {
-                            const productHeader = this.closest("th, td");
-
-                            const productTitle =
-                                productHeader
-                                    ?.querySelector(".featuredresourcesTable__productTitle")
-                                    ?.textContent.trim() || "";
-
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: productTitle.toLowerCase(),
-                                    componentContext: "featured resources - table"
-                                }
-                            });
-
-                            return;
-                        }
-
-                         // -----------------------------
-                        // Resources Card
-                        // -----------------------------
-                        else if (resourceCard) {
-                            const resourceCardTitle = resourceCard.querySelector(".resource-card__title")?.textContent.trim() || "";
-                            const clickName = resourceCard.querySelector(".resource-card__cta")?.textContent.trim() || "";
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: clickName.toLowerCase(),
-                                    clickDestination: fullDestination.toLowerCase(),
-                                    clickLocation: "body",
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: resourceCardTitle.toLowerCase(),
-                                    componentContext: "resources card"
-                                }
-                            });
-
-                            return;
-                        }
-
-
-                        else {
-                            // Existing Default
-                            adobeDataLayer.push({
-                                event: adobeDataLayerEvents.component.linkClick,
-                                linkDetails: {
-                                    clickName: linkName.toLowerCase(),
-                                    clickElementType: linkType.toLowerCase(),
-                                    clickDestination: (linkHref || "").toLowerCase(),
-                                    clickLocation: linkLocation.toLowerCase(),
-                                    clickType: linkClickType.toLowerCase(),
-                                    clickContext: clickContextValue,
-                                    componentContext: componentContextValue
-                                }
-                            });
-                        }
-                    }
-                }
-            });
-        }
-
-
-
-        // ==========================================
-        // LOOKUP FORM – SEARCH + CTA EVENTS
-        // ==========================================
-
-        const lookupForms = document.querySelectorAll(".lookup-form");
-
-        lookupForms.forEach(form => {
-
-            const searchBtn = form.querySelector(".lookup-form__search-label");
-            const titleEl = form.querySelector(".lookup-form__title h2");
-            const componentTitle = titleEl?.textContent.trim() || "NA";
-
-            // -----------------------------
-            // SEARCH BUTTON CLICK
-            // -----------------------------
-            if (searchBtn) {
-                searchBtn.addEventListener("click", () => {
-
-                    const clickName = searchBtn.textContent.trim().toLowerCase();
-                    const clickDestination = "NA"; // Search triggers JS, not navigation
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName,
-                            clickDestination,
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: componentTitle.toLowerCase(),
-                            componentContext: "lookup form"
-                        }
-                    });
-                });
-            }
-
-            // -----------------------------
-            // CTA BUTTONS (Primary, Contact, Secondary)
-            // -----------------------------
-            const ctas = form.querySelectorAll(
-                ".lookup-form__primary-cta, .lookup-form__contact-cta, .lookup-form__secondary-cta"
-            );
-
-            ctas.forEach(cta => {
-                cta.addEventListener("click", () => {
-
-                    const clickName = cta.textContent.trim().toLowerCase();
-
-                    // Build full destination URL
-                    let rawHref = cta.getAttribute("href") || cta.getAttribute("data-link") || cta.getAttribute("data-href");
-                    let clickDestination = "NA";
-
-                    if (rawHref) {
-                        try {
-                            clickDestination = new URL(rawHref, window.location.origin).href;
-                        } catch (e) {
-                            clickDestination = rawHref;
-                        }
-                    }
-
-                    // Determine search result context (success or error message)
-                    const successMsg = form.querySelector(".lookup-form__success");
-                    const errorMsg = form.querySelector(".lookup-form__error");
-
-                    let clickContext = componentTitle.toLowerCase();
-
-                    if (successMsg && successMsg.style.display !== "none") {
-                        clickContext = successMsg.textContent.trim().toLowerCase();
-                    } else if (errorMsg && errorMsg.style.display !== "none") {
-                        clickContext = errorMsg.textContent.trim().toLowerCase();
-                    }
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName,
-                            clickDestination,
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext,
-                            componentContext: "lookup form"
-                        }
-                    });
-                });
-            });
-
-        });
-
-
-        // ==========================================
-        // FEATURED RESOURCES – INFORMATION TOGGLE
-        // ==========================================
-        const resourcesInfoComponents = document.querySelectorAll(".featured-resources-information");
-
-        resourcesInfoComponents.forEach(component => {
-            const toggle = component.querySelector(".cmp-featured-resources-info__toggle");
-
-            if (!toggle) return;
-
-            toggle.addEventListener("click", () => {
-
-                const titleEl = component.querySelector(".cmp-featured-resources-info__title");
-                const title = titleEl?.textContent.trim() || "NA";
-
-                // Determine expand/collapse state
-                const isExpanded = toggle.getAttribute("aria-expanded") === "true";
-                let clickState = isExpanded ? "collapse" : "expand";
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: title.toLowerCase(),
-                        clickDestination: "NA",
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: title.toLowerCase(),
-                        componentContext: "featured resources - information",
-                        clickState: clickState
-                    }
-                });
-            });
-        });
-
-        // ==========================================
-        // CONVERSION BANNER – PRIMARY CTA BUTTON
-        // ==========================================
-        const conversionBanners = document.querySelectorAll(".conversion-banner");
-
-        conversionBanners.forEach(banner => {
-            const primaryCTA = banner.querySelector(".cmp-conversion-banner__cta--primary");
-
-            if (!primaryCTA) return;
-
-            primaryCTA.addEventListener("click", () => {
-
-                const titleEl = banner.querySelector(".cmp-conversion-banner__title");
-                const bannerTitle = titleEl?.textContent.trim() || "NA";
-
-                const clickName = primaryCTA.textContent.trim().toLowerCase();
-
-                // Primary CTA buttons often navigate via JS → no href
-                const clickDestination = "NA";
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: clickName,
-                        clickDestination: clickDestination,
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: bannerTitle.toLowerCase(),
-                        componentContext: "conversion banner"
-                    }
-                });
-            });
-        });
-
-        // ==========================================
-        // CONTACT US – ACTION CTA
-        // ==========================================
-        if (!window.__contactUsCtaBound) {
-            document.addEventListener("click", function (event) {
-
-                const cta = event.target.closest(
-                    ".contact-us-component .cmp-teaser__action-link, .contact-us-component .chat-cta"
-                );
-
-                if (!cta) return;
-
-                const sectionRoot = cta.closest(".contact-us-component");
-                const sectionTitleEl = sectionRoot?.querySelector(".cmp-teaser__title");
-                const sectionTitle = sectionTitleEl?.textContent.trim() || "NA";
-
-                const clickName = cta.closest(".card")?.querySelector(".cmp-teaser__title")?.textContent?.trim()?.toLowerCase() || "na";
-                const rawHref = cta.getAttribute("href") || cta.getAttribute("data-href") || "";
-                let clickDestination = "NA";
-
-                if (rawHref) {
-                    try {
-                        clickDestination = new URL(rawHref, window.location.origin).href;
-                    } catch (e) {
-                        clickDestination = rawHref;
-                    }
-                }
-
-                let clickType = "other";
-                if (rawHref) {
-                    clickType = (rawHref.startsWith("/content/lumen") || isLumenHost(rawHref)) ? "other" : "exit";
-                }
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: clickName,
-                        clickDestination: clickDestination.toLowerCase(),
-                        clickLocation: "body",
-                        clickType: clickType,
-                        clickContext: sectionTitle.toLowerCase(),
-                        componentContext: "contact us"
-                    }
-                });
-            });
-
-            window.__contactUsCtaBound = true;
-        }
-
-         // ==========================================
-        // FEATURED RESOURCES CARD – BUTTON CTA
-        // ==========================================
-        const featuredResourceCards = document.querySelectorAll(".cmp-featured-resources-card");
- 
-        featuredResourceCards.forEach(card => {
- 
-            const buttonCta = card.querySelector(".featurecard-modal-popup");
- 
-            if (!buttonCta) return;
- 
-            buttonCta.addEventListener("click", () => {
- 
-                const titleEl = card.querySelector(".cmp-featured-resources-card__title");
-                const productTitle = titleEl?.textContent.trim() || "NA";
- 
-                const clickName = buttonCta.textContent.trim().toLowerCase();
- 
-                // Modal-triggering buttons navigate via JS → no real href
-                const rawHref = buttonCta.getAttribute("data-href") || "";
-                let clickDestination = "NA";
- 
-                if (rawHref) {
-                    try {
-                        clickDestination = new URL(rawHref, window.location.origin).href;
-                    } catch (e) {
-                        clickDestination = rawHref;
-                    }
-                }
- 
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: clickName,
-                        clickDestination: clickDestination.toLowerCase(),
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: productTitle.toLowerCase(),
-                        componentContext: "featured-card"
-                    }
-                });
-            });
-        });
-
-        const featuredResourcesTableAccordionComponents = document.querySelectorAll(".featuredresourcesTable");
-
-        featuredResourcesTableAccordionComponents.forEach((component) => {
-
-            const accordionToggle = component.querySelector(".featuredresourcesTable__accordionToggle");
-
-            if (!accordionToggle) {
-                return;
-            }
-
-            accordionToggle.addEventListener("click", () => {
-
-                const title =
-                    component.querySelector(".featuredresourcesTable__title")
-                        ?.textContent.trim() || "NA";
-
-                const isExpanded =
-                    accordionToggle.getAttribute("aria-expanded") === "true";
-
-                const clickState = isExpanded ? "collapse" : "expand";
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: title.toLowerCase(),
-                        clickDestination: "NA",
-                        clickLocation: "body",
-                        clickType: "other",
-                        clickContext: title.toLowerCase(),
-                        componentContext: "featured resources - table",
-                        clickState
-                    }
-                });
-
-            });
-
-        });
-
-        // ==========================================
-        // FEATURED RESOURCES TABLE
-        // ==========================================
-        const resourcesTableComponents = document.querySelectorAll(".featuredresourcesTable");
- 
-        resourcesTableComponents.forEach(component => {
- 
-            const componentContextValue = "featured resources - table";
- 
-            function pushStandardLinkClick(linkName, linkHref, clickContextValue) {
- 
-                let clickType = "other";
-                let clickDestination = "NA";
- 
-                if (linkHref) {
-                    clickType = (linkHref.startsWith("/content/lumen") || isLumenHost(linkHref)) ? "other" : "exit";
-                    try {
-                        clickDestination = new URL(linkHref, window.location.origin).href;
-                    } catch (e) {
-                        clickDestination = linkHref;
-                    }
-                }
- 
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: linkName.toLowerCase(),
-                        clickDestination: clickDestination,
-                        clickLocation: "body",
-                        clickType: clickType,
-                        clickContext: clickContextValue.toLowerCase(),
-                        componentContext: componentContextValue
-                    }
-                });
-            }
- 
-            component.addEventListener("click", function (event) {
- 
-                const titleEl = component.querySelector(".featuredresourcesTable__title");
-                const componentTitle = titleEl?.textContent.trim() || "NA";
-                const toggleWrapper = event.target.closest(".featuredresourcesTable__toggleWrapper");
-                if (toggleWrapper) {
- 
-                    const toggleEl = toggleWrapper.querySelector(".featuredresourcesTable__toggle");
-                    const toggleLabelEl = toggleWrapper.querySelector(".featuredresourcesTable__keyDiffText");
-                    const toggleLabel = toggleLabelEl?.textContent.trim() || "NA";
- 
-                    const isOn = toggleEl?.getAttribute("data-state") === "true";
-                    const clickState = isOn ? "off" : "on";
- 
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: toggleLabel.toLowerCase(),
-                            clickDestination: "NA",
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: componentTitle.toLowerCase(),
-                            componentContext: componentContextValue,
-                            clickState: clickState
-                        }
-                    });
-                    return;
-                }
- 
-                const columnsToggle = event.target.closest(".featuredresourcesTable__ctaText");
-                if (columnsToggle) {
-                    pushStandardLinkClick(columnsToggle.textContent.trim(), null, componentTitle);
-                    return;
-                }
-            });
- 
-         
-        });
- 
-
-        // ==============================
-        // SUBHEADER
-        // ==============================
-        const subheaderContainer = document.querySelector(".pdp-subheadernav");
-        if (subheaderContainer) {
-            subheaderContainer.addEventListener("click", function (event) {
-                const item = event.target.closest(".subheadernav-item");
-                if (!item) return;
-
-                const linkName = item.textContent.trim();
-                const dataTarget = item.getAttribute("data-target") || "";
-                const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
-                const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${formattedTarget}` : "NA";
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.linkClick,
-                    linkDetails: {
-                        clickName: linkName.toLowerCase(),
-                        clickDestination: destination,
-                        clickLocation: "header",
-                        clickType: "other",
-                        clickContext: "subheader",
-                        componentContext: "subheader-navigation"
-                    }
-                });
-            });
-
-            // MOBILE dropdown support
-            const mobileDropdown = subheaderContainer.querySelector(".subheadernav-mobile-dropdown");
-            if (mobileDropdown) {
-                mobileDropdown.addEventListener("click", function (event) {
-
-                    const item = event.target.closest(".subheadernav-item");
-                    const dataTarget = item.getAttribute("data-target") || "";
-                    const formattedTarget = dataTarget.trim().toLowerCase().replace(/\s+/g, "-");
-                    const destination = formattedTarget ? `${window.location.origin}${window.location.pathname}#${dataTarget}` : "NA";
-                    if (!item) return;
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: item.textContent.trim().toLowerCase(),
-                            clickDestination: destination.toLowerCase(),
-                            clickLocation: "header",
-                            clickType: "other",
-                            clickContext: "subheader",
-                            componentContext: "subheader-navigation"
-                        }
-                    });
-                });
-            }
-             }
-
-            // CDP Hero - Share Button
-            // -----------------------------
-            const shareButtons = document.querySelectorAll(".cdp-hero__share-btn");
-
-            shareButtons.forEach((btn) => {
-                btn.addEventListener("click", function () {
-
-                    const cdpHero = btn.closest(".cdp-hero");
-
-                    let heroTitle = "";
-                    const heroLayer = cdpHero?.getAttribute("data-cmp-data-layer");
-
-                    if (heroLayer) {
-                        try {
-                            const parsed = JSON.parse(heroLayer);
-                            const key = Object.keys(parsed)[0];
-                            heroTitle = parsed[key]?.title || "";
-                        } catch (e) {}
-                    }
-
-                    if (!heroTitle) {
-                        heroTitle = cdpHero?.querySelector(".cdp-hero__title")?.textContent.trim() || "";
-                    }
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: "share",
-                            clickDestination: "",
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: heroTitle.toLowerCase(),
-                            componentContext: "content detail hero"
-                        }
-                    });
-                });
-            });
-
-            // -----------------------------
-            // CDP Hero - Anchor Links
-            // -----------------------------
-            const heroAnchorButtons = document.querySelectorAll(".cdp-hero__anchor-link");
-
-            heroAnchorButtons.forEach((btn) => {
-                btn.addEventListener("click", function () {
-
-                    const cdpHero = btn.closest(".cdp-hero");
-                    let heroTitle = "";
-                    const heroLayer = cdpHero?.getAttribute("data-cmp-data-layer");
-
-                    if (heroLayer) {
-                        try {
-                            const parsed = JSON.parse(heroLayer);
-                            const key = Object.keys(parsed)[0];
-                            heroTitle = parsed[key]?.title || "";
-                        } catch (e) {}
-                    }
-
-                    if (!heroTitle) {
-                        heroTitle = cdpHero.querySelector(".cdp-hero__title")?.textContent.trim() || "";
-                    }
-
-                    const target = btn.getAttribute("data-target") || "";
-
-                    const destination = target
-                        ? `${window.location.origin}${window.location.pathname}#${target}`
-                        : "";
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: btn.textContent.trim().toLowerCase(),
-                            clickDestination: destination,
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: heroTitle.toLowerCase(),
-                            componentContext: "content detail hero"
-                        }
-                    });
-                });
-            });
-
-
-
-
-        // Sign In Button
-
-        const signInBtn = document.querySelector('button.signInButton');
-        if (signInBtn) {
-            const signInBtnOverride = signInBtn.getAttribute('data-linkOverride');
-            signInBtn.addEventListener('click', function (event) {
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents?.component.linkClick,
-                    linkDetails: {
-                        clickName: 'sign in',
-                        clickElementType: 'button',
-                        clickDestination: (signInBtnOverride ? signInBtnOverride : "sign in authentication"),
-                        clickLocation: 'header',
-                        clickType: 'other'
-                    }
-                });
-            });
-        }
-
-        function pushAdobeDataLayerForDropdown(optionName) {
-            const industryEybrowText = document.querySelector('.industry-selector-eybrow-text');
-            optionName = optionName ? optionName.trim() : optionName;
-            adobeDataLayer.push({
-                event: adobeDataLayerEvents.component.linkClick,
-                linkDetails: {
-                    clickDestination: '',
-                    clickLocation: industryEybrowText.textContent.toLocaleLowerCase(),
-                    clickName: 'industry dropdown|' + optionName.toLowerCase(),
-                    clickElementType: 'button',
-                    clickType: 'other'
-                }
-            });
-        }
-
-        // Industry Selector Dropdown Analytics
-        const dropdownHeader = document.getElementById('dropdownHeader');
-        const dropdownList = document.getElementById('dropdownList');
-        if (dropdownHeader && dropdownList) {
-            dropdownHeader.addEventListener('click', function (event) {
-                const isOpen = dropdownHeader.classList.contains('open');
-                pushAdobeDataLayerForDropdown(isOpen ? 'collapse' : 'expand');
-            });
-
-            dropdownList.addEventListener('click', function (event) {
-                pushAdobeDataLayerForDropdown(event.target.textContent);
-            });
-        }
-
-        // ==========================================
-        // ACCORDION (CDP / core cmp-accordion) – CHEVRON TOGGLE
-        // ==========================================
-        const cdpAccordions = document.querySelectorAll(".cmp-accordion");
-
-        cdpAccordions.forEach(accordion => {
-            if (accordion.closest(".cmp-faq-agentic")) return;
-
-            const accordionLayer = accordion.getAttribute("data-cmp-data-layer");
-            let componentName = "accordion";
-
-            if (accordionLayer) {
-                try {
-                    const parsed = JSON.parse(accordionLayer);
-                    const key = Object.keys(parsed)[0];
-                    componentName = parsed[key]?.componentName || componentName;
-                } catch (e) {
-                    console.error("Accordion data layer parse error", e);
-                }
-            }
-
-
-            const buttons = accordion.querySelectorAll(".cmp-accordion__button");
-
-            buttons.forEach(button => {
-
-                if (button.dataset.accordionAnalyticsBound === "true") return;
-
-                button.addEventListener("click", () => {
-
-                    const titleEl = button.querySelector(".cmp-accordion__title");
-                    const title = titleEl?.textContent.trim() || "NA";
-                    const isExpanded = button.getAttribute("aria-expanded") === "true";
-                    const clickState = isExpanded ? "collapse" : "expand";
-
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: title.toLowerCase(),
-                            clickDestination: "NA",
-                            clickLocation: "body",
-                            clickType: "other",
-                            clickContext: 'faq',
-                            clickState: clickState,
-                            componentContext: componentName
-                        }
-                    });
-                });
-
-                button.dataset.accordionAnalyticsBound = "true";
-            });
-        });
-
-        // FAQ Component Analytics
-        const faqButtons = document.querySelectorAll('.cmp-faq-agentic__cta');
-        if (faqButtons.length) {
-            faqButtons.forEach((btn) => {
-                btn.addEventListener('click', function () {
-                    const component = btn.closest('.cmp-faq-agentic');
-                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: (btn.textContent || '').trim().toLowerCase(),
-                            clickDestination: 'NA',
-                            clickLocation: 'body',
-                            clickType: 'other',
-                            clickContext: titleText.toLowerCase(),
-                            componentContext: "faqs",
-                        }
-                    });
-                });
-            });
-        }
-
-        const faqOptions = document.querySelectorAll('.cmp-faq-agentic__right .cmp-accordion__header .cmp-accordion__button');
-        if (faqOptions.length) {
-            faqOptions.forEach((optionBtn) => {
-                optionBtn.addEventListener('click', function () {
-                    const component = this.closest('.cmp-faq-agentic');
-                    const titleText = component?.querySelector('.cmp-faq-agentic__title')?.textContent?.trim() || '';
-                    const wasExpanded = this.getAttribute('aria-expanded') === 'true';
-                    adobeDataLayer.push({
-                        event: adobeDataLayerEvents.component.linkClick,
-                        linkDetails: {
-                            clickName: (this.textContent || '').trim().toLowerCase(),
-                            clickDestination: 'NA',
-                            clickLocation: 'body',
-                            clickType: 'other',
-                            clickContext: titleText.toLowerCase(),
-                            componentContext: "faqs",
-                            clickState: wasExpanded ? "collapse" : "expand",
-                        }
-                    });
-                }, true);
-            });
-        }
-
-        // Chat Transcript
-        const chatSaveTranscript = document.querySelector('#downloadBtn');
-        if (chatSaveTranscript) {
-            chatSaveTranscript.addEventListener('click', function (event) {
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.fileDownload,
-                    linkDetails: {
-                        clickName: 'save transcript',
-                        clickType: 'download',
-                        clickDestination: 'transcript.txt',
-                        clickLocation: 'lumen chat dialog box',
-                        fileDownload: {
-                            filename: 'transcript of chat session',
-                            type: 'txt'
-                        }
-                    }
-                });
-            });
-        }
-
-        // Forms
-        function trackForms() {
-            try {
-                MktoForms2.whenReady(function (form) {
-                    const fields = document.querySelectorAll('.mktoField');
-                    const pageTitle = document.querySelector('title') ? document.querySelector('title').textContent : 'Page Title Unavailable';
-                    const formID = form.getId() ? 'mktoForm_' + form.getId().toString() : 'Form ID Unavailable';
-                    let counter = 1;
-
-                    // Form Start
-                    for (let i = 0; i < fields.length; i++) {
-                        if (fields[i]?.type !== 'hidden') {
-                            fields[i].addEventListener('focus', function (event) {
-                                if (counter == 1) { // Fire only once per page load
-                                    adobeDataLayer.push({
-                                        event: adobeDataLayerEvents.component.formStart,
-                                        details: {
-                                            formName: pageTitle + ': ' + formID,
-                                            formID: formID
-                                        }
-                                    });
-                                    counter++;
-                                }
-                            });
-                        }
-                    }
-
-                    // Form Error
-                    form.onValidate(function (nativeValid) {
-                        if (!nativeValid) {
-                            setTimeout(function () { // Wait half a second so that the mktoErrorMsg html will be added first
-                                let mktoError = document.querySelector('.mktoErrorMsg');
-                                if (mktoError) {
-                                    let mktoErrorMsg = mktoError.textContent;
-                                    let mktoErrorField = mktoError.getAttribute('id');
-                                    adobeDataLayer.push({
-                                        event: adobeDataLayerEvents.component.formError,
-                                        details: {
-                                            formName: pageTitle + ': ' + formID,
-                                            formID: formID,
-                                            formError: mktoErrorField + ': ' + mktoErrorMsg
-                                        }
-                                    });
-                                }
-                            }, 500);
-                        }
-                    });
-
-                    // Form Submit
-                    form.onSuccess(function (valsObj, destStr) {
-                        const email = valsObj?.Email || valsObj?.email || valsObj?.userEmail || '';
-                        adobeDataLayer.push({
-                            event: adobeDataLayerEvents.component.formSubmit,
-                            details: {
-                                formName: pageTitle + ': ' + formID,
-                                formID: formID,
-                                emailID: email
-                            }
-                        });
-                    });
-                });
-            }
-            catch (e) {
-                console.log('Error in trackForms: ', e);
-            }
-        }
-
-        if (typeof MktoForms2 !== 'undefined') {
-            trackForms();
-        } else {
-            window.addEventListener("mkto-script-loaded", (e) => {
-                trackForms();
-            }, false,
-            );
-        }
-
-        // Chat
-        const chatLink = document.querySelector("a[href='#chat']");
-        let chatClickName = 'Chat';
-        let chatClickType = 'Button';
-        let chatClickDestination = 'launchChat';
-        let newUser = 'new';
-
-        if (chatLink) {
-            chatLink.addEventListener('click', function (event) {
-                chatClickName = chatLink.textContent.trim();
-                chatClickType = 'Link';
-                chatClickDestination = '#chat';
-            });
-        }
-
-        // Chat Initiated event for Salesforce Embedded Messaging
-        window.addEventListener("onEmbeddedMessagingConversationStarted", function (event) {
-            try {
-                window.adobeDataLayer = window.adobeDataLayer || [];
-                let conversationId = event?.detail?.conversationId || "";
-
-                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
-                    newUser = 'Registered member';
-                }
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.chatInitiated,
-                    linkDetails: {
-                        clickName: chatClickName,
-                        clickType: chatClickType,
-                        clickDestination: chatClickDestination,
-                        clickLocation: 'main container'
-                    },
-                    chat: {
-                        sessionID: conversationId
-                    },
-                    user: {
-                        type: newUser
-                    }
-                });
-            } catch (e) {
-                console.log("[AEP Utils] - Error handling chat conversation started.", e);
-            }
-        });
-
-        // Chat Terminated event for Salesforce Embedded Messaging
-        window.addEventListener("onEmbeddedMessagingConversationClosed", function (event) {
-            try {
-                window.adobeDataLayer = window.adobeDataLayer || [];
-                let conversationId = event?.detail?.conversationId || "";
-
-                if (sessionStorage.getItem('com.lumen.mkplv2..customerInfo.1')) {
-                    newUser = 'Registered member';
-                }
-
-                adobeDataLayer.push({
-                    event: adobeDataLayerEvents.component.chatTerminated,
-                    linkDetails: {
-                        clickName: 'end chat',
-                        clickType: 'user',
-                        clickLocation: 'chat'
-                    },
-                    chat: {
-                        sessionID: conversationId
-                    },
-                    user: {
-                        type: newUser
-                    }
-                });
-            } catch (e) {
-                console.log("[AEP Utils] - Error handling chat conversation closed.", e);
-            }
-        });
+    // Mirrors _navigation_v2.ts's own mouseover reveal (applied to the wrapper
+    // itself, not event.target, since the CSS rule needs the class there to
+    // expand .cmp-header__search-field to its full 298px width).
+    searchWrapper.addEventListener('mouseover', () => {
+      searchWrapper.classList.add('input');
+      searchInput?.focus();
+    });
+
+    // Mirrors _navigation_v2.ts's clearSearchButtonMobile binding.
+    if (clearIcon && searchInput) {
+      clearIcon.addEventListener('click', () => {
+        searchInput.value = '';
+      });
     }
-}());
+
+    // _searchboxSuggestions.ts binds a fresh onclick to each <li> whenever it
+    // re-renders the dropdown (on every keystroke), which only exists while that
+    // exact node is attached. This delegated listener sits on the dropdown's
+    // static <ul> container instead - bound once, unaffected by re-renders - so
+    // suggestion clicks keep working regardless of what the shared clientlib does.
+    if (suggestionsDropdown) {
+      suggestionsDropdown.addEventListener('click', (event) => {
+        const item = (event.target as HTMLElement)?.closest('li');
+        if (!item || !suggestionsDropdown.contains(item)) return;
+
+        const term = item.textContent?.trim();
+        if (!term) return;
+
+        // Looked up fresh here rather than relying on the searchInput captured
+        // at bind-time above - if that lookup ever missed (markup not fully
+        // present yet, a different instance, etc.), this listener would
+        // otherwise never have been attached at all and clicks would no-op.
+        const input = searchWrapper.querySelector('.input_search_field') as HTMLInputElement | null;
+        if (!input) return;
+
+        saveSearchTerm(term);
+        input.value = term;
+        performSearch(searchWrapper);
+      });
+    }
+  }
+
+    private bindSignInDropdown() {
+    if (this.root.dataset.signInBound === 'true') return;
+    this.root.dataset.signInBound = 'true';
+    this.root.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const button = target.closest(
+        '.headerUserName.welcome-message-button, .headerUserName, .welcome-message-button'
+      ) as HTMLElement | null;
+
+      if (!button) return;
+      const container = button.closest(
+        '.singlesignin, .headerUserDropDown'
+      ) as HTMLElement | null;
+
+      if (!container) return;
+      const card = container.querySelector(
+        '#card-div'
+      ) as HTMLElement | null;
+
+      if (!card) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      const isHidden = card.classList.contains('hide');
+
+      if (isHidden) {
+        this.closeAllOnelinkPopovers(this.root);
+        card.classList.remove('hide');
+        button.classList.add('active');
+        button.setAttribute('aria-expanded', 'true');
+      } else {
+        card.classList.add('hide');
+        button.classList.remove('active');
+        button.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  private closeSignInDropdown() {
+  this.root.querySelectorAll('.headerUserDropDown').forEach((container) => {
+    const card = container.querySelector('#card-div') as HTMLElement | null;
+    const button = container.querySelector(
+      '.headerUserName.welcome-message-button, .headerUserName, .welcome-message-button'
+    ) as HTMLElement | null;
+
+    if (card) {
+      card.classList.add('hide');
+    }
+
+    if (button) {
+      button.classList.remove('active');
+      button.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+
+  // Mirrors regionClick in common/components/_onelinknav.ts (larry footer):
+  // remember the region override, then redirect to the locale path.
+  private navigateToLocale(sLocale: string) {
+    const regionCodeMap: Record<string, string> = {
+      '/en-us/': 'US',
+      '/en-in/': 'IN',
+      '/en-au/': 'AU',
+      '/en-hk/': 'HK',
+      '/en-sg/': 'SG',
+      '/ja-jp/': 'JP',
+    };
+
+    const matchedPrefix = Object.keys(regionCodeMap).find(
+      (prefix) => sLocale.startsWith(prefix) || sLocale === prefix.slice(0, -1),
+    );
+
+    if (matchedPrefix) {
+      const regionCode = regionCodeMap[matchedPrefix];
+      document.cookie = `lumen_region_override=${regionCode}; path=/; Max-Age=600; SameSite=Lax; Secure`;
+    }
+
+    if (/^(http|https):\/\//.test(sLocale)) {
+      document.location.href = sLocale;
+      return;
+    }
+
+    const newPath =
+      sLocale +
+      document.location.pathname.substring(
+        document.location.pathname.substring(1).indexOf('/') + 2,
+      );
+    document.location.href =
+      document.location.protocol +
+      '//' +
+      document.location.host +
+      newPath +
+      document.location.search;
+  }
+
+  private syncAccountBlockPosition() {
+    const source = this.root.querySelector('.header-nav__account--source') as HTMLElement | null;
+    const slot = this.root.querySelector('.header-nav__account--mobile-slot') as HTMLElement | null;
+    const desktopWrapperEl = this.root.querySelector('.header-nav__utility-wrapper--desktop') as HTMLElement | null;
+    if (!source || !slot || !desktopWrapperEl) return;
+
+    const isMobile = window.matchMedia('(max-width: 1199px)').matches;
+
+    if (isMobile && source.parentElement !== slot) {
+      slot.appendChild(source);
+    } else if (!isMobile && source.parentElement !== desktopWrapperEl) {
+      desktopWrapperEl.appendChild(source);
+    }
+  }
+
+  // Moves the single #chat-ui element between the mobile trigger slot (row 1,
+  // next to the hamburger) and the desktop slot (row 2, next to Contact),
+  // depending on viewport - same relocate-not-duplicate pattern as
+  // syncAccountBlockPosition above. This has to be a single shared element
+  // rather than two separate containers because ChatUI.init() (a third-party
+  // singleton widget) hardcodes document.querySelector('#chat-ui') internally,
+  // so only one element with that id can ever exist on the page at a time.
+  private syncChatUIPosition() {
+    const chatEl = this.root.querySelector('#chat-ui') as HTMLElement | null;
+    const mobileSlot = this.root.querySelector('.header-nav__chat-mobile') as HTMLElement | null;
+    const desktopSlot = this.root.querySelector('.cmp-header__chatui--desktop-slot') as HTMLElement | null;
+    if (!chatEl || !mobileSlot || !desktopSlot) return;
+
+    const isMobile = window.matchMedia('(max-width: 1199px)').matches;
+
+    if (isMobile && chatEl.parentElement !== mobileSlot) {
+      mobileSlot.appendChild(chatEl);
+    } else if (!isMobile && chatEl.parentElement !== desktopSlot) {
+      desktopSlot.appendChild(chatEl);
+    }
+  }
+
+  private bindOnelinkDropdownToggle() {
+    this.root.querySelectorAll('.cmp-onelinknav__close, .cmp-onelinknav-v2__close').forEach((closeEl) => {
+      closeEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeAllOnelinkPopovers(this.root);
+      });
+    });
+
+    this.root.querySelectorAll('.cmp-onelinknav__toggle, .cmp-onelinknav-v2__toggle').forEach((toggleEl) => {
+      toggleEl.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        if (target.closest('.cmp-onelinknav__lang-link, .cmp-onelinknav-v2__lang-link')) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Scope to this toggle's own instance (desktop copy vs. mobile-panel
+        // copy) — otherwise a global querySelector always grabs the first
+        // (desktop) popover, which is hidden on mobile, so the mobile
+        // country-selector click appeared to do nothing.
+        const instance = (toggleEl as HTMLElement).closest('.cmp-onelinknav, .cmp-onelinknav-v2') as HTMLElement | null;
+        const popover = instance?.querySelector('.cmp-onelinknav__popover, .cmp-onelinknav-v2__popover') as HTMLElement | null;
+        const triggerSpan = this.getDropdownArrow(toggleEl as HTMLElement);
+
+        if (!popover || !triggerSpan) return;
+
+        const shouldOpen = !popover.classList.contains('active');
+        this.closeAllOnelinkPopovers(this.root);
+
+        if (shouldOpen) {
+          popover.classList.add('active');
+          triggerSpan.classList.add('active');
+          triggerSpan.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+  }
+
+  // ------------------------------------------------------------
+  // ⭐ Inject label DOM element
+  // ------------------------------------------------------------
+  private injectRegionLabel(toggleEl: HTMLElement, regionText: string) {
+    let label = toggleEl.querySelector('.cmp-onelinknav__current-region-label, .cmp-onelinknav-v2__current-region-label') as HTMLElement | null;
+
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'cmp-onelinknav__current-region-label cmp-onelinknav-v2__current-region-label';
+
+      const chevron = this.getDropdownArrow(toggleEl);
+      if (chevron) {
+        toggleEl.insertBefore(label, chevron);
+      } else {
+        toggleEl.appendChild(label);
+      }
+    }
+
+    label.textContent = regionText;
+  }
+
+  // ------------------------------------------------------------
+  // ⭐ Inject flag DOM element
+  // ------------------------------------------------------------
+  private injectRegionFlag(toggleEl: HTMLElement, flagSrc: string) {
+    let flag = toggleEl.querySelector('img.flag-icon, img.cmp-onelinknav-v2__current-region') as HTMLImageElement | null;
+
+    if (!flag) {
+      flag = document.createElement('img');
+      flag.className = 'flag-icon cmp-onelinknav-v2__current-region';
+      flag.alt = 'Selected region flag';
+
+      const label = toggleEl.querySelector('.cmp-onelinknav__current-region-label, .cmp-onelinknav-v2__current-region-label');
+      const chevron = this.getDropdownArrow(toggleEl);
+      const target = label ?? chevron;
+      if (target) {
+        toggleEl.insertBefore(flag, target);
+      } else {
+        toggleEl.appendChild(flag);
+      }
+    }
+
+    flag.src = flagSrc;
+  }
+
+  private getDropdownArrow(toggleEl: HTMLElement): HTMLElement | null {
+    const dedicatedArrow = toggleEl.querySelector('.cmp-onelinknav-v2__dropdown-arrow, .cmp-onelinknav__dropdown-arrow') as HTMLElement | null;
+    if (dedicatedArrow) return dedicatedArrow;
+
+    const spanChildren = Array.from(toggleEl.children).filter((child): child is HTMLElement => child instanceof HTMLElement && child.tagName === 'SPAN');
+    return spanChildren[spanChildren.length - 1] ?? null;
+  }
+
+  // ------------------------------------------------------------
+  // Close popovers
+  // ------------------------------------------------------------
+  private closeAllOnelinkPopovers(scope: HTMLElement) {
+    scope.querySelectorAll('.cmp-onelinknav__popover.active, .cmp-onelinknav-v2__popover.active').forEach((el) => {
+      el.classList.remove('active');
+    });
+    scope.querySelectorAll('.cmp-onelinknav__toggle .cmp-onelinknav__dropdown-arrow.active, .cmp-onelinknav-v2__toggle .cmp-onelinknav-v2__dropdown-arrow.active, .cmp-onelinknav__toggle .cmp-onelinknav-v2__dropdown-arrow.active, .cmp-onelinknav-v2__toggle .cmp-onelinknav__dropdown-arrow.active').forEach((el) => {
+      el.classList.remove('active');
+      el.setAttribute('aria-expanded', 'false');
+    });
+  }
+}
+
+function initHeaders() {
+  document.querySelectorAll('.cmp-header-navigation').forEach((root) => {
+    new HeaderNavigation(root as HTMLElement);
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHeaders);
+} else {
+  initHeaders();
+}
