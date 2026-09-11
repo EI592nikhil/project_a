@@ -1,0 +1,90 @@
+﻿Issue key,Issue id,Summary,Status
+MER-2788,9327434,Sub-header Navigation | Tablet & Mobile | Breadcrumb is overlapping with the old header navigation links,Closed
+MER-2765,9320813,Header | Authenticated user | Font Style issue,Verifying
+MER-2751,9316716,PDP & SDP | Sub-header navigation CTAs | Overlapping on mobile/tablet and disappearing over footer,Closed
+MER-2701,9308086,PDP & SDP | Sub-header navigation | Scroller functionality not working with old header,Closed
+MER-2642,9298768,NAV | Header UI Issues,Closed
+MER-2619,9294091,DD  | Resource Cards - Read More CTA to have external link icon,Closed
+MER-2617,9294084,DD  | Resource Cards - Enhance View More CTA,Closed
+MER-2598,9292857,PDP & SDP | Sub-header Navigation | Multiple Issues,Closed
+MER-2576,9291035,UI/UX | [All templates] [ Header ] - [Not sticky] - Change REQ [Design miss on Header/Footer Figma],Closed
+MER-2481,9276672,PLP & SCP | Category Selection FE,Closed
+MER-2433,9258033,[Analytics] Lookup Form | Data Layer Not Populating Correctly for Existing Event,Closed
+MER-2430,9257846,[Analytics] Resource Card | CSS cursor: pointer makes non-clickable card padding appear clickable,Closed
+MER-2365,9239763,CDP | Statistics Component - Compact Box Variation Alignment Issue,Closed
+MER-2304,9226107,UI/UX |[SCP] [Explore Tabs] - [opening jumps to bottom],Closed
+MER-2256,9221558,[Analytics] DD - CDP Hero,Closed
+MER-2242,9218880,DD| Text container component-Issues,Closed
+MER-2232,9217732,DD | Authors Bio Issues,Closed
+MER-2223,9216206,DD  | Resource Cards - Dynamic items,Closed
+MER-2213,9215334,[Analytics] SDP - Solution Selector Component,Closed
+MER-2161,9211343,DD | Authors Bio | Description field is missing on the CF modal,Closed
+MER-2105,9203888,UAT |[PDP] Statistics Component - Margins Shift Based on Character Length,Resolved
+MER-2086,9203135,[Agentic] [FE] Mobile Padding Issue on Sign-In,Closed
+MER-2026,9186220,UAT |[PDP] [SDP/PDP Text Container Component] - Content left alignment issue when first column text is insufficient in double column layout,Closed
+MER-2025,9186198, UAT |[PDP] [Media Highlight & SDP/PDP Text Container] - Registered trademark superscript not rendering correctly,Closed
+MER-1736,8555916,[Analytics] Implementation - Product Hero,Closed
+MER-1635,8544462,PDP | Sub-header navigation | Mobile & Tablet | Anchor link issue,Closed
+MER-1594,8542044,[Analytics] Implementation - Media Highlight,Closed
+MER-1593,8542014,[Analytics] Implementation - Solution Highlight,Closed
+MER-1592,8542003,[Analytics] Implementation - Subheader Navigation,Closed
+MER-1579,8539507,UI/UX [PDP][Sub Header Navigation] [Sub header stretches full screen width] ,Closed
+MER-1578,8539482,UI/UX [PDP][Sub Header Navigation] [Active nav doesn't update- tablet & mobile],Closed
+MER-1493,8530192,UAT |[PDP] [UAT –Tooltip] - [Drag-and-drop drop function not working and ограничed variable input] - Change Req ,Closed
+MER-1406,8512974,PDP | Subheader Navigation - Overlapping form modal issue,Closed
+MER-1403,8512873,PDP | Solutions & Product | Text container - Author Issues,Closed
+MER-1401,8512516,PDP | Subheader Navigation issues,Closed
+MER-1321,8500550,PDP | Solutions & Product | Text container - Issues,Closed
+MER-1317,8499503,UAT |[PDP] [Hero] - [ Media Functionality],Closed
+MER-1269,8491730,PDP | Component update for link to Subheader Navigation,Closed
+MER-1242,8428182,PDP | Subheader Navigation issues,Closed
+MER-1216,8140984,DM Video component UI issues,Closed
+MER-1181,8118036,PDP | Media Highlight | Alignment Issues,Closed
+MER-1177,8116171,PDP | Media Highlight - Enahancement,Closed
+MER-1163,8109656,DM | Video Component - [FED] Styling for video modal,Closed
+MER-1116,8106879,PDP & CDP | Content Details Statistics Component - Padding adjustments.,Closed
+MER-1110,8104047,PDP | Media Highlight Component - V3 50/50 img left UI Issue,Closed
+MER-1096,8096870,PDP | Media Highlight Component - Authoring Configuration Updates,Closed
+MER-1088,8094216,PDP | Media Highlight Component - UI Issues,Closed
+MER-1067,8085238,PDP FAQ UI Issues (MER-830),Closed
+MER-975,8071265,CDP | Content Detail Statistics Component | UI Issues,Closed
+MER-974,8070733,CDP & PDP | Content Details Statistics Component - Rendering Issue,Closed
+MER-952,8059916,Solutions & Product | Text container[FED] ,Closed
+MER-943,8059898,PDP & PLP | Hero Component BUTTON - Change Request,Closed
+MER-927,8055912,Reference Page | Atomic Component - Tabs | UI Issue,Closed
+MER-926,8054264,DD | BlockQuote Component | Spacing Issue,Closed
+MER-909,8041916,Atomic Page | Tab,Closed
+MER-875,8031014,Atomic Page | Tooltip,Closed
+MER-874,8030732,Reference Page | Atomic Component - Input Text Area | UI Issue,Closed
+MER-873,8030427,Atomic components | Select,Closed
+MER-854,8022754,Authors Bio Issues MER-690,Closed
+MER-848,8018922,CDP | BlockQuote Component | UI Issues,Closed
+MER-847,8018905,Atomic Page | Input TextArea,Closed
+MER-825,8015563,PDP | Media Highlight,Closed
+MER-823,8015554,PDP | Subheader Navigation,Closed
+MER-799,7997353,Reference Page | Atomic Component - Checkbox | UI Issue,Closed
+MER-798,7996925,Input | Filter Pills | Indicator  Bugs,Closed
+MER-751,7976646,CDP | Content Detail Statistics Component - Enhancement,Closed
+MER-744,7974653,Input | Filter Pills | Indicator,Closed
+MER-728,7972961,Checkbox,Closed
+MER-692,7954465,CDP | BlockQuote - Enhance to include image ,Closed
+MER-690,7954453,CDP | Authors Bio  - Update component to have up to 3 authors,Closed
+MER-663,7935491,MER-207 Image Component Issues,Closed
+MER-659,7930458,CDP | Quote Component UI Issues,Closed
+MER-557,7900677,[Analytics] “Login” Event Type Incorrectly Set to “Exit”,Closed
+MER-556,7900676,[Analytics] Region Selection Not Populating Correct Country in URL,In Progress
+MER-492,7896149,MER-208 Quote Component Bugs,Resolved
+MER-208,7834973,CDP | Quote Component ,Closed
+MER-207,7834966,CDP | Image component ,Closed
+MER-223,7816514,HP | Analytics - Footer Links,Closed
+MER-278,7808710,HP | Lifetime logo not rendering on page (Partner logo component),Closed
+MER-268,7790022,HP | Footer Color Correction,Closed
+MER-272,7781593,HP | Authoring - Update Metadata field for SEO,Closed
+MER-343,7777865,HP | No hover state vs. underline hover state for CTAs,Closed
+MER-353,7761275,HP | Cards Block component | CTA is breaking into two lines in tablet,Closed
+VACM-4430,7747964,"HP| Footer | Desktop | Social media icons are missing, and the Lumen logo does not match the expected design.",Closed
+MER-304,7717940,HP: FE - Cards Block Component - Mobile,Closed
+MER-290,7711689,HP: Partner Story Component,Closed
+MER-287,7711677,HP: Footer- Recolour and Components.,Closed
+MER-256,7704700,Run Lighthouse Reports on Stage Before Performance Updates,Closed
+MER-320,7702036,Some image are coming as a third party which are not lazy loaded,Closed
